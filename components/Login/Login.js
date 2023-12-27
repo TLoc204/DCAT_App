@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Image, Text, TextInput, TouchableOpacity, Dimensions, Platform, StyleSheet, Alert } from "react-native";
+import { View, Image, Text, TextInput, TouchableOpacity, Dimensions, Platform, StyleSheet, Alert, ActivityIndicator, StatusBar } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
@@ -33,15 +33,13 @@ export default function Login() {
         const checkLoginInfo = async () => {
             const savedUsername = await AsyncStorage.getItem('username');
             const savedPassword = await AsyncStorage.getItem('password');
-
             if (savedUsername && savedPassword) {
                 setUsername(savedUsername);
                 setPassword(savedPassword);
                 setRememberPassword(true);
-                navigation.navigate('Order');
+                navigation.navigate('BottomBarNavigation');
             }
         };
-        
         checkLoginInfo();
     }, []);
 
@@ -71,8 +69,9 @@ export default function Login() {
                     if (rememberPassword) {
                         await AsyncStorage.setItem('username', username);
                         await AsyncStorage.setItem('password', password);
+                        await AsyncStorage.setItem('role', user.IdRole);
                     }
-                    navigation.navigate('Order');
+                    navigation.navigate('BottomBarNavigation');
                 } else {
                     Alert.alert('Mật khẩu không đúng');
                 }
@@ -161,12 +160,14 @@ export default function Login() {
             alignItems: 'center',
             justifyContent: 'center'
         },
+        customLoading: {
+
+        }
     });
 
     const webStyles = StyleSheet.create({
-
+        
     });
-
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
     return (
         <PaperProvider theme={theme}>
@@ -220,10 +221,20 @@ export default function Login() {
                     style={finalStyles.button}
                     onPress={handleSubmit}
                 >
-                    <Text style={finalStyles.buttonText}>Đăng nhập</Text>
+                    {loading ? (
+                        <ActivityIndicator style={finalStyles.customLoading} size="large" color="#ffffff" />
+                    ) : (
+                        <Text style={finalStyles.buttonText}>Đăng nhập</Text>
+                    )}
+
                 </TouchableOpacity>
 
             </View>
+            <StatusBar
+                barStyle={'dark-content'} // Chọn kiểu biểu tượng (dark/light) tùy thuộc vào trạng thái focus
+                translucent={true}
+                animated
+            />
         </PaperProvider>
     );
 }

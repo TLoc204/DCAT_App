@@ -3,7 +3,7 @@ import { StyleSheet, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from './components/Login/Login';
-
+import BottomBarNavigation from './components/BottomBarNavigation'
 import Order from './components/Order/Order';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
@@ -13,6 +13,7 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="BottomBarNavigation" component={BottomBarNavigation} options={{ headerShown: false }} />
         <Stack.Screen name="Order" component={Order} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
