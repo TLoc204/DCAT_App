@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons,AntDesign} from '@expo/vector-icons';
 import { Keyboard } from 'react-native';
 import Home from './Home/Home';
-import Order from './Order/Order';
+import OrderScreen from './Order/OrderScreen';
 import { Provider as PaperProvider ,Text} from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
 import BottomFabBar from './bottombar/components/bottom.tab';
@@ -85,7 +85,7 @@ const BottomNavigationBar = () => {
               tabBarIcon: tabBarIcon('cart-outline'),
               tabBarLabel: tabBarName('Order'),
             }}
-            component={Order}
+            component={OrderScreen}
           />
         </Tab.Navigator>
       </NavigationContainer>

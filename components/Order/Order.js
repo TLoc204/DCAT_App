@@ -2,19 +2,25 @@ import React, { useEffect, useState } from "react";
 import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, AsyncStorage, Alert, SafeAreaView, ScrollView, ImageBackground } from "react-native";
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
-import { Checkbox, Button, TextInput } from 'react-native-paper';
+import { Checkbox, DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
 import { FIREBASE_APP } from '../../FirebaseConfig';
 import { getDatabase, ref, onValue, push, get, set, query, orderByChild, equalTo } from 'firebase/database';
 import SearchBar from "react-native-dynamic-search-bar";
-import SearchableDropdown from 'react-native-searchable-dropdown';
 // Lấy kích thước màn hình để hỗ trợ responsive
 const { width, height } = Dimensions.get('window');
-
+const theme = {
+    ...DefaultTheme,
+    roundness: 2,
+    colors: {
+        ...DefaultTheme.colors,
+        primary: '#007AFF', // Thay đổi màu primary theo ý muốn
+    },
+};
 export default function Order() {
     const database = getDatabase(FIREBASE_APP);
     const [dataOrders, setDataOrders] = useState([]);
     const [dataRoom, setDataRoom] = useState([]);
-    const [selectedItems, setSelectedItems] = useState([]);
+    const navigation = useNavigation();
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredOrders, setFilteredOrders] = useState([]);
     useEffect(() => {
@@ -39,11 +45,14 @@ export default function Order() {
                 setDataRoom(roomData);
             }
         });
-
+        return ()=>{
+            off(ordersRef);
+            off(roomRef);
+        }
 
     }, []);
     const handleSubmit = async () => {
-
+        navigation.navigate('OrderDetails')
     };
     useEffect(() => {
         const filtered = Object.keys(dataOrders).reduce((acc, key) => {
@@ -122,10 +131,10 @@ export default function Order() {
     });
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
     return (
+        <PaperProvider theme={theme}>
         <SafeAreaView
             style={finalStyles.container_order}>
             <View style={{ flexDirection: 'row', marginTop: 'auto' }}>
-
                 <SearchBar
                     style={{width:"auto",height:50, marginLeft:20, marginRight:20}}
                     fontColor="#ffffff"
@@ -173,11 +182,11 @@ export default function Order() {
                                                 fontWeight: "bold",
                                                 marginBottom: 15,
                                             }}>
-                                            {"Số hóa đơn: " + orderId} {/* Hiển thị key orderId */}
+                                            {"Số hóa đơn: " + orderId.replace("O","")} {/* Hiển thị key orderId */}
                                         </Text>
                                         <Text
                                             style={{
-                                                color: "#c3c6c9",
+                                                color: "#86B6F6",
                                                 fontSize: 12,
                                                 fontWeight: "bold",
                                                 marginBottom: 15,
@@ -194,7 +203,7 @@ export default function Order() {
                                         </Text>
                                     </View>
                                 </View>
-                                <TouchableOpacity>
+                                <TouchableOpacity onPress={() => navigation.navigate('OrderDetails', { titleCustomerName: order.CustomerName,titleOrderId:orderId.replace("O",""),orderDetails: order.OrderDetails })}>
                                     <View
                                         style={{
                                             position: "absolute",
@@ -221,5 +230,6 @@ export default function Order() {
             </ScrollView>
 
         </SafeAreaView>
+        </PaperProvider>
     );
 }
