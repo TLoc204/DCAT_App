@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons,AntDesign} from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { Keyboard } from 'react-native';
 import Home from './Home/Home';
 import OrderScreen from './Order/OrderScreen';
-import { Provider as PaperProvider ,Text} from 'react-native-paper';
+import { Provider as PaperProvider, Text } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
 import BottomFabBar from './bottombar/components/bottom.tab';
 
@@ -14,7 +14,7 @@ const tabBarIcon = (name) => ({ focused, color, size }) => (
   <Ionicons name={name} size={size} color={focused ? 'black' : 'gray'} />
 );
 const tabBarName = (name) => ({ focused, color, size }) => (
-  <Text color={focused ? 'black' : 'gray'}>{name}</Text>
+  <Text name={name} color={focused ? 'black' : 'gray'} />
 );
 const BottomNavigationBar = () => {
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
@@ -37,16 +37,19 @@ const BottomNavigationBar = () => {
     <PaperProvider>
       <NavigationContainer independent={true}>
         <Tab.Navigator
-          screenOptions={{
+          screenOptions={({ route }) => ({
+            tabBarIcon: tabBarIcon(`${route.name === 'Home' ? 'home-outline' : 'cart-outline'}`),
+            tabBarLabel: tabBarName(`${route.name === 'Home' ? 'Home' : 'Order'}`),
+            
             tabBarActiveBackgroundColor: 'white',
             tabBarInactiveBackgroundColor: 'black',
             headerShown: false,
-            tabBarShowLabel: true,
             tabBarLabelStyle: {
               color: 'black',
               opacity: isKeyboardVisible ? 0 : 1,
             },
-          }}
+          })}
+
           tabBar={(props) => (
             <BottomFabBar
               mode={'default'}
@@ -62,7 +65,7 @@ const BottomNavigationBar = () => {
               }}
               bottomBarContainerStyle={{
                 position: 'absolute',
-                bottom: isKeyboardVisible ? -100 : 0, // Ẩn thanh tab bar khi bàn phím hiển thị
+                bottom: isKeyboardVisible ? -100 : 0,
                 left: 0,
                 right: 0,
               }}
@@ -71,20 +74,11 @@ const BottomNavigationBar = () => {
           )}
         >
           <Tab.Screen
-            options={{
-              tabBarIcon: tabBarIcon('home-outline'),
-              tabBarLabel: tabBarName('Home'),
-              
-            }}
             name="Home"
             component={Home}
           />
           <Tab.Screen
-            name="Meh"
-            options={{
-              tabBarIcon: tabBarIcon('cart-outline'),
-              tabBarLabel: tabBarName('Order'),
-            }}
+            name="Order"
             component={OrderScreen}
           />
         </Tab.Navigator>
