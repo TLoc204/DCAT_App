@@ -8,6 +8,7 @@ import { getDatabase, ref, onValue, push, get, set, query, orderByChild, equalTo
 import { BottomSheet } from 'react-native-sheet';
 import SearchBar from "react-native-dynamic-search-bar";
 import { Dropdown } from 'react-native-element-dropdown';
+import { getStorage, ref as storageRef, listAll, getDownloadURL } from "firebase/storage";
 // Lấy kích thước màn hình để hỗ trợ responsive
 const { width, height } = Dimensions.get('window');
 const theme = {
@@ -20,6 +21,7 @@ const theme = {
 };
 export default function Order() {
     const database = getDatabase(FIREBASE_APP);
+    const storage = getStorage(FIREBASE_APP);
     const [dataOrders, setDataOrders] = useState([]);
     const [dataRoom, setDataRoom] = useState([]);
     const [dataFoods, setDataFoods] = useState([]);
@@ -40,6 +42,8 @@ export default function Order() {
     const [currentRoom, setCurrentRoom] = useState('Tất cả');
     const [selectedRoom, setSelectedRoom] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState('');
+    const [imageUrls, setImageUrls] = useState({});
+    const [imageAll, setImageAll] = useState({});
     const screenHeight = Dimensions.get('window').height; // Lấy chiều cao màn hình
     useEffect(() => {
         const ordersRef = ref(database, 'Orders');
@@ -199,7 +203,100 @@ export default function Order() {
     const handleSelectCategory = (key) => {
         setSelectedCategory(key);
     };
+    //------------------------------------------------ Lấy ảnh firebase--------------------------------------------
+    const fetchImagesFromStorage = async () => {
+        try {
+            const orderDetails = dataOrders;
+            let urls = {};
 
+            for (let billKey in orderDetails) {
+                const bill = orderDetails[billKey];
+                for (let orderKey in bill) {
+                    const order = bill[orderKey];
+
+                    const ids = {
+                        IdDrink: "Drinks",
+                        IdDrink2ND: "Drink2ND",
+                        IdFood: "Foods",
+                        IdGame: "Games",
+                        IdTopping: "Topping",
+                        IdFoodBonus: "FoodBonus",
+                    };
+                    for (let id in ids) {
+                        if (order[id]) {
+                            const imageUrl = await fetchImageFromStorage(
+                                `${ids[id]}/${order[id]}.jpg`
+                            );
+                            for (const folder in imageAll) {
+                                const items = imageAll[folder];
+                                console.log(items)
+                                const matchedItem = items.find((item) => item.url === imageUrl);
+                                if (matchedItem) {
+                                  urls[order[id]] = imageUrl;
+                                  break; // Đã tìm thấy URL khớp, không cần duyệt tiếp
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            setImageUrls(urls);
+        } catch (error) {
+            console.error("Error fetching images:", error);
+        }
+    };
+    const listAllItemsInFolder = async (folderPath) => {
+        const folderRef = storageRef(storage, folderPath);
+        try {
+          const items = await listAll(folderRef);
+          const itemDetails = [];
+    
+          for (const item of items.items) {
+            const itemUrl = await getDownloadURL(item);
+            itemDetails.push({ name: item.name, url: itemUrl });
+          }
+    
+          return itemDetails;
+        } catch (error) {
+          console.error("Error listing items in folder:", error);
+          return [];
+        }
+      };
+      const fetchAllItems = async () => {
+        try {
+          const folders = ["Topping", "Foods", "FoodBonus", "Drinks", "Drink2ND", "Games"];
+          const allItems = {};
+    
+          for (const folder of folders) {
+            const items = await listAllItemsInFolder(folder);
+            allItems[folder] = items;
+          }
+          setImageAll(allItems)
+          // Bạn có thể xử lý tất cả các item ở đây, hoặc lưu chúng vào đối tượng để sử dụng sau này.
+        } catch (error) {
+          console.error("Error fetching all items:", error);
+        }
+      };
+    
+      useEffect(() => {
+        fetchAllItems();
+      }, []);
+    
+    useEffect(() => {
+        fetchImagesFromStorage();
+    }, [dataOrders]);
+
+    const fetchImageFromStorage = async (filePath) => {
+        try {
+            const url = await getDownloadURL(storageRef(storage, filePath));
+            return url;
+        } catch (error) {
+            console.error("Error fetching image from storage:", error);
+            return null;
+        }
+    };
+    //-----------------------------------------------------End-----------------------------------------------
     const commonStyles = {
         container_order: {
             justifyContent: 'center',
@@ -468,7 +565,7 @@ export default function Order() {
                                                 <Text>Món ăn</Text>
                                             </View>
                                         </View>
-                                        <ScrollView>
+
                                             <View>
                                                 <View style={{ flexDirection: 'row', marginTop: 'auto', marginBottom: 20 }}>
                                                     <SearchBar
@@ -495,7 +592,6 @@ export default function Order() {
                                                     ))}
                                                 </ScrollView>
                                             </View>
-                                        </ScrollView>
                                     </BottomSheet>
                                 </View>
                             </ScrollView>

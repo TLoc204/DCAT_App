@@ -6,7 +6,7 @@ import { Checkbox, Button } from 'react-native-paper';
 
 import { FIREBASE_APP } from '../../FirebaseConfig';
 import { getDatabase, ref, onValue, push, get, set, query, orderByChild, equalTo } from 'firebase/database';
-import { getStorage, ref as storageRef, getDownloadURL } from "firebase/storage";
+import { getStorage, ref as storageRef, listAll, getDownloadURL } from "firebase/storage";
 import SearchBar from "react-native-dynamic-search-bar";
 import SearchableDropdown from 'react-native-searchable-dropdown';
 // Lấy kích thước màn hình để hỗ trợ responsive
@@ -20,53 +20,110 @@ export default function OrderDetails({ route }) {
     const [orderData, setOrderData] = useState([]);
     const [drinkData, setDrinkData] = useState([]);
     const [imageUrls, setImageUrls] = useState({});
-    const [imagesFetched, setImagesFetched] = useState(false);
+    const [imageAll, setImageAll] = useState({});
     useEffect(() => {
-        const orderDetailsRef = ref(database, 'Orders/' + IDOrder + '/OrderDetails');
-        
-        const unsubscribeOrderDetails = onValue(orderDetailsRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                setOrderData(data);
-                fetchImagesFromStorage(data);
+        // Sử dụng `onValue` để theo dõi thay đổi trong dữ liệu Firebase
+        const ordersRef = ref(database, 'Orders');
+        const drinksRef = ref(database, 'Drink');
+        // Đăng ký sự kiện theo dõi thay đổi dữ liệu Orders
+        onValue(ordersRef, (snapshot) => {
+            const ordersData = snapshot.val();
+            // Kiểm tra nếu có dữ liệu
+            if (ordersData) {
+                setOrderData(ordersData[IDOrder].OrderDetails);
             }
         });
-
+        onValue(drinksRef, (snapshot) => {
+            const drinksData = snapshot.val();
+            // Kiểm tra nếu có dữ liệu
+            if (drinksData) {
+                setDrinkData(drinksData);
+            }
+        });
         return () => {
-            unsubscribeOrderDetails();
-        };
+            off(ordersRef);
+            off(drinksRef);
+        }
     }, []);
-    const fetchImagesFromStorage = async (orderDetails) => {
-        let urls = {};
-        for (let billKey in orderDetails) {
-            const bill = orderDetails[billKey];
-            for (let orderKey in bill) {
-                const order = bill[orderKey];
+    const fetchImagesFromStorage = async () => {
+        try {
+            const orderDetails = orderData;
+            let urls = {};
 
-                const ids = {
-                    IdDrink: "Drinks",
-                    IdDrink2ND: "Drink2ND",
-                    IdFood: "Foods",
-                    IdGame: "Games",
-                    IdTopping: "Toppings",
-                    IdFoodBonus: "FoodBonus",
-                };
+            for (let billKey in orderDetails) {
+                const bill = orderDetails[billKey];
+                for (let orderKey in bill) {
+                    const order = bill[orderKey];
 
-                for (let id in ids) {
-                    if (order[id]) {
-                        const imageRef = storageRef(storage, `${ids[id]}/${order[id]}.jpg`);
-                        try {
-                            const imageUrl = await getDownloadURL(imageRef);
-                            urls[order[id]] = imageUrl;
-                        } catch (error) {
-                            console.error("Error fetching image:", error);
+                    const ids = {
+                        IdDrink: "Drinks",
+                        IdDrink2ND: "Drink2ND",
+                        IdFood: "Foods",
+                        IdGame: "Games",
+                        IdTopping: "Topping",
+                        IdFoodBonus: "FoodBonus",
+                    };
+                    for (let id in ids) {
+                        if (order[id]) {
+                            const imageUrl = await fetchImageFromStorage(
+                                `${ids[id]}/${order[id]}.jpg`
+                            );
+                            for (const folder in imageAll) {
+                                const items = imageAll[folder];
+                                console.log(items)
+                                const matchedItem = items.find((item) => item.url === imageUrl);
+                                if (matchedItem) {
+                                  urls[order[id]] = imageUrl;
+                                  break; // Đã tìm thấy URL khớp, không cần duyệt tiếp
+                                }
+                            }
                         }
                     }
                 }
             }
+
+            setImageUrls(urls);
+        } catch (error) {
+            console.error("Error fetching images:", error);
         }
-        setImageUrls(urls);
     };
+    const listAllItemsInFolder = async (folderPath) => {
+        const folderRef = storageRef(storage, folderPath);
+        try {
+          const items = await listAll(folderRef);
+          const itemDetails = [];
+    
+          for (const item of items.items) {
+            const itemUrl = await getDownloadURL(item);
+            itemDetails.push({ name: item.name, url: itemUrl });
+          }
+    
+          return itemDetails;
+        } catch (error) {
+          console.error("Error listing items in folder:", error);
+          return [];
+        }
+      };
+      const fetchAllItems = async () => {
+        try {
+          const folders = ["Topping", "Foods", "FoodBonus", "Drinks", "Drink2ND", "Games"];
+          const allItems = {};
+    
+          for (const folder of folders) {
+            const items = await listAllItemsInFolder(folder);
+            allItems[folder] = items;
+          }
+          setImageAll(allItems)
+          // Bạn có thể xử lý tất cả các item ở đây, hoặc lưu chúng vào đối tượng để sử dụng sau này.
+        } catch (error) {
+          console.error("Error fetching all items:", error);
+        }
+      };
+    
+      useEffect(() => {
+        fetchAllItems();
+      }, []);
+    
     useEffect(() => {
         fetchImagesFromStorage();
     }, [orderData]);
