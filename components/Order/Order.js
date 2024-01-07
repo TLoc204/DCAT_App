@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, AsyncStorage, Alert, SafeAreaView, ScrollView, ImageBackground } from "react-native";
+import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, AsyncStorage, Alert, SafeAreaView, ScrollView, ImageBackground, TextInput } from "react-native";
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import { Checkbox, DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
@@ -7,6 +7,7 @@ import { FIREBASE_APP } from '../../FirebaseConfig';
 import { getDatabase, ref, onValue, push, get, set, query, orderByChild, equalTo } from 'firebase/database';
 import { BottomSheet } from 'react-native-sheet';
 import SearchBar from "react-native-dynamic-search-bar";
+import { Dropdown } from 'react-native-element-dropdown';
 // Lấy kích thước màn hình để hỗ trợ responsive
 const { width, height } = Dimensions.get('window');
 const theme = {
@@ -21,41 +22,113 @@ export default function Order() {
     const database = getDatabase(FIREBASE_APP);
     const [dataOrders, setDataOrders] = useState([]);
     const [dataRoom, setDataRoom] = useState([]);
+    const [dataFoods, setDataFoods] = useState([]);
+    const [dataCategories, setDataCategories] = useState([]);
+    const [dataFoodBonus, setDataFoodBonus] = useState([]);
+    const [dataDrinks, setDataDrinks] = useState([]);
+    const [dataDrink2ND, setDataDrink2ND] = useState([]);
+    const [dataToppings, setDataToppings] = useState([]);
+    const [dataGames, setDataGames] = useState([]);
+    const [roomDropdownData, setRoomDropdownData] = useState([]);
     const navigation = useNavigation();
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredOrders, setFilteredOrders] = useState([]);
     const bottomSheet = useRef(null);
+    const bottomSheetCreate = useRef(null);
+    const bottomSheetFood = useRef(null);
     const [orderCountByRoom, setOrderCountByRoom] = useState({});
     const [currentRoom, setCurrentRoom] = useState('Tất cả');
+    const [selectedRoom, setSelectedRoom] = useState(null);
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const screenHeight = Dimensions.get('window').height; // Lấy chiều cao màn hình
     useEffect(() => {
-        // Sử dụng `onValue` để theo dõi thay đổi trong dữ liệu Firebase
         const ordersRef = ref(database, 'Orders');
         const roomRef = ref(database, 'Rooms');
-
-        // Đăng ký sự kiện theo dõi thay đổi dữ liệu Orders
-        onValue(ordersRef, (snapshot) => {
+        const foodRef = ref(database, 'Foods');
+        const categoryRef = ref(database, 'Categories');
+        const drinkRef = ref(database, 'Drinks');
+        const drink2ndRef = ref(database, 'Drink2ND');
+        const foodbonusRef = ref(database, 'FoodBonus');
+        const gameRef = ref(database, 'Games');
+        const toppingRef = ref(database, 'Toppings');
+        // Tạo một biến để giữ các hàm hủy đăng ký
+        const unsubscribeOrders = onValue(ordersRef, (snapshot) => {
             const ordersData = snapshot.val();
-            // Kiểm tra nếu có dữ liệu
             if (ordersData) {
                 setDataOrders(ordersData);
             }
         });
 
-        // Đăng ký sự kiện theo dõi thay đổi dữ liệu Rooms
-        onValue(roomRef, (snapshot) => {
+        const unsubscribeRooms = onValue(roomRef, (snapshot) => {
             const roomData = snapshot.val();
-            // Kiểm tra nếu có dữ liệu
             if (roomData) {
                 setDataRoom(roomData);
             }
         });
+
+        const unsubscribeFoods = onValue(foodRef, (snapshot) => {
+            const foodData = snapshot.val();
+            if (foodData) {
+                setDataFoods(foodData);
+            }
+        });
+
+        const unsubscribeCategories = onValue(categoryRef, (snapshot) => {
+            const categoryData = snapshot.val();
+            if (categoryData) {
+                setDataCategories(categoryData);
+            }
+        });
+
+        const unsubscribeDrinks = onValue(drinkRef, (snapshot) => {
+            const drinkData = snapshot.val();
+            if (drinkData) {
+                setDataDrinks(drinkData);
+            }
+        });
+
+
+        const unsubscribeDrink2ND = onValue(drink2ndRef, (snapshot) => {
+            const drink2ndData = snapshot.val();
+            if (drink2ndData) {
+                setDataDrink2ND(drink2ndData);
+            }
+        });
+
+        const unsubscribeFoodBonus = onValue(foodbonusRef, (snapshot) => {
+            const foodbonusData = snapshot.val();
+            if (foodbonusData) {
+                setDataFoodBonus(foodbonusData);
+            }
+        });
+
+        const unsubscribeGames = onValue(gameRef, (snapshot) => {
+            const gameData = snapshot.val();
+            if (gameData) {
+                setDataGames(gameData);
+            }
+        });
+
+        const unsubscribeToppings = onValue(toppingRef, (snapshot) => {
+            const toppingData = snapshot.val();
+            if (toppingData) {
+                setDataToppings(toppingData);
+            }
+        });
+        // Khi component bị unmount, gọi các hàm hủy đăng ký
         return () => {
-            off(ordersRef);
-            off(roomRef);
-        }
+            unsubscribeOrders();
+            unsubscribeRooms();
+            unsubscribeFoods();
+            unsubscribeCategories();
+            unsubscribeDrinks();
+            unsubscribeDrink2ND();
+            unsubscribeFoodBonus();
+            unsubscribeGames();
+            unsubscribeToppings();
+        };
 
     }, []);
-
     useEffect(() => {
         const countByRoom = Object.values(filteredOrders).reduce((acc, order) => {
             const roomName = roomNames[order.IdRoom] || 'Unknown'; // Dùng 'Unknown' cho những phòng không xác định được
@@ -87,7 +160,21 @@ export default function Order() {
         setFilteredOrders(filtered);
     }, [searchQuery, dataOrders]);
     const openFilterMenu = () => {
-        bottomSheet.current.show(); // Giả sử bottomSheet là ref của BottomSheet component
+        bottomSheet.current.show();
+    };
+    const openFoodMenu = () => {
+        bottomSheetFood.current.show();
+    };
+    const closeFoodMenu = () => {
+        bottomSheetFood.current.hide();
+        setSelectedCategory('')
+    };
+    const openCreateOrder = () => {
+        bottomSheetCreate.current.show();
+    };
+    const closeCreateOrder = () => {
+        bottomSheetCreate.current.hide();
+
     };
     const handleSelectRoom = (roomKey) => {
         setCurrentRoom(roomNames[roomKey] || 'Tất cả'); // Cập nhật phòng được chọn
@@ -109,7 +196,9 @@ export default function Order() {
             setFilteredOrders(filteredByRoom);
         }
     };
-
+    const handleSelectCategory = (key) => {
+        setSelectedCategory(key);
+    };
 
     const commonStyles = {
         container_order: {
@@ -163,7 +252,75 @@ export default function Order() {
         },
         icon: {
             marginLeft: -2
-        }
+        },
+        checkIconContainer: {
+            width: 25,
+            height: 25,
+            borderRadius: 15,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderWidth: 1,
+            borderColor: '#DCDCDC',
+            backgroundColor: 'white',
+        },
+        container_sheet: {
+            backgroundColor: "#f8f8f8",
+            shadowColor: "#0000001A",
+            shadowOpacity: 0.1,
+            shadowOffset: {
+                width: 0,
+                height: 20
+            },
+            shadowRadius: 104,
+            elevation: 104,
+        },
+
+        input_cus: {
+            flex: 1,
+            backgroundColor: "#ffffff",
+            padding: 10,
+            borderRadius: 10,
+            shadowColor: "#0000001A",
+            shadowOpacity: 0.1,
+            shadowOffset: {
+                width: 0,
+                height: 20
+            },
+            marginLeft: 20,
+            marginRight: 20,
+            shadowRadius: 104,
+            elevation: 104,
+        },
+        inputStyleDD: {
+            fontSize: 16
+        },
+        input: {
+            fontSize: 16
+        },
+        placeholderStyle: {
+            fontSize: 16
+        },
+        //------------------------------- Css Món Ăn----------------------------------
+        categoryButton: {
+            marginRight: 10,
+            borderRadius: 15,
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+            borderWidth: 1,
+            borderColor: '#D3D3D3', 
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        categoryButtonText: {
+            fontWeight: 'bold',
+        },
+        categoryButtonSelected: {
+            backgroundColor: '#667080', 
+            borderColor: '#667080',
+        },
+        categoryButtonTextSelected: {
+            color: '#FFFFFF', 
+        },
     });
     const webStyles = StyleSheet.create({
 
@@ -175,6 +332,22 @@ export default function Order() {
         const room = dataRoom[roomKey];
         roomNames[roomKey] = room.Name;
     });
+    const handleSearchChange = (query) => {
+        if (query !== '') {
+            setSearchQuery(query);
+        }
+        // Nếu bạn muốn xóa tìm kiếm khi nhấn "X", thêm else { setSearchQuery(''); }
+    };
+    useEffect(() => {
+        // Chuyển đổi dataRoom thành mảng cho Dropdown
+        const roomOptions = Object.keys(dataRoom).map((key) => {
+            return { label: dataRoom[key].Name, value: key };
+        });
+        setRoomDropdownData(roomOptions);
+    }, [dataRoom]);
+    const handleRoomChange = (selectedValue) => {
+        setSelectedRoom(selectedValue);
+    };
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
     return (
         <PaperProvider theme={theme}>
@@ -182,7 +355,7 @@ export default function Order() {
                 style={finalStyles.container_order}>
                 <View style={{ flexDirection: 'row', marginTop: 'auto' }}>
                     <SearchBar
-                        style={{ width: "auto", height: 50, marginLeft: 20, marginRight: 20 }}
+                        style={{ width: "auto", height: 50, marginLeft: 20 }}
                         fontColor="#ffffff"
                         iconColor="#ffffff"
                         shadowColor="#282828"
@@ -191,6 +364,7 @@ export default function Order() {
                         placeholder="Tìm kiếm"
                         value={searchQuery}
                         onChangeText={setSearchQuery}
+                        clearIconComponent={() => null}
                     />
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', height: 50, marginTop: 10 }}>
@@ -201,27 +375,131 @@ export default function Order() {
                         </View>
                     </TouchableOpacity>
 
-                    <BottomSheet ref={bottomSheet} height={250}>
-                        {/* Mục "Tất cả" để reset bộ lọc */}
+                    <BottomSheet ref={bottomSheet} height={270}>
                         <TouchableOpacity onPress={() => handleSelectRoom('Tất cả')}>
-                            <Text>Tất cả</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 20, marginRight: 20, marginTop: 10 }}>
+                                <View style={finalStyles.checkIconContainer}>
+                                    {currentRoom === 'Tất cả' && <Icon name="check" size={20} color="#667080" />}
+                                </View>
+                                <Text style={{ marginLeft: 10 }}>Tất cả</Text>
+                            </View>
                         </TouchableOpacity>
 
-                        {/* Danh sách các phòng */}
                         {Object.keys(roomNames).map((roomKey) => (
                             <TouchableOpacity key={roomKey} onPress={() => handleSelectRoom(roomKey)}>
-                                <Text>{roomNames[roomKey]}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 20, paddingTop: 20, borderTopWidth: 1, borderTopColor: '#DCDCDC', marginRight: 20, marginTop: 20 }}>
+                                    <View style={finalStyles.checkIconContainer}>
+                                        {currentRoom === roomNames[roomKey] && <Icon name="check" size={20} color="#667080" />}
+                                    </View>
+                                    <Text style={{ marginLeft: 10 }}>{roomNames[roomKey]}</Text>
+                                </View>
                             </TouchableOpacity>
                         ))}
                     </BottomSheet>
 
 
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 20 }}>
-                        <TouchableOpacity>
+                        <TouchableOpacity onPress={openCreateOrder}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 <Text>Thêm mới</Text>
                             </View>
                         </TouchableOpacity>
+                        <BottomSheet ref={bottomSheetCreate} height={screenHeight} draggable={false} showDragIcon={false} backdropClosesSheet={false}  sheetStyle={finalStyles.container_sheet}>
+                            {/* <View style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, marginBottom: 20 }}>
+                                <TouchableOpacity onPress={closeCreateOrder} style={{ paddingLeft: 20 }}>
+                                    <Icon name="arrow-back-ios" size={24} color="#667080" />
+                                </TouchableOpacity>
+                                <TouchableOpacity >
+                                    <Text>Tạo đơn</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={closeCreateOrder} style={{ paddingRight: 20 }}>
+                                    <Icon name="delete" size={24} color="#667080"/>
+                                </TouchableOpacity>
+                            </View> */}
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, marginBottom: 20 }}>
+                                <TouchableOpacity onPress={closeCreateOrder} style={{ paddingLeft: 20 }}>
+                                    <Icon name="arrow-back-ios" size={24} color="#667080" />
+                                </TouchableOpacity>
+
+                                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingRight: 40 }}>
+                                    <Text>Tạo đơn</Text>
+                                </View>
+                            </View>
+                            <ScrollView>
+                                <View>
+                                    <Text style={{ marginLeft: 20, marginBottom: 5 }}>Tên khách hàng</Text>
+                                    <View style={finalStyles.input_cus}>
+                                        <TextInput style={finalStyles.input} />
+                                    </View>
+                                    <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Phòng</Text>
+                                    <View style={finalStyles.input_cus}>
+                                        <View style={finalStyles.pickerContainer}>
+                                            <Dropdown
+                                                style={finalStyles.dropdown}
+                                                placeholderStyle={finalStyles.placeholderStyle}
+                                                selectedTextStyle={finalStyles.selectedTextStyle}
+                                                inputSearchStyle={finalStyles.inputSearchStyle}
+                                                itemTextStyle={finalStyles.inputStyleDD}
+                                                iconStyle={finalStyles.iconStyle}
+                                                data={roomDropdownData}
+                                                placeholder="Chọn phòng"
+                                                maxHeight={300}
+                                                labelField="label"
+                                                valueField="value"
+                                                onChange={handleRoomChange}
+                                            />
+                                        </View>
+                                    </View>
+
+                                    <View>
+                                        <TouchableOpacity onPress={openFoodMenu}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
+                                                <Text style={{ color: '#007AFF' }}>Thêm</Text>
+                                            </View>
+                                        </TouchableOpacity>
+                                    </View>
+                                    <BottomSheet ref={bottomSheetFood} height={screenHeight} draggable={false} showDragIcon={false} backdropClosesSheet={false}>
+                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, marginBottom: 20 }}>
+                                            <TouchableOpacity onPress={closeFoodMenu} style={{ paddingLeft: 20 }}>
+                                                <Icon name="arrow-back-ios" size={24} color="#667080" />
+                                            </TouchableOpacity>
+
+                                            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingRight: 40 }}>
+                                                <Text>Món ăn</Text>
+                                            </View>
+                                        </View>
+                                        <ScrollView>
+                                            <View>
+                                                <View style={{ flexDirection: 'row', marginTop: 'auto', marginBottom: 20 }}>
+                                                    <SearchBar
+                                                        style={{ width: "auto", height: 50, marginLeft: 20 }}
+                                                        fontColor="#ffffff"
+                                                        iconColor="#ffffff"
+                                                        shadowColor="#282828"
+                                                        cancelIconColor="#ffffff"
+                                                        backgroundColor="#ffffff"
+                                                        placeholder="Tìm kiếm"
+                                                        value={searchQuery}
+                                                        onChangeText={setSearchQuery}
+                                                        clearIconComponent={() => null}
+                                                    />
+                                                </View>
+                                                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: 20 }}>
+                                                    <TouchableOpacity onPress={() => handleSelectCategory('')} style={[finalStyles.categoryButton, selectedCategory === '' && finalStyles.categoryButtonSelected]}>
+                                                        <Text style={[finalStyles.categoryButtonText, selectedCategory === '' && finalStyles.categoryButtonTextSelected]}>Tất cả</Text>
+                                                    </TouchableOpacity>
+                                                    {Object.keys(dataCategories).map((key) => (
+                                                        <TouchableOpacity key={key} onPress={() => handleSelectCategory(key)} style={[finalStyles.categoryButton, selectedCategory === key && finalStyles.categoryButtonSelected]}>
+                                                            <Text style={[finalStyles.categoryButtonText, selectedCategory === key && finalStyles.categoryButtonTextSelected]}>{dataCategories[key].Name}</Text>
+                                                        </TouchableOpacity>
+                                                    ))}
+                                                </ScrollView>
+                                            </View>
+                                        </ScrollView>
+                                    </BottomSheet>
+                                </View>
+                            </ScrollView>
+                        </BottomSheet>
                     </View>
                 </View>
                 <ScrollView

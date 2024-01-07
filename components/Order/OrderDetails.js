@@ -20,66 +20,53 @@ export default function OrderDetails({ route }) {
     const [orderData, setOrderData] = useState([]);
     const [drinkData, setDrinkData] = useState([]);
     const [imageUrls, setImageUrls] = useState({});
+    const [imagesFetched, setImagesFetched] = useState(false);
     useEffect(() => {
-        // Sử dụng `onValue` để theo dõi thay đổi trong dữ liệu Firebase
-        const ordersRef = ref(database, 'Orders');
-        const drinksRef = ref(database, 'Drink');
-        // Đăng ký sự kiện theo dõi thay đổi dữ liệu Orders
-        onValue(ordersRef, (snapshot) => {
-            const ordersData = snapshot.val();
-            // Kiểm tra nếu có dữ liệu
-            if (ordersData) {
-                setOrderData(ordersData[IDOrder].OrderDetails);
+        const orderDetailsRef = ref(database, 'Orders/' + IDOrder + '/OrderDetails');
+        
+        const unsubscribeOrderDetails = onValue(orderDetailsRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                setOrderData(data);
+                fetchImagesFromStorage(data);
             }
         });
-        onValue(drinksRef, (snapshot) => {
-            const drinksData = snapshot.val();
-            // Kiểm tra nếu có dữ liệu
-            if (drinksData) {
-                setDrinkData(drinksData);
-            }
-        });
+
         return () => {
-            off(ordersRef);
-            off(drinksRef);
-        }
+            unsubscribeOrderDetails();
+        };
     }, []);
-    const fetchImagesFromStorage = async () => {
-        try {
-            const orderDetails = orderData;
-            let urls = {};
+    const fetchImagesFromStorage = async (orderDetails) => {
+        let urls = {};
+        for (let billKey in orderDetails) {
+            const bill = orderDetails[billKey];
+            for (let orderKey in bill) {
+                const order = bill[orderKey];
 
-            for (let billKey in orderDetails) {
-                const bill = orderDetails[billKey];
-                for (let orderKey in bill) {
-                    const order = bill[orderKey];
+                const ids = {
+                    IdDrink: "Drinks",
+                    IdDrink2ND: "Drink2ND",
+                    IdFood: "Foods",
+                    IdGame: "Games",
+                    IdTopping: "Toppings",
+                    IdFoodBonus: "FoodBonus",
+                };
 
-                    const ids = {
-                        IdDrink: "Drinks",
-                        IdDrink2ND: "Drink2ND",
-                        IdFood: "Foods",
-                        IdGame: "Games",
-                        IdTopping: "Topping",
-                        IdFoodBonus: "FoodBonus",
-                    };
-
-                    for (let id in ids) {
-                        if (order[id]) {
-                            const imageUrl = await fetchImageFromStorage(
-                                `${ids[id]}/${order[id]}.jpg`
-                            );
+                for (let id in ids) {
+                    if (order[id]) {
+                        const imageRef = storageRef(storage, `${ids[id]}/${order[id]}.jpg`);
+                        try {
+                            const imageUrl = await getDownloadURL(imageRef);
                             urls[order[id]] = imageUrl;
+                        } catch (error) {
+                            console.error("Error fetching image:", error);
                         }
                     }
                 }
             }
-
-            setImageUrls(urls);
-        } catch (error) {
-            console.error("Error fetching images:", error);
         }
+        setImageUrls(urls);
     };
-    console.log(imageUrls)
     useEffect(() => {
         fetchImagesFromStorage();
     }, [orderData]);
