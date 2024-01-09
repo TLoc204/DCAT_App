@@ -11,45 +11,45 @@ const { width, height } = Dimensions.get('window');
 import { getStorage, ref as storageRef, listAll, getDownloadURL } from "firebase/storage";
 
 export default function Order() {
-  const storage = getStorage(); // Khởi tạo đối tượng storage
+  // const storage = getStorage(); // Khởi tạo đối tượng storage
 
-  const listAllItemsInFolder = async (folderPath) => {
-    const folderRef = storageRef(storage, folderPath);
-    try {
-      const items = await listAll(folderRef);
-      const itemDetails = [];
+  // const listAllItemsInFolder = async (folderPath) => {
+  //   const folderRef = storageRef(storage, folderPath);
+  //   try {
+  //     const items = await listAll(folderRef);
+  //     const itemDetails = [];
 
-      for (const item of items.items) {
-        const itemUrl = await getDownloadURL(item);
-        itemDetails.push({ name: item.name, url: itemUrl });
-      }
+  //     for (const item of items.items) {
+  //       const itemUrl = await getDownloadURL(item);
+  //       itemDetails.push({ name: item.name, url: itemUrl });
+  //     }
 
-      return itemDetails;
-    } catch (error) {
-      console.error("Error listing items in folder:", error);
-      return [];
-    }
-  };
+  //     return itemDetails;
+  //   } catch (error) {
+  //     console.error("Error listing items in folder:", error);
+  //     return [];
+  //   }
+  // };
 
-  const fetchAllItems = async () => {
-    try {
-      const folders = ["Topping", "Foods", "FoodBonus", "Drinks", "Drink2ND", "Games"];
-      const allItems = {};
+  // const fetchAllItems = async () => {
+  //   try {
+  //     const folders = ["Topping", "Foods", "FoodBonus", "Drinks", "Drink2ND", "Games"];
+  //     const allItems = {};
 
-      for (const folder of folders) {
-        const items = await listAllItemsInFolder(folder);
-        allItems[folder] = items;
-      }
+  //     for (const folder of folders) {
+  //       const items = await listAllItemsInFolder(folder);
+  //       allItems[folder] = items;
+  //     }
 
-      console.log("All items:", allItems);
-      // Bạn có thể xử lý tất cả các item ở đây, hoặc lưu chúng vào đối tượng để sử dụng sau này.
-    } catch (error) {
-      console.error("Error fetching all items:", error);
-    }
-  };
+  //     console.log("All items:", allItems);
+  //     // Bạn có thể xử lý tất cả các item ở đây, hoặc lưu chúng vào đối tượng để sử dụng sau này.
+  //   } catch (error) {
+  //     console.error("Error fetching all items:", error);
+  //   }
+  // };
 
-  useEffect(() => {
-    fetchAllItems();
-  }, []);
+  // useEffect(() => {
+  //   fetchAllItems();
+  // }, []);
 
 }
