@@ -442,28 +442,28 @@ export default function Order() {
         },
 
         listContainer: {
-            // Adjust padding and alignment as necessary
+            
             paddingHorizontal: 10,
             alignItems: 'flex-start',
             marginTop:10
         },
         gridItem: {
-            // Define width based on your screen width and desired number of columns
+            
             width: (Dimensions.get('window').width / 2) - 30,
             margin: 10,
-            // Your other styles for the item, such as shadows, borders, etc.
+            
         },
         image: {
-            // Styles for the image
+            
             width: '100%',
-            height: 150, // Or whatever height you want
-            borderRadius: 10, // If you want rounded corners
+            height: 150,
+            borderRadius: 10, 
         },
         itemName: {
-            // Styles for the item name text
+            
         },
         itemPrice: {
-            // Styles for the item price text
+            
         },
     });
     const webStyles = StyleSheet.create({
@@ -665,12 +665,6 @@ export default function Order() {
                                                     contentContainerStyle={finalStyles.listContainer}
                                                 />
                                             </ScrollView>
-
-
-
-
-
-
                                         </View>
                                     </BottomSheet>
                                 </View>
