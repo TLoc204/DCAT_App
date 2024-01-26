@@ -44,6 +44,7 @@ export default function Order() {
     const [selectedCategory, setSelectedCategory] = useState('');
     const [imageUrls, setImageUrls] = useState({});
     const [imageAll, setImageAll] = useState({});
+    const [imageAllFolder, setImageAllFolder] = useState({});
     const screenHeight = Dimensions.get('window').height; // Lấy chiều cao màn hình
     useEffect(() => {
         const ordersRef = ref(database, 'Orders');
@@ -231,6 +232,34 @@ export default function Order() {
         }
     };
 
+    // const getFilteredData = () => {
+    //     switch (selectedCategory) {
+    //         case 'C1':
+    //             return Object.entries(dataDrinks);
+    //         case 'C2':
+    //             return Object.entries(dataDrink2ND);
+    //         case 'C3':
+    //             return Object.entries(dataFoods);
+    //         case 'C4':
+    //             return Object.entries(dataToppings);
+    //         case 'C5':
+    //             return Object.entries(dataFoodBonus);
+    //         case 'C6':
+    //             return Object.entries(dataGames);
+    //         case '':
+    //         default:
+    //             // Concatenate all items for 'all' filter
+    //             return [
+    //                 ...Object.entries(dataDrinks),
+    //                 ...Object.entries(dataDrink2ND),
+    //                 ...Object.entries(dataFoods),
+    //                 ...Object.entries(dataToppings),
+    //                 ...Object.entries(dataFoodBonus),
+    //                 ...Object.entries(dataGames),
+    //             ];
+    //     }
+    // };
+
     //------------------------------------------------ Lấy ảnh firebase--------------------------------------------
     // const fetchImagesFromStorage = async () => {
     //     try {
@@ -242,7 +271,7 @@ export default function Order() {
     //             for (let orderKey in bill) {
     //                 const order = bill[orderKey];
 
-    //                 const ids = {
+    //                 const ids = {    
     //                     IdDrink: "Drinks",
     //                     IdDrink2ND: "Drink2ND",
     //                     IdFood: "Foods",
@@ -274,34 +303,73 @@ export default function Order() {
     //         console.error("Error fetching images:", error);
     //     }
     // };
-    const listAllItemsInFolder = async () => {
+
+
+    // const listAllItemsInFolder = async () => {
+    //     try {
+    //         const items = await listAll(storageRef(storage));
+    //         const itemDetails = [];
+
+    //         for (const item of items.items) {
+    //             const itemUrl = await getDownloadURL(item);
+    //             console.log(itemUrl);
+    //             itemDetails.push({ name: item.name, url: itemUrl });
+    //         }
+    //         return itemDetails;
+    //     } catch (error) {
+    //         console.error("Error listing items:", error);
+    //         return [];
+    //     }
+    // };
+
+    // const fetchAllItems = async () => {
+    //     try {
+    //         const allItems = await listAllItemsInFolder();
+    //         setImageAll(allItems);
+    //         // Bạn có thể xử lý tất cả các item ở đây hoặc lưu chúng vào đối tượng để sử dụng sau này.
+    //     } catch (error) {
+    //         console.error("Error fetching all items:", error);
+    //     }
+    // };
+
+
+    // useEffect(() => {
+    //     fetchAllItems();
+    // }, []);
+
+    const listAllItemsInFolder = async (folderPath) => {
+        const folderRef = storageRef(storage, folderPath);
         try {
-            const items = await listAll(storageRef(storage));
+            const items = await listAll(folderRef);
             const itemDetails = [];
-    
+
             for (const item of items.items) {
                 const itemUrl = await getDownloadURL(item);
                 itemDetails.push({ name: item.name, url: itemUrl });
             }
-    
+
             return itemDetails;
         } catch (error) {
-            console.error("Error listing items:", error);
+            console.error("Error listing items in folder:", error);
             return [];
         }
     };
-    
     const fetchAllItems = async () => {
         try {
-            const allItems = await listAllItemsInFolder();
-            setImageAll(allItems);
-            // Bạn có thể xử lý tất cả các item ở đây hoặc lưu chúng vào đối tượng để sử dụng sau này.
+            const folders = ["Toppings", "Foods", "FoodBonus", "Drinks", "Drink2ND", "Games"];
+            const allItems = {};
+
+            for (const folder of folders) {
+                const items = await listAllItemsInFolder(folder);
+                allItems[folder] = items;
+                setImageAllFolder((prevItems) => (Array.isArray(prevItems) ? [...prevItems, ...items] : [...items]));
+            }
+            setImageAll(allItems)
+            // Bạn có thể xử lý tất cả các item ở đây, hoặc lưu chúng vào đối tượng để sử dụng sau này.
         } catch (error) {
             console.error("Error fetching all items:", error);
         }
     };
-    
-
     useEffect(() => {
         fetchAllItems();
     }, []);
@@ -442,28 +510,28 @@ export default function Order() {
         },
 
         listContainer: {
-            
+
             paddingHorizontal: 10,
             alignItems: 'flex-start',
-            marginTop:10
+            marginTop: 10
         },
         gridItem: {
-            
+
             width: (Dimensions.get('window').width / 2) - 30,
             margin: 10,
-            
+
         },
         image: {
-            
+
             width: '100%',
             height: 150,
-            borderRadius: 10, 
+            borderRadius: 10,
         },
         itemName: {
-            
+
         },
         itemPrice: {
-            
+
         },
     });
     const webStyles = StyleSheet.create({
@@ -480,7 +548,6 @@ export default function Order() {
         if (query !== '') {
             setSearchQuery(query);
         }
-        // Nếu bạn muốn xóa tìm kiếm khi nhấn "X", thêm else { setSearchQuery(''); }
     };
     useEffect(() => {
         // Chuyển đổi dataRoom thành mảng cho Dropdown
@@ -638,33 +705,32 @@ export default function Order() {
                                                     </TouchableOpacity>
                                                 ))}
                                             </ScrollView>
-                                            <ScrollView>
-                                                <FlatList
-                                                    data={getFilteredData()}
-                                                    renderItem={({ item }) => {
-                                                        const [key, data] = item;
-                                                        const name = data.Name;
+                                            <FlatList
+                                                data={getFilteredData()}
+                                                renderItem={({ item }) => {
+                                                    const [key, data] = item;
+                                                    const name = data.Name;
 
-                                                        // Check if imageAll is defined and contains data for the selected category
-                                                        const imageArray = imageAll || [];
+                                                    // Check if imageAll is defined and contains data for the selected category
+                                                    const imageArray = imageAllFolder || [];
 
-                                                        // Find the URL for the specific key or provide a default URL if not found
-                                                        const url = imageArray.find((item) => item.name === `${key}.jpg`).url;
+                                                    // Find the URL for the specific key or provide a default URL if not found
+                                                    const url = imageArray.find((item) => item.name === `${key}.jpg`).url;
 
 
-                                                        return (
-                                                            <TouchableOpacity style={finalStyles.gridItem}>
-                                                                <Image source={{ uri: url }} style={finalStyles.image} />
-                                                                <Text style={finalStyles.itemName}>{name}</Text>
-                                                                <Text style={finalStyles.itemPrice}>{`Giá: ${data.Price.toLocaleString('vi-VN')}`}</Text>
-                                                            </TouchableOpacity>
-                                                        );
-                                                    }}
-                                                    numColumns={2}
-                                                    keyExtractor={(item) => item[0]}
-                                                    contentContainerStyle={finalStyles.listContainer}
-                                                />
-                                            </ScrollView>
+                                                    return (
+                                                        <TouchableOpacity style={finalStyles.gridItem}>
+                                                            <Image source={{ uri: url }} style={finalStyles.image} />
+                                                            <Text style={finalStyles.itemName}>{name}</Text>
+                                                            <Text style={finalStyles.itemPrice}>{`Giá: ${data.Price.toLocaleString('vi-VN')}`}</Text>
+                                                        </TouchableOpacity>
+                                                    );
+                                                }}
+                                                numColumns={2}
+                                                keyExtractor={(item) => item[0]}
+                                                contentContainerStyle={finalStyles.listContainer}
+                                            />
+
                                         </View>
                                     </BottomSheet>
                                 </View>
