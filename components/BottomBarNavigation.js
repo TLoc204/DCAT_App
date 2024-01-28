@@ -1,89 +1,79 @@
 import React, { useState, useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { Keyboard } from 'react-native';
+import { Keyboard, View , } from 'react-native';
 import Home from './Home/Home';
-import Order from './Order/Order';
-import { Provider as PaperProvider, Text } from 'react-native-paper';
-import { NavigationContainer } from '@react-navigation/native';
-import BottomFabBar from './bottombar/components/bottom.tab';
-
+import OrderScreen from './Order/OrderScreen';
+import { NavigationContainer, useIsFocused } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 const Tab = createBottomTabNavigator();
 
-const tabBarIcon = (name) => ({ focused, color, size }) => (
-  <Ionicons name={name} size={size} color={focused ? 'black' : 'gray'} />
-);
-const tabBarName = (name) => ({ focused, color, size }) => (
-  <Text name={name} color={focused ? 'black' : 'gray'} />
-);
 const BottomNavigationBar = () => {
+  const isFocused = useIsFocused();
+  const navigation = useNavigation();
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-
+  const [isFoodOrderRoute, setIsFoodOrderRoute] = useState(false);
   useEffect(() => {
+    const getActiveRouteName = (state) => {
+      return state.routes[state.index]?.name;
+    };
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
       setIsKeyboardVisible(true);
     });
     const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
       setIsKeyboardVisible(false);
     });
-
+    const unsubscribe = navigation.addListener('state', () => {
+      const currentRouteName = getActiveRouteName(navigation.getState());
+      // Cập nhật trạng thái nếu route hiện tại là 'FoodOrder'
+      if (currentRouteName === 'FoodOrder') setIsFoodOrderRoute(true);
+      else setIsFoodOrderRoute(false);
+    });
     return () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
+      unsubscribe.remove();
     };
   }, []);
 
   return (
-    <PaperProvider>
-      <NavigationContainer independent={true}>
+    <NavigationContainer independent={true}>
+      <View style={{ flex: 1 }}>
         <Tab.Navigator
           screenOptions={({ route }) => ({
-            tabBarIcon: tabBarIcon(`${route.name === 'Home' ? 'home-outline' : 'cart-outline'}`),
-            tabBarLabel: tabBarName(`${route.name === 'Home' ? 'Home' : 'Order'}`),
+            tabBarIcon: ({ focused, color, size }) => {
+              let iconName;
+              if (route.name === 'Home') {
+                iconName = focused ? 'home' : 'home-outline';
+              } else if (route.name === 'OrderScreen') {
+                iconName = focused ? 'cart' : 'cart-outline';
+              }
+              return <Ionicons name={iconName} size={size} color={color} />;
+            },
             
-            tabBarActiveBackgroundColor: 'white',
-            tabBarInactiveBackgroundColor: 'black',
-            headerShown: false,
-            tabBarLabelStyle: {
-              color: 'black',
-              opacity: isKeyboardVisible ? 0 : 1,
+            tabBarActiveTintColor: 'black',
+            tabBarInactiveTintColor: 'gray',
+            tabBarHideOnKeyboard: true,
+            tabBarStyle: {
+              position: isKeyboardVisible ||isFoodOrderRoute ? 'absolute' : 'relative',
+              bottom: isKeyboardVisible ||isFoodOrderRoute ? 0 : null,
+              display: isFoodOrderRoute || isKeyboardVisible? 'none':'flex'
             },
           })}
-
-          tabBar={(props) => (
-            <BottomFabBar
-              mode={'default'}
-              focusedButtonStyle={{
-                shadowColor: '#000',
-                shadowOffset: {
-                  width: 0,
-                  height: 7,
-                },
-                shadowOpacity: 0.41,
-                shadowRadius: 9.11,
-                elevation: 14,
-              }}
-              bottomBarContainerStyle={{
-                position: 'absolute',
-                bottom: isKeyboardVisible ? -100 : 0,
-                left: 0,
-                right: 0,
-              }}
-              {...props}
-            />
-          )}
         >
           <Tab.Screen
             name="Home"
             component={Home}
+            options={{ headerShown: false, tabBarLabel: 'Trang chủ', }}
           />
           <Tab.Screen
-            name="Order"
-            component={Order}
+            name="OrderScreen"
+            component={OrderScreen}
+            options={{ headerShown: false, tabBarLabel: 'Hóa đơn' }}
           />
         </Tab.Navigator>
-      </NavigationContainer>
-    </PaperProvider>
+      </View>
+    </NavigationContainer>
   );
 };
 
