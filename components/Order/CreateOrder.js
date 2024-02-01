@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useState, useRef, useContext } from "react";
-import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, AsyncStorage, Alert, SafeAreaView, ScrollView, ImageBackground, TextInput, FlatList } from "react-native";
+import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, AsyncStorage, Alert, SafeAreaView, ScrollView, ImageBackground, TextInput, FlatList, SectionList } from "react-native";
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import { Checkbox, DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
@@ -9,6 +9,9 @@ import { BottomSheet } from 'react-native-sheet';
 import SearchBar from "react-native-dynamic-search-bar";
 import { Dropdown } from 'react-native-element-dropdown';
 import { getStorage, ref as storageRef, listAll, getDownloadURL } from "firebase/storage";
+import { useImageAllFolder } from "./FoodOrder"
+import IconAnt from 'react-native-vector-icons/AntDesign';
+import IconFontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 // Lấy kích thước màn hình để hỗ trợ responsive
 const { width, height } = Dimensions.get('window');
 
@@ -37,7 +40,21 @@ export default function OrderDetails({ route }) {
     const [selectedCategory, setSelectedCategory] = useState('');
     const [imageUrls, setImageUrls] = useState({});
     const [imageAll, setImageAll] = useState({});
+    const { imageAllFolder } = useImageAllFolder();
     const screenHeight = Dimensions.get('window').height; // Lấy chiều cao màn hình
+    const foods = route.params?.Foods || {};
+    const [discount, setDiscount] = useState({});
+    const [cartItems, setCartItems] = useState([]);
+    useEffect(() => {
+        // Chỉ cập nhật cartItems nếu foods thực sự thay đổi.
+        const currentFoods = JSON.stringify(foods);
+        const prevFoods = JSON.stringify(cartItems);
+
+        if (currentFoods !== prevFoods) {
+            setCartItems(foods ? foods : []);
+        }
+    }, [foods]); // Chỉ re-run khi foods thay đổi.
+
     useEffect(() => {
         const ordersRef = ref(database, 'Orders');
         const roomRef = ref(database, 'Rooms');
@@ -128,7 +145,6 @@ export default function OrderDetails({ route }) {
     }, []);
     //-----------------------------------------------------------Room-----------------------------------------------------------------
     const roomNames = {};
-
     // Duyệt qua dataTables và lưu tên của các bàn vào tableNames
     Object.keys(dataRoom).forEach((roomKey) => {
         const room = dataRoom[roomKey];
@@ -149,6 +165,88 @@ export default function OrderDetails({ route }) {
     const handleRoomChange = (selectedValue) => {
         setSelectedRoom(selectedValue);
     };
+
+    const addToCart = (key, name, quantity, price) => {
+        setCartItems((prevCartItems) => {
+            const newCartItems = { ...prevCartItems };
+
+            if (newCartItems[key]) {
+                newCartItems[key].quantity += quantity;
+                newCartItems[key].totalPrice = newCartItems[key].price * newCartItems[key].quantity;
+
+                // Cập nhật giảm giá nếu có
+                if (newCartItems[key].discount !== undefined) {
+                    newCartItems[key].discountPrice = calculateTotalPrice(newCartItems[key]);
+                }
+            } else {
+                newCartItems[key] = { name, quantity, price, totalPrice: price * quantity };
+            }
+
+            return newCartItems;
+        });
+    };
+
+
+    const removeFromCart = (key) => {
+        setCartItems((prevCartItems) => {
+            const newCartItems = { ...prevCartItems };
+            if (newCartItems[key]) {
+                if (newCartItems[key].quantity > 1) {
+                    newCartItems[key].quantity -= 1;
+                    newCartItems[key].totalPrice = newCartItems[key].price * newCartItems[key].quantity;
+
+                    // Cập nhật giảm giá nếu có
+                    if (newCartItems[key].discount !== undefined) {
+                        newCartItems[key].discountPrice = calculateTotalPrice(newCartItems[key]);
+                    }
+                } else {
+                    delete newCartItems[key];
+                }
+            }
+            return newCartItems;
+        });
+    };
+    const updateDiscount = (key, discountValue) => {
+        setCartItems((prevCartItems) => {
+            const newCartItems = { ...prevCartItems };
+
+            if (newCartItems[key]) {
+                const price = newCartItems[key].price; // Lấy giá của món hàng
+                newCartItems[key].discount = discountValue; // Cập nhật giảm giá
+
+                // Tính toán và cập nhật discountPrice
+                newCartItems[key].discountPrice = calculateTotalPrice(newCartItems[key]);
+            }
+
+            return newCartItems;
+        });
+    };
+
+    const calculateTotalPrice = (item) => {
+        const price = item.price || 0;
+        const quantity = item.quantity || 0;
+        const discount = item.discount || 0;
+
+        // Tính giá trị sau giảm giá
+        const discountedPrice = price * (1 - discount / 100);
+
+        return discountedPrice * quantity;
+    };
+
+    const totalItemsInCart = Object.values(cartItems).reduce(
+        (total, item) => total + item.quantity,
+        0
+    );
+
+    const totalCartPrice = Object.values(cartItems).reduce(
+        (total, item) => total + item.totalPrice,
+        0
+    );
+    const totalCartDiscountPrice = Object.values(cartItems).reduce(
+        (total, item) => total + (item.totalPrice - (item.discountPrice || 0)),
+        0
+    );
+
     //-----------------------------------------------------------End Room-------------------------------------------------------------
     const handleSubmit = async () => {
 
@@ -163,10 +261,10 @@ export default function OrderDetails({ route }) {
     const mobileStyles = StyleSheet.create({
         container_order: {
             flex: 1,
-            
 
-            paddingTop:20,
-            
+
+            paddingTop: 20,
+
         },
         main_order: {
             flex: 1,
@@ -246,34 +344,27 @@ export default function OrderDetails({ route }) {
             fontSize: 16
         },
         //------------------------------- Css Món Ăn----------------------------------
-    
 
         listContainer: {
-
-            paddingHorizontal: 10,
+            paddingHorizontal: 0,
             alignItems: 'flex-start',
-            marginTop: 10
         },
-        gridTotal:{
-            width:'100%',
-            flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 
-            
+        gridTotal: {
+            width: '100%',
+            height: 'auto'
         },
         // CSS cho gridItem
         gridItem: {
-            width: Dimensions.get('window').width - 50, // Đặt một giá trị cố định và trừ đi tổng marginLeft và marginRight
-            marginVertical: 10,
-            display: 'flex',
-            paddingBottom: 20,
+            width: Dimensions.get('window').width - 40,
+
+            paddingTop: 10,
+            paddingBottom: 10,
             flexDirection: 'row',
-            alignItems: 'center',
-            marginLeft: 10,
-            marginRight: 50,
-            marginTop: 10,
+            marginLeft: 5,
             borderBottomWidth: 1,
             borderBottomColor: 'gray',
-          },
-          
+        },
+
         // CSS cho ảnh
         image: {
             width: 80,
@@ -283,19 +374,39 @@ export default function OrderDetails({ route }) {
 
         // CSS cho phần view bên phải của ảnh
         itemDetails: {
-            marginLeft: 10,
+            marginLeft: 20,
+            width: '80%',
+            justifyContent: 'center',
+            height: 80,
         },
 
         // CSS cho tên sản phẩm
         itemName: {
-            // Thêm kiểu CSS cho tên sản phẩm theo ý bạn
+
         },
 
         // CSS cho giá sản phẩm
         itemPrice: {
-            // Thêm kiểu CSS cho giá sản phẩm theo ý bạn
+            color: '#667080',
         },
-
+        orderlist: {
+            flex: 1,
+            backgroundColor: "#ffffff",
+            padding: 10,
+            paddingLeft:10,
+            paddingTop:5,
+            paddingRight:10,
+            paddingBottom:10,
+            borderRadius: 10,
+            shadowColor: "#0000001A",
+            shadowOpacity: 0.1,
+            shadowOffset: {
+                width: 0,
+                height: 20
+            },
+            marginLeft: 20,
+            marginRight: 20,
+        }
     });
 
     const webStyles = StyleSheet.create({
@@ -307,7 +418,7 @@ export default function OrderDetails({ route }) {
     return (
         <SafeAreaView style={finalStyles.container_order}>
             <ScrollView>
-                <View>
+                <View style={{ marginBottom: '20%' }}>
                     <Text style={{ marginLeft: 20, marginBottom: 5 }}>Tên khách hàng</Text>
                     <View style={finalStyles.input_cus}>
                         <TextInput style={finalStyles.input} />
@@ -331,16 +442,188 @@ export default function OrderDetails({ route }) {
                             />
                         </View>
                     </View>
+                    <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Danh sách món</Text>
+                    <View style={finalStyles.orderlist}>
+                        <FlatList
+                            data={Object.entries(cartItems)}
+                            renderItem={({ item, index }) => {
+                                const [key, data] = item;
+                                const name = data.name;
+                                const price = data.price;
+                                const totalPrice = data.totalPrice;
+                                const discountPrice = data.discountPrice || '';
+                                const quantity = data.quantity;
 
-                    <View>
-                        <TouchableOpacity onPress={()=> navigation.navigate('FoodOrder')}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
-                                <Text style={{ color: '#007AFF' }}>Thêm</Text>
-                            </View>
-                        </TouchableOpacity>
+                                const imageArray = imageAllFolder || [];
+
+                                // Find the URL for the specific key or provide a default URL if not found
+                                const url = imageArray.find((item) => item.name === `${key.split('_')[0]}.jpg`).url;
+                                return (
+                                    <View style={[finalStyles.gridTotal]}>
+                                        <View
+                                            style={[
+                                                finalStyles.gridItem,
+                                                index === Object.entries(cartItems).length - 1
+                                                    ? { borderBottomWidth: 0 } // No border for the last item
+                                                    : { borderBottomWidth: 1, borderBottomColor: 'gray' },
+                                            ]}
+                                        >
+                                            <View style={{ width: '20%' }}>
+                                                <Image source={{ uri: url }} style={finalStyles.image} />
+                                            </View>
+                                            <View style={finalStyles.itemDetails}>
+                                                <Text style={finalStyles.itemName}>{name}</Text>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                    <Text>Giảm giá:</Text>
+                                                    {cartItems[key].discount !== undefined ? ( // Kiểm tra nếu có giá trị discount thì hiển thị nó
+                                                        <Text>{cartItems[key].discount}%</Text>
+                                                    ) : ( // Nếu không có giá trị discount thì cho phép người dùng nhập
+                                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                            <TextInput
+                                                                value={discount[key] || ''} // Use the discount value from the discount object
+                                                                inputMode="decimal"
+                                                                onChangeText={(text) => {
+                                                                    // Update the discount for the specific item in the discount object
+                                                                    setDiscount((prevDiscount) => ({
+                                                                        ...prevDiscount,
+                                                                        [key]: text,
+                                                                    }));
+                                                                }}
+                                                                onEndEditing={() => {
+                                                                    // Update the discount for the specific item in cartItems
+                                                                    updateDiscount(key, discount[key]);
+                                                                    // Clear the discount state for the specific item
+                                                                    setDiscount((prevDiscount) => ({
+                                                                        ...prevDiscount,
+                                                                        [key]: '',
+                                                                    }));
+                                                                }}
+                                                            />
+                                                            <Text>%</Text>
+                                                        </View>
+                                                    )}
+                                                </View>
+
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <View>
+                                                        {cartItems[key].discount !== 0 ? ( // Check if there is a discount for the item
+                                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                                <Text style={[finalStyles.itemPrice, { justifyContent: 'flex-start', textDecorationLine: 'line-through' }]}>{`${totalPrice.toLocaleString('vi-VN')}đ`}</Text>
+                                                                <Text style={[finalStyles.itemPrice, { marginLeft: 5 }]}>{`${(totalPrice - discountPrice).toLocaleString('vi-VN')}đ`}</Text>
+                                                            </View>
+                                                        ) : (
+                                                            <Text style={finalStyles.itemPrice}>{`${totalPrice.toLocaleString('vi-VN')}đ`}</Text>
+                                                        )}
+                                                    </View>
+                                                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 50 }}>
+                                                                
+                                                                <Text style={{ marginLeft: 8, marginRight: 8 }}>SL: {quantity}</Text>
+         
+                                                    </View>
+                                                </View>
+                                            </View>
+                                        </View>
+                                    </View>
+                                );
+                            }}
+                            numColumns={1}
+                            keyExtractor={(item) => item[0]}
+                            contentContainerStyle={[finalStyles.listContainer]}
+                        />
+                        <View>
+                            <TouchableOpacity style={{
+                                alignItems: "center",
+                                backgroundColor: "#667080",
+                                borderRadius: 15,
+                                paddingVertical: 15,
+                                marginHorizontal: 5,
+                            }} onPress={() => navigation.navigate('FoodOrder', { Foods: cartItems })}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
+                                    <Text style={{ color: '#ffffff' }}>Thêm món</Text>
+                                </View>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                    <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Chi tiết thanh toán</Text>
+                    <View style={finalStyles.orderlist}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'gray', }}>
+                            <Text style={{ justifyContent: 'flex-start' }}>Tổng</Text>
+                            <Text style={{ justifyContent: 'flex-end' }}>{totalCartPrice.toLocaleString('vi-VN')}đ</Text>
+                        </View>
+                        <View style={{ justifyContent: 'space-between', paddingBottom: 10, paddingTop: 10, borderBottomWidth: 1, borderBottomColor: 'gray', }}>
+                            <Text style={{ justifyContent: 'flex-start' }}>Các món khuyến mãi</Text>
+                            {Object.entries(cartItems).filter(([key, data]) => data.discount !== undefined && data.discount > 0).map(([key, data], index) => {
+                                if (data.discount !== undefined && data.discount > 0) { // Check if there is a discount
+                                    return (
+                                        <View key={key} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', justifyContent: 'flex-start' }}>
+                                                <Text>{`${index + 1}. `}</Text>
+                                                <Text style={{ justifyContent: 'flex-start' }}>{data.name}</Text>
+                                            </View>
+                                            <Text style={{ justifyContent: 'flex-end' }}>{`-${(data.discountPrice).toLocaleString('vi-VN')}đ`}</Text>
+                                        </View>
+                                    );
+                                } else {
+                                    return null; // Don't render if there's no discount
+                                }
+                            })}
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10, paddingTop: 10 }}>
+                            <Text style={{ justifyContent: 'flex-start', fontWeight: 'bold' }}>Tổng cộng</Text>
+                            <Text style={{ justifyContent: 'flex-end', fontWeight: 'bold' }}>{totalCartDiscountPrice.toLocaleString('vi-VN')}đ</Text>
+                        </View>
                     </View>
                 </View>
+
             </ScrollView>
+            <View style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                backgroundColor: 'white',
+                width: '100%',
+                height: 55,
+                alignItems: 'center',
+                shadowColor: "#0000000D",
+                shadowOpacity: 0.1,
+                shadowOffset: {
+                    width: 0,
+                    height: 20
+                },
+                shadowRadius: 35,
+                elevation: 35,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+            }}>
+                {/* Left Component */}
+                <TouchableOpacity style={{ justifyContent: 'flex-start' }}>
+                    <View style={{ flexDirection: 'row', position: 'relative', paddingLeft: 20 }}>
+                        {/* Add any content for the left component here */}
+                    </View>
+                </TouchableOpacity>
+
+                {/* Right Component */}
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={{ marginRight: 10 }}>{totalCartDiscountPrice.toLocaleString('vi-VN')}đ</Text>
+                    <TouchableOpacity
+                        style={{
+                            alignItems: "center",
+                            backgroundColor: "#667080",
+                            width: 120,
+                            height: 55,
+                            top: 0,
+                            justifyContent: 'center',
+                        }}
+
+                    >
+                        <Text style={{
+                            color: "#ffffff",
+                            fontSize: 14,
+                        }}>Tạo đơn</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
         </SafeAreaView>
     );
 
