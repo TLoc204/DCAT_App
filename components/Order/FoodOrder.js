@@ -14,11 +14,11 @@ import {
     ImageBackground,
     TextInput,
     FlatList,
+    Modal
 } from "react-native";
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import IconAnt from 'react-native-vector-icons/AntDesign';
 import IconFontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import Modal from 'react-native-modal';
 import { useNavigation } from '@react-navigation/native';
 import { Checkbox, DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
 import { FIREBASE_APP } from '../../FirebaseConfig';
@@ -43,7 +43,6 @@ import { useRoute } from '@react-navigation/native';
 import { BottomSheet } from 'react-native-sheet';
 import SearchBar from "react-native-dynamic-search-bar";
 import { Dropdown } from 'react-native-element-dropdown';
-
 export const ImageAllFolderContext = createContext();
 
 const theme = {
@@ -129,6 +128,7 @@ export default function OrderDetails({ route }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredOrders, setFilteredOrders] = useState([]);
     const bottomSheetFood = useRef(null);
+    const bottomSheetFoodItem = useRef(null);
     const [orderCountByRoom, setOrderCountByRoom] = useState({});
     const [currentRoom, setCurrentRoom] = useState('Tất cả');
     const [selectedRoom, setSelectedRoom] = useState(null);
@@ -136,9 +136,23 @@ export default function OrderDetails({ route }) {
     const [imageUrls, setImageUrls] = useState({});
     const [imageAll, setImageAll] = useState({});
     const { imageAllFolder } = useImageAllFolder();
-    const [cartItems, setCartItems] = useState({});
+    const [showPlusIcons, setShowPlusIcons] = useState({});
+    const foods = route.params?.Foods || {};
+    const [discount, setDiscount] = useState({});
+    const [cartItems, setCartItems] = useState([]);
+    useEffect(() => {
+        // Chỉ cập nhật cartItems nếu foods thực sự thay đổi.
+        const currentFoods = JSON.stringify(foods);
+        const prevFoods = JSON.stringify(cartItems);
+
+        if (currentFoods !== prevFoods) {
+            setCartItems(foods ? foods : []);
+        }
+    }, [foods]); // Chỉ re-run khi foods thay đổi.
+    const [bottomSheetData, setBottomSheetData] = useState({});
     const screenHeight = Dimensions.get('window').height; // Lấy chiều cao màn hình
     const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
+    const [initialDataLoaded, setInitialDataLoaded] = useState(false);
     useEffect(() => {
         const ordersRef = ref(database, 'Orders');
         const roomRef = ref(database, 'Rooms');
@@ -212,7 +226,7 @@ export default function OrderDetails({ route }) {
                 setDataToppings(toppingData);
             }
         });
-
+        setInitialDataLoaded(true);
         return () => {
             unsubscribeOrders();
             unsubscribeRooms();
@@ -230,7 +244,6 @@ export default function OrderDetails({ route }) {
     const handleSelectCategory = (key) => {
         setSelectedCategory(key);
     };
-
     const getFilteredData = () => {
         switch (selectedCategory) {
             case 'C1':
@@ -257,36 +270,234 @@ export default function OrderDetails({ route }) {
                 ];
         }
     };
-
-    const addToCart = (key, name, quantity, price) => {
-        setCartItems((prevCartItems) => {
-            const newCartItems = { ...prevCartItems };
-
-            if (newCartItems[key]) {
-                newCartItems[key].quantity += quantity;
-                newCartItems[key].totalPrice += price * quantity;
-            } else {
-                newCartItems[key] = { name, quantity, price, totalPrice: price * quantity };
-            }
-
-            return newCartItems;
-        });
+    useEffect(() => {
+        if (initialDataLoaded) {
+            setFilteredOrders(getFilteredData());
+        }
+    }, [initialDataLoaded, searchQuery, selectedCategory]);
+    const addToCart = () => {
+        if (bottomSheetData) {
+            setCartItems((prevCartItems) => {
+                const key = Object.keys(bottomSheetData)[0];
+                const currentItem = Object.values(bottomSheetData)[0];
+    
+                if (currentItem) {
+                    const newCartItems = { ...prevCartItems };
+    
+                    // Lọc các mục có cùng key với key ban đầu
+                    const filteredItems = Object.values(newCartItems).filter(
+                        (item) => item.key.startsWith(key)
+                    );
+    
+                    if (filteredItems.length > 0) {
+                        // Kiểm tra trùng discount
+                        const existingItem = filteredItems.find(
+                            (item) => item.discount === currentItem.discount
+                        );
+    
+                        if (existingItem) {
+                            // Trùng key và discount, tăng quantity và cộng tổng giá trị
+                            newCartItems[existingItem.key].quantity += currentItem.quantity;
+                            newCartItems[existingItem.key].totalPrice += currentItem.price * currentItem.quantity;
+                        } else {
+                            // Trùng key, nhưng khác discount, thêm số index vào key
+                            const lastIndex = filteredItems.length + 1;
+                            const newKey = `${key}_${lastIndex}`;
+                            newCartItems[newKey] = {
+                                ...currentItem,
+                                key: newKey,
+                                totalPrice: currentItem.price * currentItem.quantity,
+                            };
+                        }
+                    } else {
+                        // Không có mục nào cùng key, tạo mục mới
+                        const newKey = key;
+                        newCartItems[newKey] = {
+                            ...currentItem,
+                            key: newKey,
+                            totalPrice: currentItem.price * currentItem.quantity,
+                        };
+                    }
+    
+                    return newCartItems;
+                } else {
+                    // Xử lý khi currentItem không tồn tại (hiển thị thông báo lỗi hoặc thực hiện hành động khác)
+                    return prevCartItems;
+                }
+            });
+        } else {
+            // Xử lý khi bottomSheetData không tồn tại
+        }
+        setIsBottomSheetVisible(false);
     };
+    
+    const addToCartSheet = (customKey, customDiscount) => {
+        if (bottomSheetData) {
+            setCartItems((prevCartItems) => {
+                const key = customKey;
+                const discount = customDiscount;
+                const currentItem = Object.values(cartItems)[0]; // Lấy currentItem từ cartItems
+        
+                if (currentItem) {
+                    const newCartItems = { ...prevCartItems };
+        
+                    // Kiểm tra xem có mục nào trong cartItems có cùng key và discount không
+                    const existingCartItem = Object.values(newCartItems).find(
+                        (item) => item.key === key && item.discount === discount
+                    );
+        
+                    if (existingCartItem) {
+                        // Nếu đã tồn tại mục có cùng key và discount, cộng thêm quantity và tính lại totalPrice
+                        newCartItems[existingCartItem.key].quantity += 1;
+                        newCartItems[existingCartItem.key].totalPrice = newCartItems[existingCartItem.key].price * newCartItems[existingCartItem.key].quantity;
+                        newCartItems[existingCartItem.key].discountPrice = (newCartItems[existingCartItem.key].price * newCartItems[existingCartItem.key].quantity) * (newCartItems[existingCartItem.key].discount / 100);
+                    } else {
+                        const lastIndex = Object.keys(newCartItems).length + 1;
+                        const newKey = `${key}_${lastIndex}`;
+                        newCartItems[newKey] = {
+                            ...currentItem,
+                            key: newKey,
+                            totalPrice: currentItem.price * currentItem.quantity,
+                        };
+                    }
+        
+                    return newCartItems;
+                } else {
+                    // Xử lý khi currentItem không tồn tại (hiển thị thông báo lỗi hoặc thực hiện hành động khác)
+                    return prevCartItems;
+                }
+            });
+        } else {
+            // Xử lý khi bottomSheetData không tồn tại
+        }
+        setIsBottomSheetVisible(false);
+    };
+    
+    
+    
+    
 
     const removeFromCart = (key) => {
         setCartItems((prevCartItems) => {
             const newCartItems = { ...prevCartItems };
-            if (newCartItems[key]) {
-                if (newCartItems[key].quantity > 1) {
-                    newCartItems[key].quantity -= 1;
-                } else {
-                    delete newCartItems[key];
+    
+            // Lọc các mục có cùng key với key ban đầu
+            const filteredItems = Object.values(newCartItems).filter(
+                (item) => item.key.startsWith(key)
+            );
+    
+            if (filteredItems.length > 0) {
+                // Kiểm tra trùng discount
+                const existingItem = filteredItems.find(
+                    (item) => item.discount === filteredItems[0].discount
+                );
+    
+                if (existingItem) {
+                    // Trùng key và discount, giảm quantity và cập nhật tổng giá trị
+                    existingItem.quantity -= 1;
+                    existingItem.totalPrice = existingItem.price * existingItem.quantity;
+                    existingItem.discountPrice = (existingItem.price * existingItem.quantity) * (existingItem.discount / 100);
+                    // Nếu quantity <= 0, xóa mục khỏi giỏ hàng
+                    if (existingItem.quantity <= 0) {
+                        delete newCartItems[existingItem.key];
+                    }
                 }
             }
+    
             return newCartItems;
         });
     };
+    
+    const addToCartItem = (key) => {
+        setBottomSheetData((prevData) => {
+            const currentItem = prevData[key];
+            if (currentItem) {
+                // Increase quantity
+                const updatedQuantity = currentItem.quantity + 1;
+                // Calculate new total price
+                const updatedTotalPrice = updatedQuantity * currentItem.price;
+                const totalPrice = currentItem.price * currentItem.quantity || 0;
+                // Tính giá trị sau giảm giá
+                const discountedPrice = updatedTotalPrice * (currentItem.discount / 100);
+                // Return the updated data with the new quantity and total price for the item
+                return {
+                    ...prevData,
+                    [key]: {
+                        ...currentItem,
+                        quantity: updatedQuantity,
+                        totalPrice: updatedTotalPrice,
+                        discountPrice: discountedPrice
+                    },
+                };
+            }
 
+            return prevData; // Trường hợp không tìm thấy mục, trả về trạng thái trước đó
+        });
+    };
+
+
+    const removeFromCartItem = (key) => {
+        setBottomSheetData((prevData) => {
+            const currentItem = prevData[key];
+            if (currentItem) {
+                // Decrease quantity
+                const updatedQuantity = currentItem.quantity - 1;
+
+                if (updatedQuantity <= 0) {
+                    setIsBottomSheetVisible(false);
+                    // If the quantity is 0 or less, remove the item from data
+                    const { [key]: removedItem, ...restData } = prevData;
+                    return restData;
+                } else {
+                    // Otherwise, update the item's quantity and total price
+                    const updatedTotalPrice = updatedQuantity * currentItem.price;
+                    const discountedPrice = updatedTotalPrice * (currentItem.discount / 100);
+                    return {
+                        ...prevData,
+                        [key]: {
+                            ...currentItem,
+                            quantity: updatedQuantity,
+                            totalPrice: updatedTotalPrice,
+                            discountPrice: discountedPrice
+                        },
+                    };
+                }
+            }
+
+            return prevData; // In case the item is not found, return previous state
+        });
+
+    };
+
+    const updateDiscount = (key, discountValue) => {
+        setBottomSheetData((prevBottomSheetData) => {
+            // Tạo một bản sao của dữ liệu hiện tại
+            const newBottomSheetData = { ...prevBottomSheetData };
+
+            if (newBottomSheetData[key]) {
+                // Nếu tìm thấy sản phẩm với key tương ứng
+                const price = newBottomSheetData[key].price;
+                const quantity = newBottomSheetData[key].quantity; // Lấy giá của món hàng
+                newBottomSheetData[key].discount = discountValue; // Cập nhật giảm giá
+
+                // Tính toán và cập nhật discountPrice dựa trên quantity mới
+                const discountedPrice = (price * quantity) * (newBottomSheetData[key].discount / 100);
+                newBottomSheetData[key].discountPrice = discountedPrice;
+            }
+
+            return newBottomSheetData;
+        });
+    };
+
+
+
+    const openModal = (itemData) => {
+        setIsBottomSheetVisible(true);
+    };
+
+    const closeModal = () => {
+        setIsBottomSheetVisible(false);
+    };
     const totalItemsInCart = Object.values(cartItems).reduce(
         (total, item) => total + item.quantity,
         0
@@ -296,10 +507,63 @@ export default function OrderDetails({ route }) {
         (total, item) => total + item.totalPrice,
         0
     );
+    const handleSearch = () => {
+        // Lấy dữ liệu từ getFilteredData()
+        let data = getFilteredData();
+        // Áp dụng bộ lọc tìm kiếm nếu có từ khóa tìm kiếm
+        if (searchQuery) {
+            data = data.filter(([key, data]) => {
+                const itemName = data.Name.toLowerCase();
+                const searchTerm = searchQuery.toLowerCase();
+                return itemName.includes(searchTerm);
+            });
+            setFilteredOrders(data);
+        }
+        else {
+            setFilteredOrders(getFilteredData())
+        }
+    };
+    useEffect(() => {
+        // Chạy lại handleSearch khi searchQuery hoặc selectedCategory thay đổi
+        setFilteredOrders(getFilteredData());
+        handleSearch();
+    }, [searchQuery, selectedCategory]);
+
+    const totalCartDiscountPrice = Object.values(cartItems).reduce(
+        (total, item) => total + (item.totalPrice - (item.discountPrice || 0)),
+        0
+    );
+
     //-------------------------------------------------------------End Add Food-------------------------------------------------------------
     const openFoodOrder = () => {
         bottomSheetFood.current.show();
     };
+    const openFoodOrderItem = (key, data, url) => {
+        if (Array.isArray(data)) {
+            const itemData = data.find(([itemKey, itemValue]) => itemKey === key);
+
+            if (itemData) {
+                const [, itemValue] = itemData;
+                const updatedData = {
+                    name: itemValue.Name,
+                    price: itemValue.Price,
+                    quantity: 1,
+                    discount: 0,
+                    totalPrice: itemValue.Price // Khởi tạo totalPrice ban đầu với giá của sản phẩm
+                };
+
+                // Thêm dữ liệu vào bottomSheetData
+                setBottomSheetData({ [key]: updatedData });
+
+                // Mở BottomSheet
+                setIsBottomSheetVisible(true);
+            }
+        } else {
+            console.error("data is not an array");
+        }
+    };
+
+
     const deleteFoodOrder = () => {
         setCartItems('');
     };
@@ -352,7 +616,7 @@ export default function OrderDetails({ route }) {
         listContainer: {
             paddingHorizontal: 10,
             alignItems: 'flex-start',
-            paddingBottom: Object.keys(cartItems).length > 0?60:0,
+            paddingBottom: Object.keys(cartItems).length > 0 ? 60 : 0 || isBottomSheetVisible?150:0,
         },
         // image: {
 
@@ -374,12 +638,11 @@ export default function OrderDetails({ route }) {
         gridTotal: {
             width: '100%',
             height: 'auto'
-            
         },
         // CSS cho gridItem
         gridItem: {
             width: Dimensions.get('window').width - 40,
-            
+
             paddingTop: 20,
             paddingBottom: 20,
             flexDirection: 'row',
@@ -394,7 +657,14 @@ export default function OrderDetails({ route }) {
             height: 80,
             borderRadius: 10,
         },
-
+        imageBottomSheetData: {
+            width: 80,
+            height: 80,
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderRadius: 10,
+        },
         // CSS cho phần view bên phải của ảnh
         itemDetails: {
             marginLeft: 20,
@@ -414,12 +684,22 @@ export default function OrderDetails({ route }) {
         },
 
     });
+    console.log(Object.entries(bottomSheetData))
+    const data1 = Object.entries(cartItems || {});
+    console.log(data1 || {});
+
+    const renderedItems = filteredOrders.map(([key, data, url]) => (
+        <TouchableOpacity key={key} onPress={() => openFoodOrderItem(key, filteredOrders, url)}>
+            <IconAnt name="pluscircleo" size={24} color="#667080" />
+        </TouchableOpacity>
+    ));
     const webStyles = StyleSheet.create({
 
     });
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
     // ...
     // ...
+    const iconRendered = false;
     return (
 
         <View >
@@ -450,27 +730,22 @@ export default function OrderDetails({ route }) {
                 ))}
             </ScrollView>
             <FlatList
-                data={getFilteredData()}
+                data={filteredOrders}
                 renderItem={({ item, index }) => {
                     const [key, data] = item;
                     const name = data.Name;
-
-                    // Số lượng cho mục này
+                    const price = data.price;
                     const quantity = cartItems[key] ? cartItems[key].quantity : 0;
-
-                    // Check if imageAll is defined and contains data for the selected category
                     const imageArray = imageAllFolder || [];
-
-                    // Find the URL for the specific key or provide a default URL if not found
                     const url = imageArray.find((item) => item.name === `${key}.jpg`).url;
 
                     return (
-                        <View style={[finalStyles.gridTotal]}>
+                        <View style={finalStyles.gridTotal}>
                             <View
                                 style={[
                                     finalStyles.gridItem,
-                                    index === getFilteredData().length - 1
-                                        ? { borderBottomWidth: 0 } // No border for the last item
+                                    index === filteredOrders.length - 1
+                                        ? { borderBottomWidth: 0 } // Không có đường viền cho mục cuối cùng
                                         : { borderBottomWidth: 1, borderBottomColor: 'gray' },
                                 ]}
                             >
@@ -479,36 +754,160 @@ export default function OrderDetails({ route }) {
                                 </View>
                                 <View style={finalStyles.itemDetails}>
                                     <Text style={finalStyles.itemName}>{name}</Text>
+
                                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                         <Text style={[finalStyles.itemPrice, { justifyContent: 'flex-start' }]}>{`${data.Price.toLocaleString('vi-VN')}đ`}</Text>
                                         <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 20 }}>
-                                            {quantity > 0 ? ( // Nếu số lượng > 0, hiển thị nút giảm và số lượng
-                                                <>
-                                                    <TouchableOpacity onPress={() => removeFromCart(key)}>
-                                                        <IconAnt name="minuscircleo" size={24} color="#667080" />
-                                                    </TouchableOpacity>
-                                                    <Text style={{ marginLeft: 8, marginRight: 8 }}>{quantity}</Text>
-                                                    <TouchableOpacity onPress={() => addToCart(key, name, 1, data.Price)}>
-                                                        <IconAnt name="pluscircleo" size={24} color="#667080" />
-                                                    </TouchableOpacity>
-                                                </>
-                                            ) : ( // Ngược lại, chỉ hiển thị nút tăng
-                                                <TouchableOpacity onPress={() => addToCart(key, name, 1, data.Price)}>
-                                                    <IconAnt name="pluscircleo" size={24} color="#667080" />
-                                                </TouchableOpacity>
-                                            )}
+
+
+
+                                            <TouchableOpacity key={key} onPress={() => openFoodOrderItem(key, filteredOrders, url)}>
+                                                <IconAnt name="pluscircleo" size={24} color="#667080" />
+                                            </TouchableOpacity>
+
+
                                         </View>
+
                                     </View>
                                 </View>
+
                             </View>
+
                         </View>
+
                     );
                 }}
                 numColumns={1}
                 keyExtractor={(item) => item[0]}
-                contentContainerStyle={[finalStyles.listContainer, getFilteredData().length >= 5?{height:'auto'}:{height:Dimensions.get('window').height - 20,}]}
+                contentContainerStyle={[
+                    finalStyles.listContainer,
+                    filteredOrders.length >= 5 ? { height: 'auto' } : { height: Dimensions.get('window').height - 20 },
+                ]}
             />
-            {Object.keys(cartItems).length > 0 ? (
+            {isBottomSheetVisible && (
+                <View style={{
+                    position: 'absolute',
+                    bottom:0,
+                    left: 0,
+                    right: 0,
+                    backgroundColor: 'white',
+                    width: '100%',
+                    height: 150,
+                    alignItems: 'center',
+                    shadowColor: "#0000000D",
+                    shadowOpacity: 0.1,
+                    shadowOffset: {
+                        width: 0,
+                        height: 20
+                    },
+                    shadowRadius: 35,
+                    elevation: 35,
+                    flexDirection: 'row',
+                    justifyContent: 'space-between', // Add this line to distribute content horizontally
+                }}>
+                    <View style={finalStyles.gridTotal}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                            <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'flex-start' }} onPress={() => { setIsBottomSheetVisible(false) }}>
+                                <Text style={{ color: "#667080", paddingLeft: 10 }}>Hủy</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'flex-end' }} onPress={() => { addToCart() }}>
+                                <Text style={{ color: "#667080", paddingRight: 10 }}>Xác nhận</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <View style={[finalStyles.gridItem, { borderBottomWidth: 0, paddingTop: 10 }]}>
+
+                            <View style={{ width: '20%' }}>
+                                <Image
+                                    source={{
+                                        uri: (imageAllFolder.find(
+                                            (item) =>
+                                                item.name === `${Object.keys(bottomSheetData)[0]}.jpg`
+                                        ) || {}).url,
+                                    }}
+                                    style={finalStyles.imageBottomSheetData}
+                                />
+                            </View>
+                            <View style={finalStyles.itemDetails}>
+                                <Text style={finalStyles.itemName}>
+                                    {Object.values(bottomSheetData)[0]?.name}
+                                </Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Text>Giảm giá:</Text>
+                                    {Object.values(bottomSheetData)[0]?.discount !== 0 ? (
+                                        <Text>{Object.values(bottomSheetData)[0]?.discount}%</Text>
+                                    ) : (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <TextInput
+                                                value={discount[Object.keys(bottomSheetData)[0]] || ''}
+                                                inputMode="decimal"
+                                                onChangeText={(text) => {
+                                                    setDiscount((prevDiscount) => ({
+                                                        ...prevDiscount,
+                                                        [Object.keys(bottomSheetData)[0]]: text,
+                                                    }));
+                                                }}
+                                                onEndEditing={() => {
+                                                    updateDiscount(
+                                                        Object.keys(bottomSheetData)[0],
+                                                        discount[Object.keys(bottomSheetData)[0]]
+                                                    );
+                                                    setDiscount((prevDiscount) => ({
+                                                        ...prevDiscount,
+                                                        [Object.keys(bottomSheetData)[0]]: '',
+                                                    }));
+                                                }}
+                                            />
+                                            <Text>%</Text>
+                                        </View>
+                                    )}
+                                </View>
+                                <View
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                    }}
+                                >
+                                    <View>
+                                        {Object.values(bottomSheetData)[0]?.discount !== 0 ? ( // Check if there is a discount for the item
+                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                <Text style={[finalStyles.itemPrice, { justifyContent: 'flex-start', textDecorationLine: 'line-through' }]}>{`${Object.values(bottomSheetData)[0]?.totalPrice.toLocaleString('vi-VN')}đ`}</Text>
+                                                <Text style={[finalStyles.itemPrice, { marginLeft: 5 }]}>{`${(Object.values(bottomSheetData)[0]?.totalPrice - Object.values(bottomSheetData)[0]?.discountPrice).toLocaleString('vi-VN')}đ`}</Text>
+                                            </View>
+                                        ) : (
+                                            <Text style={finalStyles.itemPrice}>{`${Object.values(bottomSheetData)[0]?.totalPrice.toLocaleString('vi-VN')}đ`}</Text>
+                                        )}
+                                    </View>
+                                    <View
+                                        style={{
+                                            flexDirection: 'row',
+                                            justifyContent: 'flex-end',
+                                            paddingRight: 20,
+                                        }}
+                                    >
+                                        <TouchableOpacity
+                                            onPress={() =>
+                                                removeFromCartItem(Object.keys(bottomSheetData)[0])
+                                            }
+                                        >
+                                            <IconAnt name="minuscircleo" size={24} color="#667080" />
+                                        </TouchableOpacity>
+                                        <Text style={{ marginLeft: 8, marginRight: 8 }}>
+                                            {Object.values(bottomSheetData)[0]?.quantity}
+                                        </Text>
+                                        <TouchableOpacity
+                                            onPress={() => addToCartItem(Object.keys(bottomSheetData)[0])}
+                                        >
+                                            <IconAnt name="pluscircleo" size={24} color="#667080" />
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            )}
+            {Object.keys(cartItems).length > 0 && !isBottomSheetVisible ? (
                 <View style={{
                     position: 'absolute',
                     bottom: 0,
@@ -537,7 +936,7 @@ export default function OrderDetails({ route }) {
                         </View>
                     </TouchableOpacity>
                     <BottomSheet ref={bottomSheetFood} height={600} draggable={false} backdropClosesSheet={false} >
-                        <View style={{ flexDirection: 'row', paddingLeft: 20, paddingRight: 20, paddingTop:10, justifyContent: 'space-between', alignItems: 'center' }}>
+                        <View style={{ flexDirection: 'row', paddingLeft: 20, paddingRight: 20, paddingTop: 10, justifyContent: 'space-between', alignItems: 'center' }}>
                             <TouchableOpacity onPress={deleteFoodOrder}>
                                 <Text style={{ justifyContent: 'flex-start', color: "#667080" }}>Xóa tất cả</Text>
                             </TouchableOpacity>
@@ -555,17 +954,19 @@ export default function OrderDetails({ route }) {
                                     const name = data.name;
                                     const price = data.price;
                                     const quantity = data.quantity;
-
+                                    const totalPrice = data.totalPrice;
+                                    const discount = data.discount;
+                                    const discountPrice = data.discountPrice;
                                     const imageArray = imageAllFolder || [];
 
                                     // Find the URL for the specific key or provide a default URL if not found
-                                    const url = imageArray.find((item) => item.name === `${key}.jpg`).url;
+                                    const url = imageArray.find((item) => item.name === `${key.split('_')[0]}.jpg`).url;
                                     return (
                                         <View style={[finalStyles.gridTotal]}>
                                             <View
                                                 style={[
                                                     finalStyles.gridItem,
-                                                    index === getFilteredData().length - 1
+                                                    index === Object.entries(cartItems).length - 1
                                                         ? { borderBottomWidth: 0 } // No border for the last item
                                                         : { borderBottomWidth: 1, borderBottomColor: 'gray' },
                                                 ]}
@@ -575,8 +976,24 @@ export default function OrderDetails({ route }) {
                                                 </View>
                                                 <View style={finalStyles.itemDetails}>
                                                     <Text style={finalStyles.itemName}>{name}</Text>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                        <Text>Giảm giá:</Text>
+
+                                                        <Text>{discount}%</Text>
+
+                                                    </View>
                                                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                        <Text style={[finalStyles.itemPrice, { justifyContent: 'flex-start' }]}>{`${price.toLocaleString('vi-VN')}đ`}</Text>
+                                                        <View>
+                                                            {discount !== 0 ? ( // Check if there is a discount for the item
+                                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                                    <Text style={[finalStyles.itemPrice, { justifyContent: 'flex-start', textDecorationLine: 'line-through' }]}>{`${totalPrice.toLocaleString('vi-VN')}đ`}</Text>
+                                                                    <Text style={[finalStyles.itemPrice, { marginLeft: 5 }]}>{`${(totalPrice - discountPrice).toLocaleString('vi-VN')}đ`}</Text>
+                                                                </View>
+                                                            ) : (
+                                                                <Text style={finalStyles.itemPrice}>{`${totalPrice.toLocaleString('vi-VN')}đ`}</Text>
+                                                            )}
+                                                        </View>
+
                                                         <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 20 }}>
                                                             {quantity > 0 ? ( // Nếu số lượng > 0, hiển thị nút giảm và số lượng
                                                                 <>
@@ -584,12 +1001,12 @@ export default function OrderDetails({ route }) {
                                                                         <IconAnt name="minuscircleo" size={24} color="#667080" />
                                                                     </TouchableOpacity>
                                                                     <Text style={{ marginLeft: 8, marginRight: 8 }}>{quantity}</Text>
-                                                                    <TouchableOpacity onPress={() => addToCart(key, name, 1, price)}>
+                                                                    <TouchableOpacity onPress={() => addToCartSheet(key,discount)}>
                                                                         <IconAnt name="pluscircleo" size={24} color="#667080" />
                                                                     </TouchableOpacity>
                                                                 </>
                                                             ) : ( // Ngược lại, chỉ hiển thị nút tăng
-                                                                <TouchableOpacity onPress={() => addToCart(key, name, 1, price)}>
+                                                                <TouchableOpacity onPress={() => addToCartSheet(key,discount)}>
                                                                     <IconAnt name="pluscircleo" size={24} color="#667080" />
                                                                 </TouchableOpacity>
                                                             )}
@@ -602,7 +1019,7 @@ export default function OrderDetails({ route }) {
                                 }}
                                 numColumns={1}
                                 keyExtractor={(item) => item[0]}
-                                contentContainerStyle={[finalStyles.listContainer,Object.entries(cartItems).length >= 5?{paddingBottom:90}:{height:Dimensions.get('window').height - 20}]}
+                                contentContainerStyle={[finalStyles.listContainer, Object.entries(cartItems).length >= 5 ? { paddingBottom: 90 } : { paddingBottom: 0 }]}
                             />
                         </View>
 
@@ -634,7 +1051,7 @@ export default function OrderDetails({ route }) {
                                 </View>
                             </TouchableOpacity>
                             <View style={{ marginBottom: 10, justifyContent: 'flex-end', flexDirection: 'row', alignItems: 'center' }}>
-                                <Text style={{ marginRight: 10, paddingTop: 10 }}>{totalCartPrice.toLocaleString('vi-VN')}đ</Text>
+                                <Text style={{ marginRight: 10, paddingTop: 10 }}>{totalCartDiscountPrice.toLocaleString('vi-VN')}đ</Text>
                                 <TouchableOpacity
                                     style={{
                                         alignItems: "center",
@@ -645,7 +1062,7 @@ export default function OrderDetails({ route }) {
                                         top: 5,
                                         justifyContent: 'center' // Center the text vertically
                                     }}
-
+                                    onPress={() => navigation.navigate('CreateOrder', { Foods: cartItems })}
                                 >
                                     <Text style={{
                                         color: "#ffffff",
@@ -659,7 +1076,7 @@ export default function OrderDetails({ route }) {
 
 
                     <View style={{ marginBottom: 10, justifyContent: 'flex-end', flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={{ marginRight: 10, paddingTop: 10 }}>{totalCartPrice.toLocaleString('vi-VN')}đ</Text>
+                        <Text style={{ marginRight: 10, paddingTop: 10 }}>{totalCartDiscountPrice.toLocaleString('vi-VN')}đ</Text>
                         <TouchableOpacity
                             style={{
                                 alignItems: "center",
@@ -670,7 +1087,7 @@ export default function OrderDetails({ route }) {
                                 top: 5,
                                 justifyContent: 'center' // Center the text vertically
                             }}
-
+                            onPress={() => navigation.navigate('CreateOrder', { Foods: cartItems })}
                         >
                             <Text style={{
                                 color: "#ffffff",
@@ -682,9 +1099,11 @@ export default function OrderDetails({ route }) {
 
             ) : null}
 
+
         </View>
 
     );
 
 
 }
+
