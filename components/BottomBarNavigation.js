@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { Keyboard, View , } from 'react-native';
+import { Keyboard, View, } from 'react-native';
 import Home from './Home/Home';
 import OrderScreen from './Order/OrderScreen';
+import Setting from './Setting/Setting'
+import Statistics from './Statistics/Statistics'
 import { NavigationContainer, useIsFocused } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 const Tab = createBottomTabNavigator();
@@ -26,7 +28,7 @@ const BottomNavigationBar = () => {
     const unsubscribe = navigation.addListener('state', () => {
       const currentRouteName = getActiveRouteName(navigation.getState());
       // Cập nhật trạng thái nếu route hiện tại là 'FoodOrder'
-      if (currentRouteName === 'FoodOrder') setIsFoodOrderRoute(true);
+      if (currentRouteName == 'FoodOrder') setIsFoodOrderRoute(true);
       else setIsFoodOrderRoute(false);
     });
     return () => {
@@ -48,16 +50,22 @@ const BottomNavigationBar = () => {
               } else if (route.name === 'OrderScreen') {
                 iconName = focused ? 'cart' : 'cart-outline';
               }
+              else if (route.name === 'Setting') {
+                iconName = focused ? 'person' : 'person-outline';
+              }
+              else if (route.name === 'Statistics') {
+                iconName = focused ? 'bar-chart' : 'bar-chart-outline';
+              }
               return <Ionicons name={iconName} size={size} color={color} />;
             },
-            
+
             tabBarActiveTintColor: 'black',
             tabBarInactiveTintColor: 'gray',
             tabBarHideOnKeyboard: true,
             tabBarStyle: {
-              position: isKeyboardVisible ||isFoodOrderRoute ? 'absolute' : 'relative',
-              bottom: isKeyboardVisible ||isFoodOrderRoute ? 0 : null,
-              display: isFoodOrderRoute || isKeyboardVisible? 'none':'flex'
+              position: isKeyboardVisible || isFoodOrderRoute ? 'absolute' : 'relative',
+              bottom: isKeyboardVisible || isFoodOrderRoute ? 0 : null,
+              display: isFoodOrderRoute || isKeyboardVisible ? 'none' : 'flex'
             },
           })}
         >
@@ -67,9 +75,19 @@ const BottomNavigationBar = () => {
             options={{ headerShown: false, tabBarLabel: 'Trang chủ', }}
           />
           <Tab.Screen
+            name="Statistics"
+            component={Statistics}
+            options={{ headerShown: false, tabBarLabel: 'Thống kê' }}
+          />
+          <Tab.Screen
             name="OrderScreen"
             component={OrderScreen}
             options={{ headerShown: false, tabBarLabel: 'Hóa đơn' }}
+          />
+          <Tab.Screen
+            name="Setting"
+            component={Setting}
+            options={{ headerShown: false, tabBarLabel: 'Tôi' }}
           />
         </Tab.Navigator>
       </View>
