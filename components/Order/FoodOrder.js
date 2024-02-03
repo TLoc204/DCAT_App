@@ -14,7 +14,8 @@ import {
     ImageBackground,
     TextInput,
     FlatList,
-    Modal
+    Modal,
+    Keyboard
 } from "react-native";
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import IconAnt from 'react-native-vector-icons/AntDesign';
@@ -140,6 +141,7 @@ export default function OrderDetails({ route }) {
     const foods = route.params?.Foods || {};
     const [discount, setDiscount] = useState({});
     const [cartItems, setCartItems] = useState([]);
+    const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
     useEffect(() => {
         // Chỉ cập nhật cartItems nếu foods thực sự thay đổi.
         const currentFoods = JSON.stringify(foods);
@@ -240,7 +242,19 @@ export default function OrderDetails({ route }) {
         };
 
     }, []);
-
+    useEffect(() => {
+        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+          setIsKeyboardVisible(true);
+        });
+        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+          setIsKeyboardVisible(false);
+        });
+        return () => {
+          keyboardDidShowListener.remove();
+          keyboardDidHideListener.remove();
+        };
+    }, []);
+    
     const handleSelectCategory = (key) => {
         setSelectedCategory(key);
     };
@@ -750,7 +764,7 @@ export default function OrderDetails({ route }) {
                                 ]}
                             >
                                 <View style={{ width: '20%' }}>
-                                    <Image source={{ uri: url }} style={finalStyles.image} />
+                                    <Image source={{ uri: url?url:'https://firebasestorage.googleapis.com/v0/b/dcat-c09a4.appspot.com/o/MacDinh.jpg?alt=media&token=d66af2a0-9be6-44cb-9eda-504f04c1763c' }} style={finalStyles.image} />
                                 </View>
                                 <View style={finalStyles.itemDetails}>
                                     <Text style={finalStyles.itemName}>{name}</Text>
@@ -907,7 +921,7 @@ export default function OrderDetails({ route }) {
                     </View>
                 </View>
             )}
-            {Object.keys(cartItems).length > 0 && !isBottomSheetVisible ? (
+            {Object.keys(cartItems).length > 0 && !isBottomSheetVisible && !isKeyboardVisible? (
                 <View style={{
                     position: 'absolute',
                     bottom: 0,
@@ -972,13 +986,12 @@ export default function OrderDetails({ route }) {
                                                 ]}
                                             >
                                                 <View style={{ width: '20%' }}>
-                                                    <Image source={{ uri: url }} style={finalStyles.image} />
+                                                    <Image source={{ uri: url?url:'https://firebasestorage.googleapis.com/v0/b/dcat-c09a4.appspot.com/o/MacDinh.jpg?alt=media&token=d66af2a0-9be6-44cb-9eda-504f04c1763c' }} style={finalStyles.image} />
                                                 </View>
                                                 <View style={finalStyles.itemDetails}>
                                                     <Text style={finalStyles.itemName}>{name}</Text>
                                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                         <Text>Giảm giá:</Text>
-
                                                         <Text>{discount}%</Text>
 
                                                     </View>
