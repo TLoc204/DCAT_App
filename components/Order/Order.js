@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useContext } from "react";
 import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, AsyncStorage, Alert, SafeAreaView, ScrollView, ImageBackground, TextInput, FlatList } from "react-native";
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
@@ -9,6 +9,7 @@ import { BottomSheet } from 'react-native-sheet';
 import SearchBar from "react-native-dynamic-search-bar";
 import { Dropdown } from 'react-native-element-dropdown';
 import { getStorage, ref as storageRef, listAll, getDownloadURL } from "firebase/storage";
+import { useRoute } from '@react-navigation/native';
 // Lấy kích thước màn hình để hỗ trợ responsive
 const { width, height } = Dimensions.get('window');
 const theme = {
@@ -44,7 +45,6 @@ export default function Order() {
     const [selectedCategory, setSelectedCategory] = useState('');
     const [imageUrls, setImageUrls] = useState({});
     const [imageAll, setImageAll] = useState({});
-    const [imageAllFolder, setImageAllFolder] = useState({});
     const screenHeight = Dimensions.get('window').height; // Lấy chiều cao màn hình
     useEffect(() => {
         const ordersRef = ref(database, 'Orders');
@@ -144,7 +144,7 @@ export default function Order() {
         setOrderCountByRoom(countByRoom);
     }, [filteredOrders, roomNames]);
     const handleSubmit = async () => {
-        navigation.navigate('OrderDetails')
+        
     };
     useEffect(() => {
         const filtered = Object.keys(dataOrders).reduce((acc, key) => {
@@ -167,20 +167,7 @@ export default function Order() {
     const openFilterMenu = () => {
         bottomSheet.current.show();
     };
-    const openFoodMenu = () => {
-        bottomSheetFood.current.show();
-    };
-    const closeFoodMenu = () => {
-        bottomSheetFood.current.hide();
-        setSelectedCategory('')
-    };
-    const openCreateOrder = () => {
-        bottomSheetCreate.current.show();
-    };
-    const closeCreateOrder = () => {
-        bottomSheetCreate.current.hide();
 
-    };
     const handleSelectRoom = (roomKey) => {
         setCurrentRoom(roomNames[roomKey] || 'Tất cả'); // Cập nhật phòng được chọn
         bottomSheet.current.hide(); // Ẩn BottomSheet sau khi lựa chọn
@@ -201,37 +188,7 @@ export default function Order() {
             setFilteredOrders(filteredByRoom);
         }
     };
-    const handleSelectCategory = (key) => {
-        setSelectedCategory(key);
-    };
-    const getFilteredData = () => {
-        switch (selectedCategory) {
-            case 'C1':
-                return Object.entries(dataDrinks);
-            case 'C2':
-                return Object.entries(dataDrink2ND);
-            case 'C3':
-                return Object.entries(dataFoods);
-            case 'C4':
-                return Object.entries(dataToppings);
-            case 'C5':
-                return Object.entries(dataFoodBonus);
-            case 'C6':
-                return Object.entries(dataGames);
-            case '':
-            default:
-                // Concatenate all items for 'all' filter
-                return [
-                    ...Object.entries(dataDrinks),
-                    ...Object.entries(dataDrink2ND),
-                    ...Object.entries(dataFoods),
-                    ...Object.entries(dataToppings),
-                    ...Object.entries(dataFoodBonus),
-                    ...Object.entries(dataGames),
-                ];
-        }
-    };
-
+    
     // const getFilteredData = () => {
     //     switch (selectedCategory) {
     //         case 'C1':
@@ -337,42 +294,6 @@ export default function Order() {
     //     fetchAllItems();
     // }, []);
 
-    const listAllItemsInFolder = async (folderPath) => {
-        const folderRef = storageRef(storage, folderPath);
-        try {
-            const items = await listAll(folderRef);
-            const itemDetails = [];
-
-            for (const item of items.items) {
-                const itemUrl = await getDownloadURL(item);
-                itemDetails.push({ name: item.name, url: itemUrl });
-            }
-
-            return itemDetails;
-        } catch (error) {
-            console.error("Error listing items in folder:", error);
-            return [];
-        }
-    };
-    const fetchAllItems = async () => {
-        try {
-            const folders = ["Toppings", "Foods", "FoodBonus", "Drinks", "Drink2ND", "Games"];
-            const allItems = {};
-
-            for (const folder of folders) {
-                const items = await listAllItemsInFolder(folder);
-                allItems[folder] = items;
-                setImageAllFolder((prevItems) => (Array.isArray(prevItems) ? [...prevItems, ...items] : [...items]));
-            }
-            setImageAll(allItems)
-            // Bạn có thể xử lý tất cả các item ở đây, hoặc lưu chúng vào đối tượng để sử dụng sau này.
-        } catch (error) {
-            console.error("Error fetching all items:", error);
-        }
-    };
-    useEffect(() => {
-        fetchAllItems();
-    }, []);
     // useEffect(() => {
     //     fetchImagesFromStorage();
     // }, [dataOrders]);
@@ -397,30 +318,11 @@ export default function Order() {
     const mobileStyles = StyleSheet.create({
         container_order: {
             flex: 1,
-            backgroundColor: "#f8f8f8",
-            borderRadius: 50,
             paddingTop: 68,
-            shadowColor: "#0000001A",
-            shadowOpacity: 0.1,
-            shadowOffset: {
-                width: 0,
-                height: 20
-            },
-            shadowRadius: 104,
-            elevation: 104,
         },
         main_order: {
             flex: 1,
-            backgroundColor: "#f8f8f8",
-            borderRadius: 50,
-            shadowColor: "#0000001A",
-            shadowOpacity: 0.1,
-            shadowOffset: {
-                width: 0,
-                height: 20
-            },
-            shadowRadius: 104,
-            elevation: 104,
+           
         },
         main_order_item: {
             flexDirection: "row",
@@ -462,22 +364,7 @@ export default function Order() {
             elevation: 104,
         },
 
-        input_cus: {
-            flex: 1,
-            backgroundColor: "#ffffff",
-            padding: 10,
-            borderRadius: 10,
-            shadowColor: "#0000001A",
-            shadowOpacity: 0.1,
-            shadowOffset: {
-                width: 0,
-                height: 20
-            },
-            marginLeft: 20,
-            marginRight: 20,
-            shadowRadius: 104,
-            elevation: 104,
-        },
+    
         inputStyleDD: {
             fontSize: 16
         },
@@ -485,53 +372,15 @@ export default function Order() {
             fontSize: 16
         },
         placeholderStyle: {
+            
             fontSize: 16
         },
         //------------------------------- Css Món Ăn----------------------------------
-        categoryButton: {
-            marginRight: 10,
-            borderRadius: 15,
-            paddingHorizontal: 16,
-            paddingVertical: 8,
-            borderWidth: 1,
-            borderColor: '#D3D3D3',
-            justifyContent: 'center',
-            alignItems: 'center',
-        },
-        categoryButtonText: {
-            fontWeight: 'bold',
-        },
-        categoryButtonSelected: {
-            backgroundColor: '#667080',
-            borderColor: '#667080',
-        },
-        categoryButtonTextSelected: {
-            color: '#FFFFFF',
-        },
-
         listContainer: {
-
+            
             paddingHorizontal: 10,
             alignItems: 'flex-start',
             marginTop: 10
-        },
-        gridItem: {
-
-            width: (Dimensions.get('window').width / 2) - 30,
-            margin: 10,
-
-        },
-        image: {
-
-            width: '100%',
-            height: 150,
-            borderRadius: 10,
-        },
-        itemName: {
-
-        },
-        itemPrice: {
-
         },
     });
     const webStyles = StyleSheet.create({
@@ -608,141 +457,31 @@ export default function Order() {
                         ))}
                     </BottomSheet>
 
-
+                            {/*onPress={openCreateOrder} */ }
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 20 }}>
-                        <TouchableOpacity onPress={openCreateOrder}>
+                        <TouchableOpacity onPress={() => navigation.navigate('CreateOrder')}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <Text>Thêm mới</Text>
+                                <Text>Tạo đơn</Text>
                             </View>
                         </TouchableOpacity>
-                        <BottomSheet ref={bottomSheetCreate} height={screenHeight} draggable={false} showDragIcon={false} backdropClosesSheet={false} sheetStyle={finalStyles.container_sheet}>
-                            {/* <View style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, marginBottom: 20 }}>
-                                <TouchableOpacity onPress={closeCreateOrder} style={{ paddingLeft: 20 }}>
-                                    <Icon name="arrow-back-ios" size={24} color="#667080" />
-                                </TouchableOpacity>
-                                <TouchableOpacity >
-                                    <Text>Tạo đơn</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={closeCreateOrder} style={{ paddingRight: 20 }}>
-                                    <Icon name="delete" size={24} color="#667080"/>
-                                </TouchableOpacity>
-                            </View> */}
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, marginBottom: 20 }}>
-                                <TouchableOpacity onPress={closeCreateOrder} style={{ paddingLeft: 20 }}>
-                                    <Icon name="arrow-back-ios" size={24} color="#667080" />
-                                </TouchableOpacity>
-
-                                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingRight: 40 }}>
-                                    <Text>Tạo đơn</Text>
-                                </View>
-                            </View>
-                            <ScrollView>
-                                <View>
-                                    <Text style={{ marginLeft: 20, marginBottom: 5 }}>Tên khách hàng</Text>
-                                    <View style={finalStyles.input_cus}>
-                                        <TextInput style={finalStyles.input} />
-                                    </View>
-                                    <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Phòng</Text>
-                                    <View style={finalStyles.input_cus}>
-                                        <View style={finalStyles.pickerContainer}>
-                                            <Dropdown
-                                                style={finalStyles.dropdown}
-                                                placeholderStyle={finalStyles.placeholderStyle}
-                                                selectedTextStyle={finalStyles.selectedTextStyle}
-                                                inputSearchStyle={finalStyles.inputSearchStyle}
-                                                itemTextStyle={finalStyles.inputStyleDD}
-                                                iconStyle={finalStyles.iconStyle}
-                                                data={roomDropdownData}
-                                                placeholder="Chọn phòng"
-                                                maxHeight={300}
-                                                labelField="label"
-                                                valueField="value"
-                                                onChange={handleRoomChange}
-                                            />
-                                        </View>
-                                    </View>
-
-                                    <View>
-                                        <TouchableOpacity onPress={openFoodMenu}>
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
-                                                <Text style={{ color: '#007AFF' }}>Thêm</Text>
-                                            </View>
-                                        </TouchableOpacity>
-                                    </View>
-                                    <BottomSheet ref={bottomSheetFood} height={screenHeight} draggable={false} showDragIcon={false} backdropClosesSheet={false}>
-                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, marginBottom: 20 }}>
-                                            <TouchableOpacity onPress={closeFoodMenu} style={{ paddingLeft: 20 }}>
-                                                <Icon name="arrow-back-ios" size={24} color="#667080" />
-                                            </TouchableOpacity>
-
-                                            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingRight: 40 }}>
-                                                <Text>Món ăn</Text>
-                                            </View>
-                                        </View>
-
-                                        <View>
-                                            <View style={{ flexDirection: 'row', marginTop: 'auto', marginBottom: 20 }}>
-                                                <SearchBar
-                                                    style={{ width: "auto", height: 50, marginLeft: 20 }}
-                                                    fontColor="#ffffff"
-                                                    iconColor="#ffffff"
-                                                    shadowColor="#282828"
-                                                    cancelIconColor="#ffffff"
-                                                    backgroundColor="#ffffff"
-                                                    placeholder="Tìm kiếm"
-                                                    value={searchQuery}
-                                                    onChangeText={setSearchQuery}
-                                                    clearIconComponent={() => null}
-                                                />
-                                            </View>
-                                            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: 20 }}>
-                                                <TouchableOpacity onPress={() => handleSelectCategory('')} style={[finalStyles.categoryButton, selectedCategory === '' && finalStyles.categoryButtonSelected]}>
-                                                    <Text style={[finalStyles.categoryButtonText, selectedCategory === '' && finalStyles.categoryButtonTextSelected]}>Tất cả</Text>
-                                                </TouchableOpacity>
-                                                {Object.keys(dataCategories).map((key) => (
-                                                    <TouchableOpacity key={key} onPress={() => handleSelectCategory(key)} style={[finalStyles.categoryButton, selectedCategory === key && finalStyles.categoryButtonSelected]}>
-                                                        <Text style={[finalStyles.categoryButtonText, selectedCategory === key && finalStyles.categoryButtonTextSelected]}>{dataCategories[key].Name}</Text>
-                                                    </TouchableOpacity>
-                                                ))}
-                                            </ScrollView>
-                                            <FlatList
-                                                data={getFilteredData()}
-                                                renderItem={({ item }) => {
-                                                    const [key, data] = item;
-                                                    const name = data.Name;
-
-                                                    // Check if imageAll is defined and contains data for the selected category
-                                                    const imageArray = imageAllFolder || [];
-
-                                                    // Find the URL for the specific key or provide a default URL if not found
-                                                    const url = imageArray.find((item) => item.name === `${key}.jpg`).url;
-
-
-                                                    return (
-                                                        <TouchableOpacity style={finalStyles.gridItem}>
-                                                            <Image source={{ uri: url }} style={finalStyles.image} />
-                                                            <Text style={finalStyles.itemName}>{name}</Text>
-                                                            <Text style={finalStyles.itemPrice}>{`Giá: ${data.Price.toLocaleString('vi-VN')}`}</Text>
-                                                        </TouchableOpacity>
-                                                    );
-                                                }}
-                                                numColumns={2}
-                                                keyExtractor={(item) => item[0]}
-                                                contentContainerStyle={finalStyles.listContainer}
-                                            />
-
-                                        </View>
-                                    </BottomSheet>
-                                </View>
-                            </ScrollView>
-                        </BottomSheet>
                     </View>
                 </View>
                 <ScrollView
                     style={finalStyles.main_order}>
-                    {Object.keys(filteredOrders).map((orderId) => {
+                    {Object.keys(filteredOrders).reverse().map((orderId) => {
                         const order = filteredOrders[orderId];
                         if (!order.Delete) {
+                            let customerNames = []; // Khởi tạo một mảng để tích lũy tên khách hàng
+
+                            if (order.OrderDetails) {
+                                Object.keys(order.OrderDetails).forEach((key) => {
+                                    if (order.OrderDetails[key].CustomerName) {
+                                        customerNames.push(order.OrderDetails[key].CustomerName);
+                                    }
+                                });
+                            }
+
+                            const customerNameString = customerNames.join(', ');
                             return (
                                 <View
                                     key={orderId} // Sử dụng key là orderId
@@ -764,7 +503,7 @@ export default function Order() {
                                                     marginBottom: 10,
                                                     marginLeft: 1,
                                                 }}>
-                                                {"Tên khách hàng: " + order.CustomerName}
+                                                {"Tên khách hàng: " + customerNameString}
                                             </Text>
                                             <Text
                                                 style={{
@@ -794,7 +533,7 @@ export default function Order() {
                                             </Text>
                                         </View>
                                     </View>
-                                    <TouchableOpacity onPress={() => navigation.navigate('OrderDetails', { titleCustomerName: order.CustomerName, titleOrderId: orderId.replace("O", "") })}>
+                                    <TouchableOpacity onPress={() => navigation.navigate('OrderDetails', { titleCustomerName: order.CustomerName })}>
                                         <View
                                             style={{
                                                 position: "absolute",
