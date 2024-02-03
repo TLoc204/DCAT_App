@@ -1,6 +1,7 @@
 import React, { createContext, useEffect, useState, useRef, useContext } from "react";
-import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, AsyncStorage, Alert, SafeAreaView, ScrollView, ImageBackground, TextInput, FlatList, SectionList } from "react-native";
+import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, AsyncStorage, Alert, SafeAreaView, ScrollView, ImageBackground, TextInput, FlatList, SectionList,Keyboard } from "react-native";
 import Icon from 'react-native-vector-icons/MaterialIcons';
+
 import { useNavigation } from '@react-navigation/native';
 import { Checkbox, DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
 import { FIREBASE_APP } from '../../FirebaseConfig';
@@ -12,6 +13,7 @@ import { getStorage, ref as storageRef, listAll, getDownloadURL } from "firebase
 import { useImageAllFolder } from "./FoodOrder"
 import IconAnt from 'react-native-vector-icons/AntDesign';
 import IconFontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import { showMessage, hideMessage, } from "react-native-flash-message";
 // Lấy kích thước màn hình để hỗ trợ responsive
 const { width, height } = Dimensions.get('window');
 
@@ -36,15 +38,18 @@ export default function OrderDetails({ route }) {
     const bottomSheetFood = useRef(null);
     const [orderCountByRoom, setOrderCountByRoom] = useState({});
     const [currentRoom, setCurrentRoom] = useState('Tất cả');
-    const [selectedRoom, setSelectedRoom] = useState(null);
+    let [selectedRoom, setSelectedRoom] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState('');
+    const [customerName, setCustomerName] = useState('');
     const [imageUrls, setImageUrls] = useState({});
     const [imageAll, setImageAll] = useState({});
     const { imageAllFolder } = useImageAllFolder();
+    const [discountTotal, setDiscountTotal] = useState('');
     const screenHeight = Dimensions.get('window').height; // Lấy chiều cao màn hình
     const foods = route.params?.Foods || {};
     const [discount, setDiscount] = useState({});
     const [cartItems, setCartItems] = useState([]);
+    const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
     useEffect(() => {
         // Chỉ cập nhật cartItems nếu foods thực sự thay đổi.
         const currentFoods = JSON.stringify(foods);
@@ -143,6 +148,18 @@ export default function OrderDetails({ route }) {
         };
 
     }, []);
+    useEffect(() => {
+        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+          setIsKeyboardVisible(true);
+        });
+        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+          setIsKeyboardVisible(false);
+        });
+        return () => {
+          keyboardDidShowListener.remove();
+          keyboardDidHideListener.remove();
+        };
+      }, []);
     //-----------------------------------------------------------Room-----------------------------------------------------------------
     const roomNames = {};
     // Duyệt qua dataTables và lưu tên của các bàn vào tableNames
@@ -246,11 +263,206 @@ export default function OrderDetails({ route }) {
         (total, item) => total + (item.totalPrice - (item.discountPrice || 0)),
         0
     );
+    const checkInput = () => {
+        if (!selectedRoom || !Object.values(selectedRoom)[1]) {
+            selectedRoom = ''; // Gán giá trị mặc định là chuỗi rỗng
+        }
+        if (selectedRoom.length === 0) {
+            showMessage({
+                message: "Tạo đơn thất bại",
+                type: "danger",
+                icon: { icon: "danger", position: "left" }, // Use the built-in icon
+                // Here you can pass your custom component
+                renderCustomContent: () => (
+                    <CustomMessageComponent
+                        message="Tạo đơn thất bại"
+                        description="Vui lòng chọn phòng."
+                        icon="closecircle"
+                    />
+                ),
+            });
+            return; // Dừng việc thực hiện tiếp theo
+        }
 
+        if (customerName.length === 0) {
+            showMessage({
+                message: "Tạo đơn thất bại",
+                type: "danger",
+                icon: { icon: "danger", position: "left" }, // Use the built-in icon
+                // Here you can pass your custom component
+                renderCustomContent: () => (
+                    <CustomMessageComponent
+                        message="Tạo đơn thất bại"
+                        description="Vui lòng nhập tên khách."
+                        icon="closecircle"
+                    />
+                ),
+            });
+            return; // Dừng việc thực hiện tiếp theo
+        }
+
+    }
     //-----------------------------------------------------------End Room-------------------------------------------------------------
     const handleSubmit = async () => {
+        // Kiểm tra selectedRoom và customerName nếu trống
+        if (!selectedRoom || !Object.values(selectedRoom)[1]) {
+            selectedRoom = ''; // Gán giá trị mặc định là chuỗi rỗng
+        }
+        if (customerName.length === 0) {
+            showMessage({
+                message: "Tạo đơn thất bại",
+                type: "danger",
+                icon: { icon: "danger", position: "left" }, // Use the built-in icon
+                // Here you can pass your custom component
+                renderCustomContent: () => (
+                    <CustomMessageComponent
+                        message="Tạo đơn thất bại"
+                        description="Vui lòng nhập tên khách."
+                        icon="closecircle"
+                    />
+                ),
+            });
+            return; // Dừng việc thực hiện tiếp theo
+        }
+        // Kiểm tra độ dài của selectedRoom
+        if (selectedRoom.length === 0) {
+            showMessage({
+                message: "Tạo đơn thất bại",
+                type: "danger",
+                icon: { icon: "danger", position: "left" }, // Use the built-in icon
+                // Here you can pass your custom component
+                renderCustomContent: () => (
+                    <CustomMessageComponent
+                        message="Tạo đơn thất bại"
+                        description="Vui lòng chọn phòng."
+                        icon="closecircle"
+                    />
+                ),
+            });
+            return; // Dừng việc thực hiện tiếp theo
+        }
 
+        if (Object.values(selectedRoom)[1].length > 0 && customerName.length > 0) {
+            const ordersRef = ref(database, 'Orders');
+            let lastOrderKey = '';
+
+            await get(ordersRef)
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        const orderKeys = Object.keys(data);
+                        lastOrderKey = orderKeys[orderKeys.length - 1];
+                    } else {
+                        console.log("No data available");
+                    }
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+
+            const newOrderKey = 'O' + (parseInt(lastOrderKey.substring(1)) + 1);
+
+            let orderDetailsData = {};
+            Object.values(cartItems).forEach((item, index) => {
+                const orderKey = 'OD1';
+                const itemKey = `${orderKey}_${index + 1}`;
+                const itemId = item.key.split('_')[0];
+                const itemTypePrefix = itemId.match(/[A-Za-z]+/)[0];
+                let itemType = '';
+
+                switch (itemTypePrefix) {
+                    case 'D':
+                        itemType = 'IdDrink';
+                        break;
+                    case 'F':
+                        itemType = 'IdFood';
+                        break;
+                    case 'DD':
+                        itemType = 'IdDrink2ND';
+                        break;
+                    case 'Tp':
+                        itemType = 'IdTopping';
+                        break;
+                    case 'Fb':
+                        itemType = 'IdFoodBonus';
+                        break;
+                    case 'G':
+                        itemType = 'IdGame';
+                        break;
+                    default:
+                        console.log("Unknown item type");
+                }
+
+                if (!orderDetailsData[orderKey]) {
+                    orderDetailsData[orderKey] = {};
+                }
+
+                orderDetailsData[orderKey][itemKey] = {
+                    [itemType]: itemId,
+                    "Quantity": item.quantity,
+                    "Discount": item.discount,
+                };
+            });
+
+            orderDetailsData['OD1']['CustomerName'] = customerName || 'Khách hàng';
+
+            const newOrderData = {
+                "CreatedDate": new Date().toISOString().split('T')[0],
+                "Delete": false,
+                "IdRoom": Object.values(selectedRoom)[1] || 'Rm3',
+                "OrderDetails": orderDetailsData,
+                "PaidDate": new Date().toISOString().split('T')[0],
+                "TotalAmount": totalCartPrice,
+                "TotalDiscountPrice": totalCartDiscountPrice,
+                "DiscountTotal": discountTotal || 0
+            };
+
+            await set(ref(database, 'Orders/' + newOrderKey), newOrderData)
+                .then(() => {
+                    console.log('Order saved successfully!');
+                })
+                .catch((error) => {
+                    console.error('Failed to save order: ', error);
+                });
+        }
+        navigation.navigate('Order')
     };
+    const CustomMessageComponent = ({ message, description, icon }) => {
+        return (
+            <View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, marginLeft: -30 , marginTop:10 }}>
+                    <IconAnt name={icon} size={24} color={'#ffffff'} />
+                    <Text style={{ marginLeft: 10, color: '#ffffff' }}>{message}</Text>
+                </View>
+                <Text style={{ marginLeft: 5, color: '#ffffff' }}>{description}</Text>
+            </View>
+        );
+    };
+    const handleCreateOrder = () => {
+        if (Object.values(cartItems).length > 0 && 
+        selectedRoom  &&
+        customerName.length > 0) {
+            handleSubmit();
+            showMessage({
+                message: "Tạo đơn thành công",
+                type: "success",
+                icon: { icon: "success", position: "left" }, // Use the built-in icon
+                // Here you can pass your custom component
+                renderCustomContent: () => (
+                    <CustomMessageComponent
+                        message="Tạo đơn thành công"
+                        description="Đơn hàng của bạn đã được tạo thành công."
+                        icon="checkcircle"
+                    />
+                ),
+            });
+            setTimeout(() => {
+                hideMessage();
+            }, 2000); // 2000 miliseconds = 2 giây
+        } else {
+            checkInput();
+        }
+    }
     const commonStyles = {
         container_order: {
             justifyContent: 'center',
@@ -261,10 +473,7 @@ export default function OrderDetails({ route }) {
     const mobileStyles = StyleSheet.create({
         container_order: {
             flex: 1,
-
-
             paddingTop: 20,
-
         },
         main_order: {
             flex: 1,
@@ -393,10 +602,10 @@ export default function OrderDetails({ route }) {
             flex: 1,
             backgroundColor: "#ffffff",
             padding: 10,
-            paddingLeft:10,
-            paddingTop:5,
-            paddingRight:10,
-            paddingBottom:10,
+            paddingLeft: 10,
+            paddingTop: Object.values(cartItems).length > 0 ? 5 : 10,
+            paddingRight: 10,
+            paddingBottom: 10,
             borderRadius: 10,
             shadowColor: "#0000001A",
             shadowOpacity: 0.1,
@@ -421,7 +630,7 @@ export default function OrderDetails({ route }) {
                 <View style={{ marginBottom: '20%' }}>
                     <Text style={{ marginLeft: 20, marginBottom: 5 }}>Tên khách hàng</Text>
                     <View style={finalStyles.input_cus}>
-                        <TextInput style={finalStyles.input} />
+                        <TextInput style={finalStyles.input} onChangeText={(text) => { setCustomerName(text) }} />
                     </View>
                     <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Phòng</Text>
                     <View style={finalStyles.input_cus}>
@@ -516,9 +725,9 @@ export default function OrderDetails({ route }) {
                                                         )}
                                                     </View>
                                                     <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 50 }}>
-                                                                
-                                                                <Text style={{ marginLeft: 8, marginRight: 8 }}>SL: {quantity}</Text>
-         
+
+                                                        <Text style={{ marginLeft: 8, marginRight: 8 }}>SL: {quantity}</Text>
+
                                                     </View>
                                                 </View>
                                             </View>
@@ -544,39 +753,53 @@ export default function OrderDetails({ route }) {
                             </TouchableOpacity>
                         </View>
                     </View>
+                    <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 5 }}>Mã giảm giá </Text>
+                    <View style={finalStyles.input_cus}>
+                        <TextInput style={finalStyles.input} onChangeText={(text) => { setDiscountTotal(text) }} />
+                    </View>
                     <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Chi tiết thanh toán</Text>
                     <View style={finalStyles.orderlist}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'gray', }}>
                             <Text style={{ justifyContent: 'flex-start' }}>Tổng</Text>
                             <Text style={{ justifyContent: 'flex-end' }}>{totalCartPrice.toLocaleString('vi-VN')}đ</Text>
                         </View>
-                        <View style={{ justifyContent: 'space-between', paddingBottom: 10, paddingTop: 10, borderBottomWidth: 1, borderBottomColor: 'gray', }}>
-                            <Text style={{ justifyContent: 'flex-start' }}>Các món khuyến mãi</Text>
-                            {Object.entries(cartItems).filter(([key, data]) => data.discount !== undefined && data.discount > 0).map(([key, data], index) => {
-                                if (data.discount !== undefined && data.discount > 0) { // Check if there is a discount
-                                    return (
+
+                        {Object.entries(cartItems).filter(([key, data]) => data.discount !== undefined && data.discount > 0).map(([key, data], index) => {
+                            if (data.discount !== undefined && data.discount > 0) { // Check if there is a discount
+                                return (
+                                    <View style={{ justifyContent: 'space-between', paddingBottom: 10, paddingTop: 10, borderBottomWidth: 1, borderBottomColor: 'gray', }}>
+                                        <Text style={{ justifyContent: 'flex-start' }}>Các món khuyến mãi</Text>
                                         <View key={key} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                            <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', justifyContent: 'flex-start' }}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', justifyContent: 'flex-start' }}>
                                                 <Text>{`${index + 1}. `}</Text>
                                                 <Text style={{ justifyContent: 'flex-start' }}>{data.name}</Text>
                                             </View>
                                             <Text style={{ justifyContent: 'flex-end' }}>{`-${(data.discountPrice).toLocaleString('vi-VN')}đ`}</Text>
                                         </View>
-                                    );
-                                } else {
-                                    return null; // Don't render if there's no discount
-                                }
-                            })}
-                        </View>
+                                    </View>
+                                );
+                            } else {
+                                return null; // Don't render if there's no discount
+                            }
+                        })}
+
+                        {discountTotal > 0 ? (
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'gray' }}>
+                                <Text style={{ justifyContent: 'flex-start' }}>Khấu trừ giảm giá</Text>
+                                <Text style={{ justifyContent: 'flex-end' }}>{`${(totalCartDiscountPrice * discountTotal / 100) > 0 ? '-' : ''}${(totalCartPrice * discountTotal / 100).toLocaleString('vi-VN')}đ`}</Text>
+                            </View>
+                        ) : null}
+
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10, paddingTop: 10 }}>
                             <Text style={{ justifyContent: 'flex-start', fontWeight: 'bold' }}>Tổng cộng</Text>
-                            <Text style={{ justifyContent: 'flex-end', fontWeight: 'bold' }}>{totalCartDiscountPrice.toLocaleString('vi-VN')}đ</Text>
+                            <Text style={{ justifyContent: 'flex-end', fontWeight: 'bold' }}>{(discountTotal ? (totalCartDiscountPrice - (totalCartPrice * discountTotal / 100)) : totalCartDiscountPrice).toLocaleString('vi-VN')}đ</Text>
                         </View>
                     </View>
                 </View>
 
             </ScrollView>
-            <View style={{
+            {!isKeyboardVisible?
+            (    <View style={{
                 position: 'absolute',
                 bottom: 0,
                 left: 0,
@@ -615,7 +838,9 @@ export default function OrderDetails({ route }) {
                             top: 0,
                             justifyContent: 'center',
                         }}
-
+                        onPress={() => {
+                            handleCreateOrder()
+                        }}
                     >
                         <Text style={{
                             color: "#ffffff",
@@ -623,7 +848,9 @@ export default function OrderDetails({ route }) {
                         }}>Tạo đơn</Text>
                     </TouchableOpacity>
                 </View>
-            </View>
+            </View>)
+            :null}
+        
         </SafeAreaView>
     );
 
