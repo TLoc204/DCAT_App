@@ -485,7 +485,6 @@ export default function Order() {
                             <ContentLoader
                             originY={0}
                             originX={0}
-                            
                             speed={2}
                             width={Dimensions.get('window').width}
                             height={Dimensions.get('window').height}
@@ -494,28 +493,19 @@ export default function Order() {
                             foregroundColor="#f3f3f3"   // Change foreground color to the previous background color
                         >
                             {/* Define the placeholders shapes */}
-                            <Circle cx="30" cy="30" r="30" x="20" />
-                            <Rect x="90" y="10" rx="4" ry="4" width="60%" height="6.4" />
-                            <Rect x="90" y="40" rx="3" ry="3" width="40%" height="6.4" />
-                            <Rect x="30" y="70" rx="3" ry="3" width="100%" height="6.4" />
-                            <Rect x="30" y="100" rx="3" ry="3" width="40%" height="6.4" />
-                            <Rect x="30" y="130" rx="3" ry="3" width="70%" height="6.4" />
-                            <Rect x="30" y="160" rx="3" ry="3" width="50%" height="6.4" />
-                            <Rect x="30" y="190" rx="3" ry="3" width="60%" height="6.4" />
-                            <Rect x="30" y="220" rx="3" ry="3" width="90%" height="6.4" />
-                            <Rect x="30" y="250" rx="3" ry="3" width="55%" height="6.4" />
-                            <Rect x="30" y="280" rx="3" ry="3" width="100%" height="6.4" />
-                            <Circle cx="30" cy="330" r="30" x="20" />
-                            <Rect x="90" y="310" rx="4" ry="4" width="60%" height="6.4" />
-                            <Rect x="90" y="340" rx="3" ry="3" width="40%" height="6.4" />
-                            <Rect x="30" y="370" rx="3" ry="3" width="100%" height="6.4"/>
-                            <Rect x="30" y="400" rx="3" ry="3" width="60%" height="6.4" />
-                            <Rect x="30" y="430" rx="3" ry="3" width="80%" height="6.4" />
-                            <Rect x="30" y="460" rx="3" ry="3" width="40%" height="6.4" />
-                            <Rect x="30" y="490" rx="3" ry="3" width="70%" height="6.4" />
-                            <Rect x="30" y="520" rx="3" ry="3" width="40%" height="6.4" />
-                            <Rect x="30" y="550" rx="3" ry="3" width="30%" height="6.4" />
-                            <Rect x="30" y="580" rx="3" ry="3" width="100%" height="6.4" />
+
+                            <Rect x="40" y="30" rx="4" ry="4" width="80%" height="15" />
+                            <Rect x="40" y="60" rx="4" ry="4" width="40%" height="15" />
+                            <Rect x="40" y="90" rx="4" ry="4" width="60%" height="15" />
+                            <Rect x="40" y="120" rx="4" ry="4" width="50%" height="15" />
+                            <Rect x="40" y="220" rx="4" ry="4" width="80%" height="15" />
+                            <Rect x="40" y="250" rx="4" ry="4" width="40%" height="15" />
+                            <Rect x="40" y="280" rx="4" ry="4" width="60%" height="15" />
+                            <Rect x="40" y="310" rx="4" ry="4" width="50%" height="15" />
+                            <Rect x="40" y="410" rx="4" ry="4" width="80%" height="15" />
+                            <Rect x="40" y="440" rx="4" ry="4" width="40%" height="15" />
+                            <Rect x="40" y="470" rx="4" ry="4" width="60%" height="15" />
+                            <Rect x="40" y="500" rx="4" ry="4" width="50%" height="15" />
                         </ContentLoader>
                         ) : (
                             Object.keys(filteredOrders)
