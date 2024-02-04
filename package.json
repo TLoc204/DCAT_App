@@ -29,6 +29,7 @@
     "firebase": "^10.7.1",
     "metro-react-native-babel-preset": "^0.65.0",
     "react": "18.2.0",
+    "react-content-loader": "^6.2.1",
     "react-dom": "18.2.0",
     "react-native": "0.72.5",
     "react-native-bem-check-box": "^1.0.0",
