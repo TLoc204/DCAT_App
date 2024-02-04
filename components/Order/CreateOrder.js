@@ -17,7 +17,7 @@ import { showMessage, hideMessage, } from "react-native-flash-message";
 // Lấy kích thước màn hình để hỗ trợ responsive
 const { width, height } = Dimensions.get('window');
 
-export default function OrderDetails({ route }) {
+export default function CreateOrder({ route }) {
     const database = getDatabase(FIREBASE_APP);
     const storage = getStorage(FIREBASE_APP);
     const [dataOrders, setDataOrders] = useState([]);
