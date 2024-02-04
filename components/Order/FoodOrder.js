@@ -112,7 +112,7 @@ export const useImageAllFolder = () => {
     return context;
 };
 
-export default function OrderDetails({ route }) {
+export default function FoodOrder({ route }) {
     const database = getDatabase(FIREBASE_APP);
     const storage = getStorage(FIREBASE_APP);
     const [dataOrders, setDataOrders] = useState([]);
@@ -142,6 +142,7 @@ export default function OrderDetails({ route }) {
     const [discount, setDiscount] = useState({});
     const [cartItems, setCartItems] = useState([]);
     const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+    const [defaultImageUrl, setDefaultImageUrl] = useState('https://firebasestorage.googleapis.com/v0/b/dcat-c09a4.appspot.com/o/MacDinh.jpg?alt=media&token=d66af2a0-9be6-44cb-9eda-504f04c1763c');
     useEffect(() => {
         // Chỉ cập nhật cartItems nếu foods thực sự thay đổi.
         const currentFoods = JSON.stringify(foods);
@@ -751,7 +752,8 @@ export default function OrderDetails({ route }) {
                     const price = data.price;
                     const quantity = cartItems[key] ? cartItems[key].quantity : 0;
                     const imageArray = imageAllFolder || [];
-                    const url = imageArray.find((item) => item.name === `${key}.jpg`).url;
+                    const url = imageArray.find((item) => item.name === `${key}.jpg`)?.url || defaultImageUrl;
+
 
                     return (
                         <View style={finalStyles.gridTotal}>
@@ -764,7 +766,7 @@ export default function OrderDetails({ route }) {
                                 ]}
                             >
                                 <View style={{ width: '20%' }}>
-                                    <Image source={{ uri: url?url:'https://firebasestorage.googleapis.com/v0/b/dcat-c09a4.appspot.com/o/MacDinh.jpg?alt=media&token=d66af2a0-9be6-44cb-9eda-504f04c1763c' }} style={finalStyles.image} />
+                                    <Image source={{ uri: url}} style={finalStyles.image} />
                                 </View>
                                 <View style={finalStyles.itemDetails}>
                                     <Text style={finalStyles.itemName}>{name}</Text>
@@ -974,7 +976,7 @@ export default function OrderDetails({ route }) {
                                     const imageArray = imageAllFolder || [];
 
                                     // Find the URL for the specific key or provide a default URL if not found
-                                    const url = imageArray.find((item) => item.name === `${key.split('_')[0]}.jpg`).url;
+                                    const url = imageArray.find((item) => item.name === `${key.split('_')[0]}.jpg`)?.url || defaultImageUrl;
                                     return (
                                         <View style={[finalStyles.gridTotal]}>
                                             <View
@@ -986,7 +988,7 @@ export default function OrderDetails({ route }) {
                                                 ]}
                                             >
                                                 <View style={{ width: '20%' }}>
-                                                    <Image source={{ uri: url?url:'https://firebasestorage.googleapis.com/v0/b/dcat-c09a4.appspot.com/o/MacDinh.jpg?alt=media&token=d66af2a0-9be6-44cb-9eda-504f04c1763c' }} style={finalStyles.image} />
+                                                    <Image source={{ uri: url }} style={finalStyles.image} />
                                                 </View>
                                                 <View style={finalStyles.itemDetails}>
                                                     <Text style={finalStyles.itemName}>{name}</Text>
