@@ -10,6 +10,7 @@ import SearchBar from "react-native-dynamic-search-bar";
 import { Dropdown } from 'react-native-element-dropdown';
 import { getStorage, ref as storageRef, listAll, getDownloadURL } from "firebase/storage";
 import { useRoute } from '@react-navigation/native';
+import ContentLoader, { Rect, Circle } from 'react-content-loader/native';
 // Lấy kích thước màn hình để hỗ trợ responsive
 const { width, height } = Dimensions.get('window');
 const theme = {
@@ -46,6 +47,7 @@ export default function Order() {
     const [imageUrls, setImageUrls] = useState({});
     const [imageAll, setImageAll] = useState({});
     const screenHeight = Dimensions.get('window').height; // Lấy chiều cao màn hình
+    const [isLoading, setIsLoading] = useState(true);
     useEffect(() => {
         const ordersRef = ref(database, 'Orders');
         const roomRef = ref(database, 'Rooms');
@@ -144,7 +146,7 @@ export default function Order() {
         setOrderCountByRoom(countByRoom);
     }, [filteredOrders, roomNames]);
     const handleSubmit = async () => {
-        
+
     };
     useEffect(() => {
         const filtered = Object.keys(dataOrders).reduce((acc, key) => {
@@ -163,6 +165,9 @@ export default function Order() {
             return acc;
         }, {});
         setFilteredOrders(filtered);
+        setTimeout(() => {
+            setIsLoading(false);
+        }, 2000); // 2000 milliseconds = 2 seconds
     }, [searchQuery, dataOrders]);
     const openFilterMenu = () => {
         bottomSheet.current.show();
@@ -171,11 +176,14 @@ export default function Order() {
     const handleSelectRoom = (roomKey) => {
         setCurrentRoom(roomNames[roomKey] || 'Tất cả'); // Cập nhật phòng được chọn
         bottomSheet.current.hide(); // Ẩn BottomSheet sau khi lựa chọn
-
+        setIsLoading(true);
         // Lọc các orders dựa trên phòng được chọn
         if (roomKey === 'Tất cả') {
             // Nếu chọn 'Tất cả', hiển thị tất cả orders
             setFilteredOrders(dataOrders);
+            setTimeout(() => {
+                setIsLoading(false);
+            }, 2000); // 2000 milliseconds = 2 seconds
         } else {
             // Nếu chọn một phòng cụ thể, lọc orders theo phòng đó
             const filteredByRoom = Object.keys(dataOrders).reduce((acc, orderId) => {
@@ -186,9 +194,12 @@ export default function Order() {
                 return acc;
             }, {});
             setFilteredOrders(filteredByRoom);
+            setTimeout(() => {
+                setIsLoading(false);
+            }, 2000); // 2000 milliseconds = 2 seconds
         }
     };
-    
+
     // const getFilteredData = () => {
     //     switch (selectedCategory) {
     //         case 'C1':
@@ -322,7 +333,7 @@ export default function Order() {
         },
         main_order: {
             flex: 1,
-           
+
         },
         main_order_item: {
             flexDirection: "row",
@@ -364,7 +375,7 @@ export default function Order() {
             elevation: 104,
         },
 
-    
+
         inputStyleDD: {
             fontSize: 16
         },
@@ -372,12 +383,12 @@ export default function Order() {
             fontSize: 16
         },
         placeholderStyle: {
-            
+
             fontSize: 16
         },
         //------------------------------- Css Món Ăn----------------------------------
         listContainer: {
-            
+
             paddingHorizontal: 10,
             alignItems: 'flex-start',
             marginTop: 10
@@ -457,7 +468,7 @@ export default function Order() {
                         ))}
                     </BottomSheet>
 
-                            {/*onPress={openCreateOrder} */ }
+                    {/*onPress={openCreateOrder} */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 20 }}>
                         <TouchableOpacity onPress={() => navigation.navigate('CreateOrder')}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -468,94 +479,138 @@ export default function Order() {
                 </View>
                 <ScrollView
                     style={finalStyles.main_order}>
-                    {Object.keys(filteredOrders).reverse().map((orderId) => {
-                        const order = filteredOrders[orderId];
-                        if (!order.Delete) {
-                            let customerNames = []; // Khởi tạo một mảng để tích lũy tên khách hàng
+                    <ScrollView
+                        style={finalStyles.main_order}>
+                        {isLoading ? (
+                            <ContentLoader
+                            originY={0}
+                            originX={0}
+                            
+                            speed={2}
+                            width={Dimensions.get('window').width}
+                            height={Dimensions.get('window').height}
+                            viewBox={`0 0 ${Dimensions.get('window').width} ${Dimensions.get('window').height}` }
+                            backgroundColor="#ffffff"  // Change background color to white or a brighter color
+                            foregroundColor="#f3f3f3"   // Change foreground color to the previous background color
+                        >
+                            {/* Define the placeholders shapes */}
+                            <Circle cx="30" cy="30" r="30" x="20" />
+                            <Rect x="90" y="10" rx="4" ry="4" width="60%" height="6.4" />
+                            <Rect x="90" y="40" rx="3" ry="3" width="40%" height="6.4" />
+                            <Rect x="30" y="70" rx="3" ry="3" width="100%" height="6.4" />
+                            <Rect x="30" y="100" rx="3" ry="3" width="40%" height="6.4" />
+                            <Rect x="30" y="130" rx="3" ry="3" width="70%" height="6.4" />
+                            <Rect x="30" y="160" rx="3" ry="3" width="50%" height="6.4" />
+                            <Rect x="30" y="190" rx="3" ry="3" width="60%" height="6.4" />
+                            <Rect x="30" y="220" rx="3" ry="3" width="90%" height="6.4" />
+                            <Rect x="30" y="250" rx="3" ry="3" width="55%" height="6.4" />
+                            <Rect x="30" y="280" rx="3" ry="3" width="100%" height="6.4" />
+                            <Circle cx="30" cy="330" r="30" x="20" />
+                            <Rect x="90" y="310" rx="4" ry="4" width="60%" height="6.4" />
+                            <Rect x="90" y="340" rx="3" ry="3" width="40%" height="6.4" />
+                            <Rect x="30" y="370" rx="3" ry="3" width="100%" height="6.4"/>
+                            <Rect x="30" y="400" rx="3" ry="3" width="60%" height="6.4" />
+                            <Rect x="30" y="430" rx="3" ry="3" width="80%" height="6.4" />
+                            <Rect x="30" y="460" rx="3" ry="3" width="40%" height="6.4" />
+                            <Rect x="30" y="490" rx="3" ry="3" width="70%" height="6.4" />
+                            <Rect x="30" y="520" rx="3" ry="3" width="40%" height="6.4" />
+                            <Rect x="30" y="550" rx="3" ry="3" width="30%" height="6.4" />
+                            <Rect x="30" y="580" rx="3" ry="3" width="100%" height="6.4" />
+                        </ContentLoader>
+                        ) : (
+                            Object.keys(filteredOrders)
+                                .reverse()
+                                .map((orderId) => {
+                                    const order = filteredOrders[orderId];
+                                    if (!order.Delete) {
+                                        let customerNames = []; // Khởi tạo một mảng để tích lũy tên khách hàng
 
-                            if (order.OrderDetails) {
-                                Object.keys(order.OrderDetails).forEach((key) => {
-                                    if (order.OrderDetails[key].CustomerName) {
-                                        customerNames.push(order.OrderDetails[key].CustomerName);
+                                        if (order.OrderDetails) {
+                                            Object.keys(order.OrderDetails).forEach((key) => {
+                                                if (order.OrderDetails[key].CustomerName) {
+                                                    customerNames.push(order.OrderDetails[key].CustomerName);
+                                                }
+                                            });
+                                        }
+
+                                        const customerNameString = customerNames.join(', ');
+                                        return (
+                                            <View
+                                                key={orderId} // Sử dụng key là orderId
+                                                style={{
+                                                    marginBottom: 40,
+                                                    marginHorizontal: 24,
+                                                }}>
+                                                <View style={finalStyles.main_order_item}>
+                                                    <View
+                                                        style={{
+                                                            flex: 1,
+                                                        }}>
+                                                        <Text
+                                                            style={{
+                                                                color: "#201a25",
+                                                                fontSize: 16,
+                                                                fontWeight: "bold",
+                                                                marginBottom: 10,
+                                                                marginLeft: 1,
+                                                            }}>
+                                                            {"Tên khách hàng: " + customerNameString}
+                                                        </Text>
+                                                        <Text
+                                                            style={{
+                                                                color: "#c3c6c9",
+                                                                fontSize: 12,
+                                                                fontWeight: "bold",
+                                                                marginBottom: 15,
+                                                            }}>
+                                                            {"Số hóa đơn: " + orderId.replace("O", "")} {/* Hiển thị key orderId */}
+                                                        </Text>
+                                                        <Text
+                                                            style={{
+                                                                color: "#86B6F6",
+                                                                fontSize: 12,
+                                                                fontWeight: "bold",
+                                                                marginBottom: 15,
+                                                            }}>
+                                                            {"Tổng tiền: " + order.TotalAmount.toLocaleString('vi-VN')} {/* Hiển thị key orderId */}
+                                                        </Text>
+                                                        <Text
+                                                            style={{
+                                                                color: "#201a25",
+                                                                fontSize: 14,
+                                                                fontWeight: "bold",
+                                                            }}>
+                                                            {roomNames[order.IdRoom] || ''}
+                                                        </Text>
+                                                    </View>
+                                                </View>
+                                                <TouchableOpacity onPress={() => navigation.navigate('OrderDetails', { titleCustomerName: order.CustomerName })}>
+                                                    <View
+                                                        style={{
+                                                            position: "absolute",
+                                                            bottom: -20,
+                                                            right: -1,
+                                                            width: 66,
+                                                            flex: 1,
+                                                            justifyContent: 'center',
+                                                            alignItems: 'center',
+                                                            height: 66,
+                                                            backgroundColor: "#eef1f4",
+                                                            borderRadius: 20,
+                                                            paddingHorizontal: 20,
+                                                        }}>
+                                                        <Icon name="add" size={34} color="#667080" style={finalStyles.icon} />
+                                                    </View>
+                                                </TouchableOpacity>
+                                            </View>
+                                        );
                                     }
-                                });
-                            }
+                                    return null;
+                                })
+                        )}
+                    </ScrollView>
 
-                            const customerNameString = customerNames.join(', ');
-                            return (
-                                <View
-                                    key={orderId} // Sử dụng key là orderId
-                                    style={{
-                                        marginBottom: 40,
-                                        marginHorizontal: 24,
-                                    }}>
-                                    <View
-                                        style={finalStyles.main_order_item}>
-                                        <View
-                                            style={{
-                                                flex: 1,
-                                            }}>
-                                            <Text
-                                                style={{
-                                                    color: "#201a25",
-                                                    fontSize: 16,
-                                                    fontWeight: "bold",
-                                                    marginBottom: 10,
-                                                    marginLeft: 1,
-                                                }}>
-                                                {"Tên khách hàng: " + customerNameString}
-                                            </Text>
-                                            <Text
-                                                style={{
-                                                    color: "#c3c6c9",
-                                                    fontSize: 12,
-                                                    fontWeight: "bold",
-                                                    marginBottom: 15,
-                                                }}>
-                                                {"Số hóa đơn: " + orderId.replace("O", "")} {/* Hiển thị key orderId */}
-                                            </Text>
-                                            <Text
-                                                style={{
-                                                    color: "#86B6F6",
-                                                    fontSize: 12,
-                                                    fontWeight: "bold",
-                                                    marginBottom: 15,
-                                                }}>
-                                                {"Tổng tiền: " + order.TotalAmount.toLocaleString('vi-VN')} {/* Hiển thị key orderId */}
-                                            </Text>
-                                            <Text
-                                                style={{
-                                                    color: "#201a25",
-                                                    fontSize: 14,
-                                                    fontWeight: "bold",
-                                                }}>
-                                                {roomNames[order.IdRoom] || ''}
-                                            </Text>
-                                        </View>
-                                    </View>
-                                    <TouchableOpacity onPress={() => navigation.navigate('OrderDetails', { titleCustomerName: order.CustomerName })}>
-                                        <View
-                                            style={{
-                                                position: "absolute",
-                                                bottom: -20,
-                                                right: -1,
-                                                width: 66,
-                                                flex: 1,
-                                                justifyContent: 'center',
-                                                alignItems: 'center',
-                                                height: 66,
-                                                backgroundColor: "#eef1f4",
-                                                borderRadius: 20,
-                                                paddingHorizontal: 20,
-                                            }}>
-                                            <Icon name="add" size={34} color="#667080" style={finalStyles.icon} />
-                                        </View>
-                                    </TouchableOpacity>
-                                </View>
-                            );
-                        }
-                        return null;
-                    })}
+
 
                 </ScrollView>
 
