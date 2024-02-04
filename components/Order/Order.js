@@ -165,14 +165,19 @@ export default function Order() {
             return acc;
         }, {});
         setFilteredOrders(filtered);
-        setTimeout(() => {
-            setIsLoading(false);
-        }, 2000); // 2000 milliseconds = 2 seconds
     }, [searchQuery, dataOrders]);
     const openFilterMenu = () => {
         bottomSheet.current.show();
     };
-
+    useEffect(() => {
+        // Kiểm tra xem filteredOrders đã kết thúc cập nhật
+        if (filteredOrders) {
+            setTimeout(() => {
+                setIsLoading(false);
+            }, 2000); // 2000 milliseconds = 2 seconds
+        }
+        else setIsLoading(true);
+    }, [filteredOrders]);
     const handleSelectRoom = (roomKey) => {
         setCurrentRoom(roomNames[roomKey] || 'Tất cả'); // Cập nhật phòng được chọn
         bottomSheet.current.hide(); // Ẩn BottomSheet sau khi lựa chọn
@@ -498,10 +503,12 @@ export default function Order() {
                             <Rect x="40" y="60" rx="4" ry="4" width="40%" height="15" />
                             <Rect x="40" y="90" rx="4" ry="4" width="60%" height="15" />
                             <Rect x="40" y="120" rx="4" ry="4" width="50%" height="15" />
+
                             <Rect x="40" y="220" rx="4" ry="4" width="80%" height="15" />
                             <Rect x="40" y="250" rx="4" ry="4" width="40%" height="15" />
                             <Rect x="40" y="280" rx="4" ry="4" width="60%" height="15" />
                             <Rect x="40" y="310" rx="4" ry="4" width="50%" height="15" />
+
                             <Rect x="40" y="410" rx="4" ry="4" width="80%" height="15" />
                             <Rect x="40" y="440" rx="4" ry="4" width="40%" height="15" />
                             <Rect x="40" y="470" rx="4" ry="4" width="60%" height="15" />
