@@ -10,7 +10,7 @@ import SearchableDropdown from 'react-native-searchable-dropdown';
 const { width, height } = Dimensions.get('window');
 import { getStorage, ref as storageRef, listAll, getDownloadURL } from "firebase/storage";
 
-export default function Order() {
+export default function Home() {
   // const storage = getStorage(); // Khởi tạo đối tượng storage
 
   // const listAllItemsInFolder = async (folderPath) => {
