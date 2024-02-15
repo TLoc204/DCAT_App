@@ -881,7 +881,7 @@ useEffect(() => {
                     justifyContent: 'space-between',
                 }}>
                     {/* Left Component */}
-                    <TouchableOpacity style={{ justifyContent: 'flex-start' }}>
+                    <TouchableOpacity style={{ justifyContent: 'flex-start' }}> 
                         <View style={{ flexDirection: 'row', position: 'relative', paddingLeft: 20 }}>
                             {/* Add any content for the left component here */}
                         </View>
