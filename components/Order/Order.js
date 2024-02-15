@@ -467,7 +467,7 @@ export default function Order() {
                                                                 fontWeight: "bold",
                                                                 marginBottom: 15,
                                                             }}>
-                                                            {"Tổng tiền: " + order.TotalAmount.toLocaleString('vi-VN')} {/* Hiển thị key orderId */}
+                                                            {"Tổng tiền: " + order.TotalDiscountPrice.toLocaleString('vi-VN')} {/* Hiển thị key orderId */}
                                                         </Text>
                                                         <Text
                                                             style={{
