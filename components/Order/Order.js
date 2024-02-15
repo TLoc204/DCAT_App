@@ -151,13 +151,24 @@ export default function Order() {
     useEffect(() => {
         const filtered = Object.keys(dataOrders).reduce((acc, key) => {
             const order = dataOrders[key];
-            const customerName = order.CustomerName;
+            const customerNames = []; // Khởi tạo mảng rỗng để chứa tên khách hàng
             const roomId = order.IdRoom;
             const roomName = roomNames[roomId];
 
+            if (order.OrderDetails) {
+                Object.keys(order.OrderDetails).forEach((orderDetailKey) => {
+                    if (order.OrderDetails[orderDetailKey].CustomerName) {
+                        customerNames.push(order.OrderDetails[orderDetailKey].CustomerName); // Thêm tên khách hàng vào mảng
+                    }
+                });
+            }
+
+            const customerNameString = customerNames.join(', ');
+
+            // Chuyển searchQuery thành chữ thường và so sánh
             if (
-                (customerName && customerName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                key.includes(searchQuery) ||
+                (customerNameString && customerNameString.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                key.includes(searchQuery.toLowerCase()) ||
                 (roomName && roomName.toLowerCase().includes(searchQuery.toLowerCase()))
             ) {
                 acc[key] = order;
@@ -166,6 +177,7 @@ export default function Order() {
         }, {});
         setFilteredOrders(filtered);
     }, [searchQuery, dataOrders]);
+
     const openFilterMenu = () => {
         bottomSheet.current.show();
     };
@@ -370,32 +382,36 @@ export default function Order() {
                         style={finalStyles.main_order}>
                         {isLoading ? (
                             <ContentLoader
-                            originY={0}
-                            originX={0}
-                            speed={2}
-                            width={Dimensions.get('window').width}
-                            height={Dimensions.get('window').height}
-                            viewBox={`0 0 ${Dimensions.get('window').width} ${Dimensions.get('window').height}` }
-                            backgroundColor="#ffffff"  // Change background color to white or a brighter color
-                            foregroundColor="#f3f3f3"   // Change foreground color to the previous background color
-                        >
-                            {/* Define the placeholders shapes */}
+                                originY={0}
+                                originX={0}
+                                speed={2}
+                                width={Dimensions.get('window').width}
+                                height={Dimensions.get('window').height}
+                                viewBox={`0 0 ${Dimensions.get('window').width} ${Dimensions.get('window').height}`}
+                                backgroundColor="#ffffff"  // Change background color to white or a brighter color
+                                foregroundColor="#f3f3f3"   // Change foreground color to the previous background color
+                            >
+                                {/* Define the placeholders shapes */}
 
-                            <Rect x="40" y="30" rx="4" ry="4" width="80%" height="15" />
-                            <Rect x="40" y="60" rx="4" ry="4" width="40%" height="15" />
-                            <Rect x="40" y="90" rx="4" ry="4" width="60%" height="15" />
-                            <Rect x="40" y="120" rx="4" ry="4" width="50%" height="15" />
+                                <Rect x="40" y="30" rx="4" ry="4" width="80%" height="15" />
+                                <Rect x="40" y="60" rx="4" ry="4" width="40%" height="15" />
+                                <Rect x="40" y="90" rx="4" ry="4" width="60%" height="15" />
+                                <Rect x="40" y="120" rx="4" ry="4" width="50%" height="15" />
 
-                            <Rect x="40" y="220" rx="4" ry="4" width="80%" height="15" />
-                            <Rect x="40" y="250" rx="4" ry="4" width="40%" height="15" />
-                            <Rect x="40" y="280" rx="4" ry="4" width="60%" height="15" />
-                            <Rect x="40" y="310" rx="4" ry="4" width="50%" height="15" />
+                                <Rect x="40" y="220" rx="4" ry="4" width="80%" height="15" />
+                                <Rect x="40" y="250" rx="4" ry="4" width="40%" height="15" />
+                                <Rect x="40" y="280" rx="4" ry="4" width="60%" height="15" />
+                                <Rect x="40" y="310" rx="4" ry="4" width="50%" height="15" />
 
-                            <Rect x="40" y="410" rx="4" ry="4" width="80%" height="15" />
-                            <Rect x="40" y="440" rx="4" ry="4" width="40%" height="15" />
-                            <Rect x="40" y="470" rx="4" ry="4" width="60%" height="15" />
-                            <Rect x="40" y="500" rx="4" ry="4" width="50%" height="15" />
-                        </ContentLoader>
+                                <Rect x="40" y="410" rx="4" ry="4" width="80%" height="15" />
+                                <Rect x="40" y="440" rx="4" ry="4" width="40%" height="15" />
+                                <Rect x="40" y="470" rx="4" ry="4" width="60%" height="15" />
+                                <Rect x="40" y="500" rx="4" ry="4" width="50%" height="15" />
+
+                                {/* <Rect x="13" y="28" rx="5" ry="5" width="51" height="51" />
+                                <Rect x="78" y="29" rx="5" ry="5" width="157" height="19" />
+                                <Rect x="78" y="55" rx="5" ry="5" width="90" height="19" /> */}
+                            </ContentLoader>
                         ) : (
                             Object.keys(filteredOrders)
                                 .reverse()
@@ -463,7 +479,7 @@ export default function Order() {
                                                         </Text>
                                                     </View>
                                                 </View>
-                                                <TouchableOpacity onPress={() => navigation.navigate('OrderDetails', { titleCustomerName: order.CustomerName })}>
+                                                <TouchableOpacity onPress={() => navigation.navigate('OrderDetails', { Orders: Object.entries(filteredOrders[orderId]) })}>
                                                     <View
                                                         style={{
                                                             position: "absolute",
