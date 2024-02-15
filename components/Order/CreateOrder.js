@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useState, useRef, useContext } from "react";
-import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, AsyncStorage, Alert, SafeAreaView, ScrollView, ImageBackground, TextInput, FlatList, SectionList,Keyboard } from "react-native";
+import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, AsyncStorage, Alert, SafeAreaView, ScrollView, ImageBackground, TextInput, FlatList, SectionList, Keyboard } from "react-native";
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 import { useNavigation } from '@react-navigation/native';
@@ -150,16 +150,16 @@ export default function CreateOrder({ route }) {
     }, []);
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-          setIsKeyboardVisible(true);
+            setIsKeyboardVisible(true);
         });
         const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-          setIsKeyboardVisible(false);
+            setIsKeyboardVisible(false);
         });
         return () => {
-          keyboardDidShowListener.remove();
-          keyboardDidHideListener.remove();
+            keyboardDidShowListener.remove();
+            keyboardDidHideListener.remove();
         };
-      }, []);
+    }, []);
     //-----------------------------------------------------------Room-----------------------------------------------------------------
     const roomNames = {};
     // Duyệt qua dataTables và lưu tên của các bàn vào tableNames
@@ -267,6 +267,22 @@ export default function CreateOrder({ route }) {
         if (!selectedRoom || !Object.values(selectedRoom)[1]) {
             selectedRoom = ''; // Gán giá trị mặc định là chuỗi rỗng
         }
+        if (customerName.length === 0) {
+            showMessage({
+                message: "Tạo đơn thất bại",
+                type: "danger",
+                icon: { icon: "danger", position: "left" }, // Use the built-in icon
+                // Here you can pass your custom component
+                renderCustomContent: () => (
+                    <CustomMessageComponent
+                        message="Tạo đơn thất bại"
+                        description="Vui lòng nhập tên khách."
+                        icon="closecircle"
+                    />
+                ),
+            });
+            return; // Dừng việc thực hiện tiếp theo
+        }
         if (selectedRoom.length === 0) {
             showMessage({
                 message: "Tạo đơn thất bại",
@@ -284,24 +300,10 @@ export default function CreateOrder({ route }) {
             return; // Dừng việc thực hiện tiếp theo
         }
 
-        if (customerName.length === 0) {
-            showMessage({
-                message: "Tạo đơn thất bại",
-                type: "danger",
-                icon: { icon: "danger", position: "left" }, // Use the built-in icon
-                // Here you can pass your custom component
-                renderCustomContent: () => (
-                    <CustomMessageComponent
-                        message="Tạo đơn thất bại"
-                        description="Vui lòng nhập tên khách."
-                        icon="closecircle"
-                    />
-                ),
-            });
-            return; // Dừng việc thực hiện tiếp theo
-        }
+
 
     }
+    console.log(cartItems)
     //-----------------------------------------------------------End Room-------------------------------------------------------------
     const handleSubmit = async () => {
         // Kiểm tra selectedRoom và customerName nếu trống
@@ -400,7 +402,9 @@ export default function CreateOrder({ route }) {
                 orderDetailsData[orderKey][itemKey] = {
                     [itemType]: itemId,
                     "Quantity": item.quantity,
+                    "Name":item.name,
                     "Discount": item.discount,
+                    "Price" : item.price
                 };
             });
 
@@ -430,7 +434,7 @@ export default function CreateOrder({ route }) {
     const CustomMessageComponent = ({ message, description, icon }) => {
         return (
             <View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, marginLeft: -30 , marginTop:10 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, marginLeft: -30, marginTop: 10 }}>
                     <IconAnt name={icon} size={24} color={'#ffffff'} />
                     <Text style={{ marginLeft: 10, color: '#ffffff' }}>{message}</Text>
                 </View>
@@ -439,9 +443,9 @@ export default function CreateOrder({ route }) {
         );
     };
     const handleCreateOrder = () => {
-        if (Object.values(cartItems).length > 0 && 
-        selectedRoom  &&
-        customerName.length > 0) {
+        if (Object.values(cartItems).length > 0 &&
+            selectedRoom &&
+            customerName.length > 0) {
             handleSubmit();
             showMessage({
                 message: "Tạo đơn thành công",
@@ -677,6 +681,7 @@ export default function CreateOrder({ route }) {
                                                     : { borderBottomWidth: 1, borderBottomColor: 'gray' },
                                             ]}
                                         >
+
                                             <View style={{ width: '20%' }}>
                                                 <Image source={{ uri: url }} style={finalStyles.image} />
                                             </View>
@@ -763,12 +768,12 @@ export default function CreateOrder({ route }) {
                             <Text style={{ justifyContent: 'flex-start' }}>Tổng</Text>
                             <Text style={{ justifyContent: 'flex-end' }}>{totalCartPrice.toLocaleString('vi-VN')}đ</Text>
                         </View>
+                        <View style={{ justifyContent: 'space-between', paddingBottom: 10, paddingTop: 10, borderBottomWidth: 1, borderBottomColor: 'gray', }}>
+                            <Text style={{ justifyContent: 'flex-start' }}>Các món khuyến mãi</Text>
+                            {Object.entries(cartItems).filter(([key, data]) => data.discount !== undefined && data.discount > 0).map(([key, data], index) => {
+                                if (data.discount !== undefined && data.discount > 0) { // Check if there is a discount
+                                    return (
 
-                        {Object.entries(cartItems).filter(([key, data]) => data.discount !== undefined && data.discount > 0).map(([key, data], index) => {
-                            if (data.discount !== undefined && data.discount > 0) { // Check if there is a discount
-                                return (
-                                    <View style={{ justifyContent: 'space-between', paddingBottom: 10, paddingTop: 10, borderBottomWidth: 1, borderBottomColor: 'gray', }}>
-                                        <Text style={{ justifyContent: 'flex-start' }}>Các món khuyến mãi</Text>
                                         <View key={key} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', justifyContent: 'flex-start' }}>
                                                 <Text>{`${index + 1}. `}</Text>
@@ -776,19 +781,19 @@ export default function CreateOrder({ route }) {
                                             </View>
                                             <Text style={{ justifyContent: 'flex-end' }}>{`-${(data.discountPrice).toLocaleString('vi-VN')}đ`}</Text>
                                         </View>
-                                    </View>
-                                );
-                            } else {
-                                return null; // Don't render if there's no discount
-                            }
-                        })}
 
-                        {discountTotal > 0 ? (
+                                    );
+                                } else {
+                                    return null; // Don't render if there's no discount
+                                }
+                            })}
+                        </View>
+   
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'gray' }}>
-                                <Text style={{ justifyContent: 'flex-start' }}>Khấu trừ giảm giá</Text>
+                                <Text style={{ justifyContent: 'flex-start' }}>Giảm giá tổng</Text>
                                 <Text style={{ justifyContent: 'flex-end' }}>{`${(totalCartDiscountPrice * discountTotal / 100) > 0 ? '-' : ''}${(totalCartPrice * discountTotal / 100).toLocaleString('vi-VN')}đ`}</Text>
                             </View>
-                        ) : null}
+
 
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10, paddingTop: 10 }}>
                             <Text style={{ justifyContent: 'flex-start', fontWeight: 'bold' }}>Tổng cộng</Text>
@@ -798,59 +803,59 @@ export default function CreateOrder({ route }) {
                 </View>
 
             </ScrollView>
-            {!isKeyboardVisible?
-            (    <View style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                backgroundColor: 'white',
-                width: '100%',
-                height: 55,
-                alignItems: 'center',
-                shadowColor: "#0000000D",
-                shadowOpacity: 0.1,
-                shadowOffset: {
-                    width: 0,
-                    height: 20
-                },
-                shadowRadius: 35,
-                elevation: 35,
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-            }}>
-                {/* Left Component */}
-                <TouchableOpacity style={{ justifyContent: 'flex-start' }}>
-                    <View style={{ flexDirection: 'row', position: 'relative', paddingLeft: 20 }}>
-                        {/* Add any content for the left component here */}
-                    </View>
-                </TouchableOpacity>
-
-                {/* Right Component */}
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={{ marginRight: 10 }}>{totalCartDiscountPrice.toLocaleString('vi-VN')}đ</Text>
-                    <TouchableOpacity
-                        style={{
-                            alignItems: "center",
-                            backgroundColor: "#667080",
-                            width: 120,
-                            height: 55,
-                            top: 0,
-                            justifyContent: 'center',
-                        }}
-                        onPress={() => {
-                            handleCreateOrder()
-                        }}
-                    >
-                        <Text style={{
-                            color: "#ffffff",
-                            fontSize: 14,
-                        }}>Tạo đơn</Text>
+            {!isKeyboardVisible ?
+                (<View style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    backgroundColor: 'white',
+                    width: '100%',
+                    height: 55,
+                    alignItems: 'center',
+                    shadowColor: "#0000000D",
+                    shadowOpacity: 0.1,
+                    shadowOffset: {
+                        width: 0,
+                        height: 20
+                    },
+                    shadowRadius: 35,
+                    elevation: 35,
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                }}>
+                    {/* Left Component */}
+                    <TouchableOpacity style={{ justifyContent: 'flex-start' }}>
+                        <View style={{ flexDirection: 'row', position: 'relative', paddingLeft: 20 }}>
+                            {/* Add any content for the left component here */}
+                        </View>
                     </TouchableOpacity>
-                </View>
-            </View>)
-            :null}
-        
+
+                    {/* Right Component */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={{ marginRight: 10 }}>{totalCartDiscountPrice.toLocaleString('vi-VN')}đ</Text>
+                        <TouchableOpacity
+                            style={{
+                                alignItems: "center",
+                                backgroundColor: "#667080",
+                                width: 120,
+                                height: 55,
+                                top: 0,
+                                justifyContent: 'center',
+                            }}
+                            onPress={() => {
+                                handleCreateOrder()
+                            }}
+                        >
+                            <Text style={{
+                                color: "#ffffff",
+                                fontSize: 14,
+                            }}>Tạo đơn</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>)
+                : null}
+
         </SafeAreaView>
     );
 
