@@ -82,7 +82,7 @@ const BottomNavigationBar = () => {
           <Tab.Screen
             name="OrderScreen"
             component={OrderScreen}
-            options={{ headerShown: false, tabBarLabel: 'Hóa đơn' }}
+            options={{ headerShown: false, tabBarLabel: 'Đơn hàng' }}
           />
           <Tab.Screen
             name="Setting"

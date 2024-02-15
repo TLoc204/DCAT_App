@@ -52,7 +52,7 @@ export default function OrderScreen() {
                 options={({ route }) => ({
                     headerShown: true,
                     headerTitleAlign: 'center',
-                    title: "Thanh toán",
+                    title: "Sửa đơn & Thanh toán ",
                     headerLeft: () => (
                         <TouchableOpacity onPress={() => navigation.navigate('Order')}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>

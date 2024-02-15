@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import { Checkbox, DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
 import { FIREBASE_APP } from '../../FirebaseConfig';
-import { getDatabase, ref, onValue, push, get, set, query, orderByChild, equalTo } from 'firebase/database';
+import { getDatabase, ref, onValue, push, get, set, query, orderByChild, equalTo,update } from 'firebase/database';
 import { BottomSheet } from 'react-native-sheet';
 import SearchBar from "react-native-dynamic-search-bar";
 import { Dropdown } from 'react-native-element-dropdown';
@@ -21,6 +21,7 @@ export default function OrderDetails({ route }) {
     const database = getDatabase(FIREBASE_APP);
     const storage = getStorage(FIREBASE_APP);
     const { Orders } = route.params;
+    const { OrderID } = route.params;
     // const IDOrder = "O" + titleOrderId
     const [dataOrders, setDataOrders] = useState([]);
     const [dataRoom, setDataRoom] = useState([]);
@@ -40,7 +41,7 @@ export default function OrderDetails({ route }) {
     const bottomSheetFood = useRef(null);
     const [orderCountByRoom, setOrderCountByRoom] = useState({});
     const [currentRoom, setCurrentRoom] = useState('Tất cả');
-    let [selectedRoom, setSelectedRoom] = useState(Object.values(Orders[3])[1]);
+    let [selectedRoom, setSelectedRoom] = useState(Object.values(Orders[3])[1] || '');
     const [selectedCategory, setSelectedCategory] = useState('');
     const [customerName, setCustomerName] = useState(Object.values(Orders[4][1])[0]["CustomerName"] || '');
     const [imageUrls, setImageUrls] = useState({});
@@ -54,69 +55,71 @@ export default function OrderDetails({ route }) {
     const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
     const [defaultImageUrl, setDefaultImageUrl] = useState('https://firebasestorage.googleapis.com/v0/b/dcat-c09a4.appspot.com/o/MacDinh.jpg?alt=media&token=d66af2a0-9be6-44cb-9eda-504f04c1763c');
 
-    const initialData = Object.values(Orders[4][1]);
-const categoryMapping = {
-    D: dataDrinks,
-    DD: dataDrink2ND,
-    F: dataFoods,
-    Tp: dataToppings,
-    Fb: dataFoodBonus,
-    G: dataGames,
-};
+    const categoryMapping = {
+        D: dataDrinks,
+        DD: dataDrink2ND,
+        F: dataFoods,
+        Tp: dataToppings,
+        Fb: dataFoodBonus,
+        G: dataGames,
+    };
+    console.log(OrderID)
+    useEffect(() => {
+        if (Object.keys(foods).length > 0) {
+            setCartItems(foods);
+        } else {
+            const initialData = Object.values(Orders[4][1]);
+            const transformedData = {};
 
-useEffect(() => {
-    const transformedData = {};
-  
-    initialData.forEach((item) => {
-      const idMap = new Map(); // Sử dụng Map để theo dõi các id đã xuất hiện
-  
-      for (const key in item) {
-        if (key !== "CustomerName" && key.startsWith("OD")) {
-          const subItem = item[key];
-  
-          const idType = Object.keys(subItem)[1]; // Loại Id (IdDrink, IdDrink2ND, IdGame, IdFoodBonus, IdFood)
-  
-          let idValue = subItem[idType]; // Giá trị Id cụ thể
-  
+            initialData.forEach((item) => {
+                const idMap = new Map(); // Sử dụng Map để theo dõi các id đã xuất hiện
 
+                for (const key in item) {
+                    if (key !== "CustomerName" && key.startsWith("OD")) {
+                        const subItem = item[key];
 
-            const name = subItem.Name || ""; // Lấy tên từ danh mục tương ứng
-            const price = subItem.Price || 0; // Lấy giá từ danh mục tương ứng
-            const discount = subItem.Discount;
-            const quantity = subItem.Quantity;
-            const totalPrice = price * quantity;
-            let newItemId = idValue;
-  
-            // Kiểm tra nếu đã có id này, thì thêm _ và tạo tên mới
-            if (idMap.has(idValue)) {
-              let count = idMap.get(idValue) + 1;
-              newItemId = `${idValue}_${count}`;
-              idMap.set(newItemId, 1); // Cập nhật count cho newItemId
-            } else {
-              idMap.set(idValue, 1);
-            }
-  
-            // Chỉ định mỗi key ánh xạ trực tiếp tới một object chứa thông tin sản phẩm
-            transformedData[newItemId] = {
-              discount,
-              key: newItemId,
-              name,
-              price,
-              quantity,
-              totalPrice,
-            };
-          
+                        const idType = Object.keys(subItem)[1]; // Loại Id (IdDrink, IdDrink2ND, IdGame, IdFoodBonus, IdFood)
+
+                        let idValue = subItem[idType]; // Giá trị Id cụ thể
+
+                        const name = subItem.Name || ""; // Lấy tên từ danh mục tương ứng
+                        const price = subItem.Price || 0; // Lấy giá từ danh mục tương ứng
+                        const discount = subItem.Discount;
+                        const quantity = subItem.Quantity;
+                        const totalPrice = price * quantity;
+
+                        // Tạo một key duy nhất cho mỗi sản phẩm dựa trên id và discount
+                        let uniqueKey = `${idValue}_${discount}`;
+
+                        // Kiểm tra và cập nhật số lượng sản phẩm với key duy nhất
+                        if (idMap.has(uniqueKey)) {
+                            let count = idMap.get(uniqueKey) + 1;
+                            uniqueKey = `${idValue}_${discount}_${count}`;
+                            idMap.set(uniqueKey, 1); // Cập nhật count cho uniqueKey
+                        } else {
+                            idMap.set(uniqueKey, 1);
+                        }
+
+                        // Chỉ định mỗi key ánh xạ trực tiếp tới một object chứa thông tin sản phẩm
+                        transformedData[uniqueKey] = {
+                            discount,
+                            key: uniqueKey,
+                            name,
+                            price,
+                            quantity,
+                            totalPrice,
+                        };
+
+                    }
+                }
+            });
+
+            // Trực tiếp cập nhật cartItems với object đã được biến đổi 
+            setCartItems(transformedData);
         }
-      }
-    });
-  
-    // Không cần tạo một mảng duy nhất; thay vào đó, trực tiếp cập nhật cartItems với object đã được biến đổi
-    setCartItems(transformedData);
-  }, []);
-  
+    }, [route.params]);
 
-      console.log(Object.values(Orders[4][1]))
-      
+
 
     useEffect(() => {
         const ordersRef = ref(database, 'Orders');
@@ -318,7 +321,7 @@ useEffect(() => {
         0
     );
     const totalCartDiscountPrice = Object.values(cartItems).reduce(
-        (total, item) => total + (item.totalPrice - (item.discountPrice || 0)),
+        (total, item) => total + (item.totalPrice - (item.totalPrice * item.discount / 100 || 0)),
         0
     );
     const checkInput = () => {
@@ -363,68 +366,17 @@ useEffect(() => {
     }
     //-----------------------------------------------------------End Room-------------------------------------------------------------
     const handleSubmit = async () => {
-        // Kiểm tra selectedRoom và customerName nếu trống
-        if (!selectedRoom || !Object.values(selectedRoom)[1]) {
-            selectedRoom = ''; // Gán giá trị mặc định là chuỗi rỗng
-        }
-        if (customerName.length === 0) {
-            showMessage({
-                message: "Tạo đơn thất bại",
-                type: "danger",
-                icon: { icon: "danger", position: "left" }, // Use the built-in icon
-                // Here you can pass your custom component
-                renderCustomContent: () => (
-                    <CustomMessageComponent
-                        message="Tạo đơn thất bại"
-                        description="Vui lòng nhập tên khách."
-                        icon="closecircle"
-                    />
-                ),
-            });
-            return; // Dừng việc thực hiện tiếp theo
-        }
-        // Kiểm tra độ dài của selectedRoom
-        if (selectedRoom.length === 0) {
-            showMessage({
-                message: "Tạo đơn thất bại",
-                type: "danger",
-                icon: { icon: "danger", position: "left" }, // Use the built-in icon
-                // Here you can pass your custom component
-                renderCustomContent: () => (
-                    <CustomMessageComponent
-                        message="Tạo đơn thất bại"
-                        description="Vui lòng chọn phòng."
-                        icon="closecircle"
-                    />
-                ),
-            });
-            return; // Dừng việc thực hiện tiếp theo
-        }
-
-        if (Object.values(selectedRoom)[1].length > 0 && customerName.length > 0) {
-            const ordersRef = ref(database, 'Orders');
-            let lastOrderKey = '';
-
-            await get(ordersRef)
-                .then((snapshot) => {
-                    if (snapshot.exists()) {
-                        const data = snapshot.val();
-                        const orderKeys = Object.keys(data);
-                        lastOrderKey = orderKeys[orderKeys.length - 1];
-                    } else {
-                        console.log("No data available");
-                    }
-                })
-                .catch((error) => {
-                    console.error(error);
-                });
-
-            const newOrderKey = 'O' + (parseInt(lastOrderKey.substring(1)) + 1);
-
-            let orderDetailsData = {};
+        // Lấy OrderID từ route.params
+        const { OrderID } = route.params;
+      
+        // Kiểm tra xem OrderID có tồn tại không
+        if (OrderID) {
+          const orderRef = ref(database, `Orders/${OrderID}`);
+          let orderDetailsData = {};
             Object.values(cartItems).forEach((item, index) => {
                 const orderKey = 'OD1';
-                const itemKey = `${orderKey}_${index + 1}`;
+                const formattedIndex = (index + 1).toString().padStart(2, '0');
+                const itemKey = `${orderKey}_${formattedIndex}`;
                 const itemId = item.key.split('_')[0];
                 const itemTypePrefix = itemId.match(/[A-Za-z]+/)[0];
                 let itemType = '';
@@ -459,33 +411,56 @@ useEffect(() => {
                 orderDetailsData[orderKey][itemKey] = {
                     [itemType]: itemId,
                     "Quantity": item.quantity,
+                    "Name":item.name,
                     "Discount": item.discount,
+                    "Price" : item.price
                 };
             });
 
             orderDetailsData['OD1']['CustomerName'] = customerName || 'Khách hàng';
-
-            const newOrderData = {
-                "CreatedDate": new Date().toISOString().split('T')[0],
-                "Delete": false,
-                "IdRoom": Object.values(selectedRoom)[1] || 'Rm3',
+          try {
+            await update(orderRef, {
+                "IdRoom": selectedRoom,
                 "OrderDetails": orderDetailsData,
-                "PaidDate": new Date().toISOString().split('T')[0],
                 "TotalAmount": totalCartPrice,
                 "TotalDiscountPrice": totalCartDiscountPrice,
                 "DiscountTotal": discountTotal || 0
-            };
-
-            await set(ref(database, 'Orders/' + newOrderKey), newOrderData)
-                .then(() => {
-                    console.log('Order saved successfully!');
-                })
-                .catch((error) => {
-                    console.error('Failed to save order: ', error);
-                });
+            });
+            console.log("Cập nhật thành công!");
+          } catch (error) {
+            console.error("Lỗi khi cập nhật:", error);
+          }
+        } else {
+          console.log('OrderID is missing');
+          // Xử lý khi không có OrderID
         }
         navigation.navigate('Order')
-    };
+      };
+    
+      const handleSubmitPaid = async () => {
+        // Lấy OrderID từ route.params
+        const { OrderID } = route.params;
+      
+        // Kiểm tra xem OrderID có tồn tại không
+        if (OrderID) {
+          const orderRef = ref(database, `Orders/${OrderID}`);
+          try {
+            await update(orderRef, {
+              Delete: true,
+              PaidDate : new Date().toISOString().split('T')[0]
+            });
+            console.log("Cập nhật thành công!");
+          } catch (error) {
+            console.error("Lỗi khi cập nhật:", error);
+          }
+        } else {
+          console.log('OrderID is missing');
+          // Xử lý khi không có OrderID
+        }
+        navigation.navigate('Order')
+      };
+    
+    
     const CustomMessageComponent = ({ message, description, icon }) => {
         return (
             <View>
@@ -497,20 +472,45 @@ useEffect(() => {
             </View>
         );
     };
-    const handleCreateOrder = () => {
+    const handleEditOrder = () => {
         if (Object.values(cartItems).length > 0 &&
             selectedRoom &&
             customerName.length > 0) {
             handleSubmit();
             showMessage({
-                message: "Tạo đơn thành công",
+                message: "Sửa đơn thành công",
                 type: "success",
                 icon: { icon: "success", position: "left" }, // Use the built-in icon
                 // Here you can pass your custom component
                 renderCustomContent: () => (
                     <CustomMessageComponent
-                        message="Tạo đơn thành công"
-                        description="Đơn hàng của bạn đã được tạo thành công."
+                        message="Sửa đơn thành công"
+                        description="Đơn hàng của bạn đã được sửa thành công."
+                        icon="checkcircle"
+                    />
+                ),
+            });
+            setTimeout(() => {
+                hideMessage();
+            }, 2000); // 2000 miliseconds = 2 giây
+        } else {
+            checkInput();
+        }
+    }
+    const handlePaidOrder = () => {
+        if (Object.values(cartItems).length > 0 &&
+            selectedRoom &&
+            customerName.length > 0) {
+            handleSubmitPaid()
+            showMessage({
+                message: "Thanh toán đơn hàng thành công",
+                type: "success",
+                icon: { icon: "success", position: "left" }, // Use the built-in icon
+                // Here you can pass your custom component
+                renderCustomContent: () => (
+                    <CustomMessageComponent
+                        message="Thanh toán đơn hàng thành công"
+                        description="Đơn hàng của bạn đã được thanh toán thành công."
                         icon="checkcircle"
                     />
                 ),
@@ -680,6 +680,7 @@ useEffect(() => {
     const webStyles = StyleSheet.create({
 
     });
+    console.log(cartItems)
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
     // ...
     // ...
@@ -689,7 +690,7 @@ useEffect(() => {
                 <View style={{ marginBottom: '20%' }}>
                     <Text style={{ marginLeft: 20, marginBottom: 5 }}>Tên khách hàng</Text>
                     <View style={finalStyles.input_cus}>
-                        <TextInput style={finalStyles.input} value={customerName} onChangeText={(text)=> { setCustomerName(text) }} />
+                        <TextInput style={finalStyles.input} value={customerName} onChangeText={(text) => { setCustomerName(text) }} />
                     </View>
                     <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Phòng</Text>
                     <View style={finalStyles.input_cus}>
@@ -721,8 +722,8 @@ useEffect(() => {
                                 const price = data.price;
                                 const quantity = data.quantity;
                                 const totalPrice = price * quantity || 0;
-                                const discountPrice = totalPrice * (data.discount /100)|| 0;
-                                
+                                const discountPrice = totalPrice * (data.discount / 100) || 0;
+
 
                                 const imageArray = imageAllFolder || [];
 
@@ -779,7 +780,8 @@ useEffect(() => {
                                                     <View>
                                                         {cartItems[key].discount !== 0 ? ( // Check if there is a discount for the item
                                                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                
+                                                                <Text style={[finalStyles.itemPrice, { justifyContent: 'flex-start', textDecorationLine: 'line-through' }]}>{`${totalPrice.toLocaleString('vi-VN')}đ`}</Text>
+                                                                <Text style={[finalStyles.itemPrice, { marginLeft: 5 }]}>{`${(totalPrice - discountPrice).toLocaleString('vi-VN')}đ`}</Text>
                                                             </View>
                                                         ) : (
                                                             <Text style={finalStyles.itemPrice}>{`${totalPrice.toLocaleString('vi-VN')}đ`}</Text>
@@ -807,7 +809,7 @@ useEffect(() => {
                                 borderRadius: 15,
                                 paddingVertical: 15,
                                 marginHorizontal: 5,
-                            }} onPress={() => navigation.navigate('FoodOrder', { Foods: cartItems })}>
+                            }} onPress={() => navigation.navigate('FoodOrder', { Foods: cartItems, origin: 'OrderDetails',Orders: Orders, OrderID:OrderID })}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
                                     <Text style={{ color: '#ffffff' }}>Thêm món</Text>
                                 </View>
@@ -835,7 +837,7 @@ useEffect(() => {
                                                 <Text>{`${index + 1}. `}</Text>
                                                 <Text style={{ justifyContent: 'flex-start' }}>{data.name}</Text>
                                             </View>
-                                            <Text style={{ justifyContent: 'flex-end' }}>{`-${((data.price* data.quantity) * (data.discount / 100)).toLocaleString('vi-VN')}đ`}</Text>
+                                            <Text style={{ justifyContent: 'flex-end' }}>{`-${((data.price * data.quantity) * (data.discount / 100)).toLocaleString('vi-VN')}đ`}</Text>
                                         </View>
 
                                     );
@@ -844,17 +846,35 @@ useEffect(() => {
                                 }
                             })}
                         </View>
-   
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'gray' }}>
-                                <Text style={{ justifyContent: 'flex-start' }}>Giảm giá tổng</Text>
-                                <Text style={{ justifyContent: 'flex-end' }}>{`${(totalCartDiscountPrice * discountTotal / 100) > 0 ? '-' : ''}${(totalCartPrice * discountTotal / 100).toLocaleString('vi-VN')}đ`}</Text>
-                            </View>
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'gray' }}>
+                            <Text style={{ justifyContent: 'flex-start' }}>Giảm giá tổng</Text>
+                            <Text style={{ justifyContent: 'flex-end' }}>{`${(totalCartDiscountPrice * discountTotal / 100) > 0 ? '-' : ''}${(totalCartPrice * discountTotal / 100).toLocaleString('vi-VN')}đ`}</Text>
+                        </View>
 
 
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10, paddingTop: 10 }}>
                             <Text style={{ justifyContent: 'flex-start', fontWeight: 'bold' }}>Tổng cộng</Text>
                             <Text style={{ justifyContent: 'flex-end', fontWeight: 'bold' }}>{(discountTotal ? (totalCartDiscountPrice - (totalCartPrice * discountTotal / 100)) : totalCartDiscountPrice).toLocaleString('vi-VN')}đ</Text>
                         </View>
+                    </View>
+                    <View>
+                        <TouchableOpacity style={{
+                            alignItems: "center",
+                            backgroundColor: "#667080",
+                            borderRadius: 15,
+                            paddingVertical: 15,
+                            marginHorizontal: 5,
+                            marginLeft: 15,
+                            marginRight: 15,
+                            marginTop: 15
+                        }}  onPress={() => {
+                                handlePaidOrder()
+                            }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
+                                <Text style={{ color: '#ffffff' }}>Thanh toán</Text>
+                            </View>
+                        </TouchableOpacity>
                     </View>
                 </View>
 
@@ -881,7 +901,7 @@ useEffect(() => {
                     justifyContent: 'space-between',
                 }}>
                     {/* Left Component */}
-                    <TouchableOpacity style={{ justifyContent: 'flex-start' }}> 
+                    <TouchableOpacity style={{ justifyContent: 'flex-start' }}>
                         <View style={{ flexDirection: 'row', position: 'relative', paddingLeft: 20 }}>
                             {/* Add any content for the left component here */}
                         </View>
@@ -900,7 +920,7 @@ useEffect(() => {
                                 justifyContent: 'center',
                             }}
                             onPress={() => {
-                                handleCreateOrder()
+                                handleEditOrder()
                             }}
                         >
                             <Text style={{
@@ -908,7 +928,7 @@ useEffect(() => {
                                 fontSize: 14,
                             }}>Sửa đơn</Text>
                         </TouchableOpacity>
-                        
+
                     </View>
                 </View>)
                 : null}

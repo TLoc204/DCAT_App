@@ -139,6 +139,8 @@ export default function FoodOrder({ route }) {
     const { imageAllFolder } = useImageAllFolder();
     const [showPlusIcons, setShowPlusIcons] = useState({});
     const foods = route.params?.Foods || {};
+    const Orders = route.params?.Orders || {};
+    const OrderID = route.params?.OrderID || {};
     const [discount, setDiscount] = useState({});
     const [cartItems, setCartItems] = useState([]);
     const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
@@ -152,6 +154,7 @@ export default function FoodOrder({ route }) {
             setCartItems(foods ? foods : []);
         }
     }, [foods]); // Chỉ re-run khi foods thay đổi.
+    
     const [bottomSheetData, setBottomSheetData] = useState({});
     const screenHeight = Dimensions.get('window').height; // Lấy chiều cao màn hình
     const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
@@ -473,7 +476,6 @@ export default function FoodOrder({ route }) {
                             ...currentItem,
                             quantity: updatedQuantity,
                             totalPrice: updatedTotalPrice,
-                            discountPrice: discountedPrice
                         },
                     };
                 }
@@ -545,7 +547,7 @@ export default function FoodOrder({ route }) {
     }, [searchQuery, selectedCategory]);
 
     const totalCartDiscountPrice = Object.values(cartItems).reduce(
-        (total, item) => total + (item.totalPrice - (item.discountPrice || 0)),
+        (total, item) => total + (item.totalPrice - (item.totalPrice * item.discount/100 || 0)),
         0
     );
 
@@ -699,9 +701,6 @@ export default function FoodOrder({ route }) {
         },
 
     });
-    console.log(Object.entries(bottomSheetData))
-    const data1 = Object.entries(cartItems || {});
-    console.log(data1 || {});
 
     const renderedItems = filteredOrders.map(([key, data, url]) => (
         <TouchableOpacity key={key} onPress={() => openFoodOrderItem(key, filteredOrders, url)}>
@@ -711,6 +710,7 @@ export default function FoodOrder({ route }) {
     const webStyles = StyleSheet.create({
 
     });
+    console.log(cartItems)
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
     // ...
     // ...
@@ -1077,7 +1077,15 @@ export default function FoodOrder({ route }) {
                                         top: 5,
                                         justifyContent: 'center' // Center the text vertically
                                     }}
-                                    onPress={() => navigation.navigate('CreateOrder', { Foods: cartItems })}
+                                    onPress={() => {
+                                        // Kiểm tra xem người dùng đến từ màn hình nào
+                                        const origin = route.params.origin;
+                                        if (origin === 'CreateOrder') {
+                                            navigation.navigate('CreateOrder', { Foods: cartItems });
+                                        } else if (origin === 'OrderDetails') {
+                                            navigation.navigate('OrderDetails', { Foods: cartItems,Orders:Orders, OrderID:OrderID });
+                                        }
+                                    }}
                                 >
                                     <Text style={{
                                         color: "#ffffff",
@@ -1102,7 +1110,15 @@ export default function FoodOrder({ route }) {
                                 top: 5,
                                 justifyContent: 'center' // Center the text vertically
                             }}
-                            onPress={() => navigation.navigate('CreateOrder', { Foods: cartItems })}
+                            onPress={() => {
+                                // Kiểm tra xem người dùng đến từ màn hình nào
+                                const origin = route.params.origin;
+                                if (origin === 'CreateOrder') {
+                                    navigation.navigate('CreateOrder', { Foods: cartItems });
+                                } else if (origin === 'OrderDetails') {
+                                    navigation.navigate('OrderDetails', { Foods: cartItems,Orders:Orders , OrderID:OrderID});
+                                }
+                            }}
                         >
                             <Text style={{
                                 color: "#ffffff",

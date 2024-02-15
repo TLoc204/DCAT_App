@@ -50,6 +50,7 @@ export default function CreateOrder({ route }) {
     const [discount, setDiscount] = useState({});
     const [cartItems, setCartItems] = useState([]);
     const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
     useEffect(() => {
         // Chỉ cập nhật cartItems nếu foods thực sự thay đổi.
         const currentFoods = JSON.stringify(foods);
@@ -367,7 +368,8 @@ export default function CreateOrder({ route }) {
             let orderDetailsData = {};
             Object.values(cartItems).forEach((item, index) => {
                 const orderKey = 'OD1';
-                const itemKey = `${orderKey}_${index + 1}`;
+                const formattedIndex = (index + 1).toString().padStart(2, '0');
+                const itemKey = `${orderKey}_${formattedIndex}`;
                 const itemId = item.key.split('_')[0];
                 const itemTypePrefix = itemId.match(/[A-Za-z]+/)[0];
                 let itemType = '';
@@ -751,7 +753,7 @@ export default function CreateOrder({ route }) {
                                 borderRadius: 15,
                                 paddingVertical: 15,
                                 marginHorizontal: 5,
-                            }} onPress={() => navigation.navigate('FoodOrder', { Foods: cartItems })}>
+                            }} onPress={() => navigation.navigate('FoodOrder', { Foods: cartItems, origin: 'CreateOrder' })}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
                                     <Text style={{ color: '#ffffff' }}>Thêm món</Text>
                                 </View>

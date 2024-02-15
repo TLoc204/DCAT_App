@@ -479,7 +479,7 @@ export default function Order() {
                                                         </Text>
                                                     </View>
                                                 </View>
-                                                <TouchableOpacity onPress={() => navigation.navigate('OrderDetails', { Orders: Object.entries(filteredOrders[orderId]) })}>
+                                                <TouchableOpacity onPress={() => navigation.navigate('OrderDetails', { Orders: Object.entries(filteredOrders[orderId]),OrderID:orderId })}>
                                                     <View
                                                         style={{
                                                             position: "absolute",
