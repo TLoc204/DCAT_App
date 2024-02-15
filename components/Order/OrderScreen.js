@@ -52,7 +52,14 @@ export default function OrderScreen() {
                 options={({ route }) => ({
                     headerShown: true,
                     headerTitleAlign: 'center',
-                    title: "HĐ: " + route.params.titleOrderId + " - " + "KH: " + route.params.titleCustomerName
+                    title: "Thanh toán",
+                    headerLeft: () => (
+                        <TouchableOpacity onPress={() => navigation.navigate('Order')}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Icon name="arrow-back-ios" size={24} color="#667080" />
+                            </View>
+                        </TouchableOpacity>
+                    ),
                 })}
             />
         </Stack.Navigator>
