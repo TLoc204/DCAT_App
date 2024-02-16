@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import { Checkbox, DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
 import { FIREBASE_APP } from '../../FirebaseConfig';
-import { getDatabase, ref, onValue, push, get, set, query, orderByChild, equalTo,update } from 'firebase/database';
+import { getDatabase, ref, onValue, push, get, set, query, orderByChild, equalTo, update } from 'firebase/database';
 import { BottomSheet } from 'react-native-sheet';
 import SearchBar from "react-native-dynamic-search-bar";
 import { Dropdown } from 'react-native-element-dropdown';
@@ -368,11 +368,11 @@ export default function OrderDetails({ route }) {
     const handleSubmit = async () => {
         // Lấy OrderID từ route.params
         const { OrderID } = route.params;
-      
+
         // Kiểm tra xem OrderID có tồn tại không
         if (OrderID) {
-          const orderRef = ref(database, `Orders/${OrderID}`);
-          let orderDetailsData = {};
+            const orderRef = ref(database, `Orders/${OrderID}`);
+            let orderDetailsData = {};
             Object.values(cartItems).forEach((item, index) => {
                 const orderKey = 'OD1';
                 const formattedIndex = (index + 1).toString().padStart(2, '0');
@@ -411,56 +411,59 @@ export default function OrderDetails({ route }) {
                 orderDetailsData[orderKey][itemKey] = {
                     [itemType]: itemId,
                     "Quantity": item.quantity,
-                    "Name":item.name,
+                    "Name": item.name,
                     "Discount": item.discount,
-                    "Price" : item.price
+                    "Price": item.price
                 };
             });
 
             orderDetailsData['OD1']['CustomerName'] = customerName || 'Khách hàng';
-          try {
-            await update(orderRef, {
-                "IdRoom": selectedRoom,
-                "OrderDetails": orderDetailsData,
-                "TotalAmount": totalCartPrice,
-                "TotalDiscountPrice": totalCartDiscountPrice,
-                "DiscountTotal": discountTotal || 0
-            });
-            console.log("Cập nhật thành công!");
-          } catch (error) {
-            console.error("Lỗi khi cập nhật:", error);
-          }
+            try {
+                await update(orderRef, {
+                    "IdRoom": selectedRoom,
+                    "OrderDetails": orderDetailsData,
+                    "TotalAmount": totalCartPrice,
+                    "TotalDiscountPrice": totalCartDiscountPrice,
+                    "DiscountTotal": discountTotal || 0
+                });
+                console.log("Cập nhật thành công!");
+            } catch (error) {
+                console.error("Lỗi khi cập nhật:", error);
+            }
         } else {
-          console.log('OrderID is missing');
-          // Xử lý khi không có OrderID
+            console.log('OrderID is missing');
+            // Xử lý khi không có OrderID
         }
         navigation.navigate('Order')
-      };
-    
-      const handleSubmitPaid = async () => {
+    };
+
+    const handleSubmitPaid = async () => {
         // Lấy OrderID từ route.params
         const { OrderID } = route.params;
-      
+
         // Kiểm tra xem OrderID có tồn tại không
         if (OrderID) {
-          const orderRef = ref(database, `Orders/${OrderID}`);
-          try {
-            await update(orderRef, {
-              Delete: true,
-              PaidDate : new Date().toISOString().split('T')[0]
-            });
-            console.log("Cập nhật thành công!");
-          } catch (error) {
-            console.error("Lỗi khi cập nhật:", error);
-          }
+            const orderRef = ref(database, `Orders/${OrderID}`);
+            const now = new Date();
+            const date = now.toISOString().split('T')[0]; // Ngày
+            const time = now.toTimeString().split(' ')[0]; // Thời gian
+            try {
+                await update(orderRef, {
+                    Delete: true,
+                    PaidDate: `${date} ${time}`
+                });
+                console.log("Cập nhật thành công!");
+            } catch (error) {
+                console.error("Lỗi khi cập nhật:", error);
+            }
         } else {
-          console.log('OrderID is missing');
-          // Xử lý khi không có OrderID
+            console.log('OrderID is missing');
+            // Xử lý khi không có OrderID
         }
         navigation.navigate('Order')
-      };
-    
-    
+    };
+
+
     const CustomMessageComponent = ({ message, description, icon }) => {
         return (
             <View>
@@ -809,7 +812,7 @@ export default function OrderDetails({ route }) {
                                 borderRadius: 15,
                                 paddingVertical: 15,
                                 marginHorizontal: 5,
-                            }} onPress={() => navigation.navigate('FoodOrder', { Foods: cartItems, origin: 'OrderDetails',Orders: Orders, OrderID:OrderID })}>
+                            }} onPress={() => navigation.navigate('FoodOrder', { Foods: cartItems, origin: 'OrderDetails', Orders: Orders, OrderID: OrderID })}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
                                     <Text style={{ color: '#ffffff' }}>Thêm món</Text>
                                 </View>
@@ -868,9 +871,9 @@ export default function OrderDetails({ route }) {
                             marginLeft: 15,
                             marginRight: 15,
                             marginTop: 15
-                        }}  onPress={() => {
-                                handlePaidOrder()
-                            }}>
+                        }} onPress={() => {
+                            handlePaidOrder()
+                        }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
                                 <Text style={{ color: '#ffffff' }}>Thanh toán</Text>
                             </View>

@@ -404,20 +404,22 @@ export default function CreateOrder({ route }) {
                 orderDetailsData[orderKey][itemKey] = {
                     [itemType]: itemId,
                     "Quantity": item.quantity,
-                    "Name":item.name,
+                    "Name": item.name,
                     "Discount": item.discount,
-                    "Price" : item.price
+                    "Price": item.price
                 };
             });
 
             orderDetailsData['OD1']['CustomerName'] = customerName || 'Khách hàng';
-
+            const now = new Date();
+            const date = now.toISOString().split('T')[0]; // Ngày
+            const time = now.toTimeString().split(' ')[0]; // Thời gian
             const newOrderData = {
-                "CreatedDate": new Date().toISOString().split('T')[0],
+                "CreatedDate": `${date} ${time}`,
                 "Delete": false,
                 "IdRoom": Object.values(selectedRoom)[1] || 'Rm3',
                 "OrderDetails": orderDetailsData,
-                "PaidDate": new Date().toISOString().split('T')[0],
+                "PaidDate": `${date} ${time}`,
                 "TotalAmount": totalCartPrice,
                 "TotalDiscountPrice": totalCartDiscountPrice,
                 "DiscountTotal": discountTotal || 0
@@ -790,11 +792,11 @@ export default function CreateOrder({ route }) {
                                 }
                             })}
                         </View>
-   
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'gray' }}>
-                                <Text style={{ justifyContent: 'flex-start' }}>Giảm giá tổng</Text>
-                                <Text style={{ justifyContent: 'flex-end' }}>{`${(totalCartDiscountPrice * discountTotal / 100) > 0 ? '-' : ''}${(totalCartPrice * discountTotal / 100).toLocaleString('vi-VN')}đ`}</Text>
-                            </View>
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'gray' }}>
+                            <Text style={{ justifyContent: 'flex-start' }}>Giảm giá tổng</Text>
+                            <Text style={{ justifyContent: 'flex-end' }}>{`${(totalCartDiscountPrice * discountTotal / 100) > 0 ? '-' : ''}${(totalCartPrice * discountTotal / 100).toLocaleString('vi-VN')}đ`}</Text>
+                        </View>
 
 
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10, paddingTop: 10 }}>
