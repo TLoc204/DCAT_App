@@ -137,14 +137,21 @@ export default function Order() {
 
     }, []);
     useEffect(() => {
-        const countByRoom = Object.values(filteredOrders).reduce((acc, order) => {
-            const roomName = roomNames[order.IdRoom] || 'Unknown'; // Dùng 'Unknown' cho những phòng không xác định được
-            acc[roomName] = (acc[roomName] || 0) + 1;
-            return acc;
-        }, {});
+        // Tạo một đối tượng để theo dõi số lượng đơn hàng không bị xóa cho mỗi phòng
+        const countByRoom = {};
 
+        // Lặp qua mỗi đơn hàng trong filteredOrders
+        Object.values(filteredOrders).forEach(order => {
+            if (!order.Delete) { // Kiểm tra nếu đơn hàng không bị xóa
+                const roomName = roomNames[order.IdRoom] || 'Unknown'; // Lấy tên phòng hoặc dùng 'Unknown'
+                countByRoom[roomName] = (countByRoom[roomName] || 0) + 1; // Tăng số lượng cho phòng
+            }
+        });
+
+        // Cập nhật trạng thái với số lượng đơn hàng theo phòng
         setOrderCountByRoom(countByRoom);
     }, [filteredOrders, roomNames]);
+
     const handleSubmit = async () => {
 
     };
@@ -340,7 +347,8 @@ export default function Order() {
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', height: 50, marginTop: 10 }}>
                     <TouchableOpacity onPress={openFilterMenu}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 20 }}>
-                            <Text>{currentRoom} ({currentRoom === 'Tất cả' ? Object.keys(filteredOrders).length : (orderCountByRoom[currentRoom] || 0)})</Text>
+                            <Text>{
+                                currentRoom} ({currentRoom === 'Tất cả' ? Object.values(filteredOrders).filter(order => !order.Delete).length : (orderCountByRoom[currentRoom] || 0)})</Text>
                             <Icon name="filter-alt" size={24} color="#667080" />
                         </View>
                     </TouchableOpacity>
@@ -479,7 +487,7 @@ export default function Order() {
                                                         </Text>
                                                     </View>
                                                 </View>
-                                                <TouchableOpacity onPress={() => navigation.navigate('OrderDetails', { Orders: Object.entries(filteredOrders[orderId]),OrderID:orderId })}>
+                                                <TouchableOpacity onPress={() => navigation.navigate('OrderDetails', { Orders: Object.entries(filteredOrders[orderId]), OrderID: orderId })}>
                                                     <View
                                                         style={{
                                                             position: "absolute",
