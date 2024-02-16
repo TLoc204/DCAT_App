@@ -819,7 +819,7 @@ export default function OrderDetails({ route }) {
                             </TouchableOpacity>
                         </View>
                     </View>
-                    <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 5 }}>Mã giảm giá </Text>
+                    <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 5 }}>Giảm giá </Text>
                     <View style={finalStyles.input_cus}>
                         <TextInput style={finalStyles.input} onChangeText={(text) => { setDiscountTotal(text) }} />
                     </View>
