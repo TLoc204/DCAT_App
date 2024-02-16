@@ -547,7 +547,7 @@ export default function FoodOrder({ route }) {
     }, [searchQuery, selectedCategory]);
 
     const totalCartDiscountPrice = Object.values(cartItems).reduce(
-        (total, item) => total + (item.totalPrice - (item.totalPrice * item.discount/100 || 0)),
+        (total, item) => total + (item.price * item.quantity - (item.price * item.quantity * item.discount/100 || 0)),
         0
     );
 
@@ -970,9 +970,9 @@ export default function FoodOrder({ route }) {
                                     const name = data.name;
                                     const price = data.price;
                                     const quantity = data.quantity;
-                                    const totalPrice = data.totalPrice;
+                                    const totalPrice = price * quantity;
                                     const discount = data.discount;
-                                    const discountPrice = data.discountPrice;
+                                    const discountPrice = totalPrice * discount/100;
                                     const imageArray = imageAllFolder || [];
 
                                     // Find the URL for the specific key or provide a default URL if not found
