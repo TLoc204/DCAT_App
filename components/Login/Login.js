@@ -166,7 +166,79 @@ export default function Login() {
     });
 
     const webStyles = StyleSheet.create({
-        
+        container: {
+            width:'100%',
+            justifyContent: 'center',
+
+            alignItems:'center',
+            flex: 1,
+            flexDirection:"column",
+            backgroundColor: "#FFFFFF",
+        },
+        logo: {
+            height: 100,
+            width: 140,
+            marginBottom: 20,
+            alignSelf: 'center',
+        },
+        title: {
+            textAlign: 'center',
+            color: '#667080',
+            fontSize: 22,
+            fontWeight: 'bold',
+            marginBottom: 10
+        },
+        inputRow: {
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: "#9f9e9a0D",
+            borderRadius: 16,
+            paddingVertical: 16,
+            paddingHorizontal: 20,
+            marginBottom: 14,
+            marginHorizontal: 20,
+            width: Platform.OS === 'web' ? width * 0.8 : 'auto',
+        },
+        input: {
+            color: "#667080",
+            fontSize: 16,
+            flex: 1,
+        },
+        button: {
+            alignItems: "center",
+            backgroundColor: "#667080",
+            borderRadius: 50,
+            paddingVertical: 21,
+            marginBottom: 24,
+            marginHorizontal: 20,
+            width: Platform.OS === 'web' ? width * 0.8 : 'auto',
+        },
+        buttonText: {
+            color: "#ffffff",
+            fontSize: 16,
+        },
+        signUpText: {
+            color: "#667080",
+            fontSize: 14,
+        },
+        icon: {
+            marginRight: 5
+        },
+        checkboxContainer: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            alignContent:'flex-start',
+            marginLeft: 15,
+            marginBottom: 5
+        },
+        signUpContainer: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center'
+        },
+        customLoading: {
+
+        }
     });
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
     return (

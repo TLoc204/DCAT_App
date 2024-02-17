@@ -6,7 +6,7 @@ import { Checkbox, DefaultTheme, Provider as PaperProvider } from 'react-native-
 import { FIREBASE_APP } from '../../FirebaseConfig';
 import { getDatabase, ref, onValue, push, get, set, query, orderByChild, equalTo } from 'firebase/database';
 import { BottomSheet } from 'react-native-sheet';
-import SearchBar from "react-native-dynamic-search-bar";
+import { SearchBar } from 'react-native-elements';
 import { Dropdown } from 'react-native-element-dropdown';
 import { getStorage, ref as storageRef, listAll, getDownloadURL } from "firebase/storage";
 import { useRoute } from '@react-navigation/native';
@@ -301,7 +301,71 @@ export default function Order() {
         },
     });
     const webStyles = StyleSheet.create({
+        container_order: {
+            flex: 1,
+        },
+        main_order: {
+            flex: 1,
 
+        },
+        main_order_item: {
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: "#ffffff",
+            borderRadius: 20,
+            padding: 19,
+            shadowColor: "#0000000D",
+            shadowOpacity: 0.1,
+            shadowOffset: {
+                width: 0,
+                height: 20
+            },
+            shadowRadius: 35,
+            elevation: 35,
+        },
+        icon: {
+            marginLeft: -2
+        },
+        checkIconContainer: {
+            width: 25,
+            height: 25,
+            borderRadius: 15,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderWidth: 1,
+            borderColor: '#DCDCDC',
+            backgroundColor: 'white',
+        },
+        container_sheet: {
+            backgroundColor: "#f8f8f8",
+            shadowColor: "#0000001A",
+            shadowOpacity: 0.1,
+            shadowOffset: {
+                width: 0,
+                height: 20
+            },
+            shadowRadius: 104,
+            elevation: 104,
+        },
+
+
+        inputStyleDD: {
+            fontSize: 16
+        },
+        input: {
+            fontSize: 16
+        },
+        placeholderStyle: {
+
+            fontSize: 16
+        },
+        //------------------------------- Css Món Ăn----------------------------------
+        listContainer: {
+
+            paddingHorizontal: 10,
+            alignItems: 'flex-start',
+            marginTop: 10
+        },
     });
     const roomNames = {};
 
@@ -332,17 +396,30 @@ export default function Order() {
                 style={finalStyles.container_order}>
                 <View style={{ flexDirection: 'row', marginTop: 'auto' }}>
                     <SearchBar
-                        style={{ width: "auto", height: 50, marginLeft: 20 }}
-                        fontColor="#ffffff"
-                        iconColor="#ffffff"
-                        shadowColor="#282828"
-                        cancelIconColor="#ffffff"
-                        backgroundColor="#ffffff"
                         placeholder="Tìm kiếm"
-                        value={searchQuery}
                         onChangeText={setSearchQuery}
-                        clearIconComponent={() => null}
+                        value={searchQuery}
+                        inputStyle={{ color: 'black' }} // Đặt màu chữ trong input
+                        containerStyle={{
+                            backgroundColor: 'transparent', // Để background của container trong suốt
+                            borderBottomColor: 'transparent',
+                            borderTopColor: 'transparent',
+                            marginLeft: 0, // Loại bỏ lề trái
+                            marginRight: 0, // Loại bỏ lề phải
+                            height: 50,
+                            width: '100%', // Đảm bảo container chiếm full chiều rộng
+                            paddingHorizontal: 20, // Loại bỏ padding ngang nếu cần
+                            
+                        }}
+                        inputContainerStyle={{
+                            backgroundColor: '#ffffff',
+                            width: '100%', // Đảm bảo khung nhập chiếm full chiều rộng
+                        }}
+                        placeholderTextColor="black" // Màu của placeholder text
+                        searchIcon={{ color: 'black' }} // Màu icon tìm kiếm
+                        clearIcon={{ color: 'black' }} // Màu icon xóa
                     />
+
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', height: 50, marginTop: 10 }}>
                     <TouchableOpacity onPress={openFilterMenu}>

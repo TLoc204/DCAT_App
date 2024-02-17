@@ -7,7 +7,6 @@ import { Checkbox, DefaultTheme, Provider as PaperProvider } from 'react-native-
 import { FIREBASE_APP } from '../../FirebaseConfig';
 import { getDatabase, ref, onValue, push, get, set, query, orderByChild, equalTo } from 'firebase/database';
 import { BottomSheet } from 'react-native-sheet';
-import SearchBar from "react-native-dynamic-search-bar";
 import { Dropdown } from 'react-native-element-dropdown';
 import { getStorage, ref as storageRef, listAll, getDownloadURL } from "firebase/storage";
 import { useImageAllFolder } from "./FoodOrder"
@@ -627,7 +626,150 @@ export default function CreateOrder({ route }) {
     });
 
     const webStyles = StyleSheet.create({
+        container_order: {
+            flex: 1,
+        },
+        main_order: {
+            flex: 1,
+            backgroundColor: "#f8f8f8",
+            borderRadius: 50,
+            shadowColor: "#0000001A",
+            shadowOpacity: 0.1,
+            shadowOffset: {
+                width: 0,
+                height: 20
+            },
+            shadowRadius: 104,
+            elevation: 104,
+        },
+        main_order_item: {
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: "#ffffff",
+            borderRadius: 20,
+            padding: 19,
+            shadowColor: "#0000000D",
+            shadowOpacity: 0.1,
+            shadowOffset: {
+                width: 0,
+                height: 20
+            },
+            shadowRadius: 35,
+            elevation: 35,
+        },
+        icon: {
+            marginLeft: -2
+        },
+        checkIconContainer: {
+            width: 25,
+            height: 25,
+            borderRadius: 15,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderWidth: 1,
+            borderColor: '#DCDCDC',
+            backgroundColor: 'white',
+        },
+        container_sheet: {
+            backgroundColor: "#f8f8f8",
+            shadowColor: "#0000001A",
+            shadowOpacity: 0.1,
+            shadowOffset: {
+                width: 0,
+                height: 20
+            },
+            shadowRadius: 104,
+            elevation: 104,
+        },
 
+        input_cus: {
+            flex: 1,
+            backgroundColor: "#ffffff",
+            padding: 10,
+            borderRadius: 10,
+            shadowColor: "#0000001A",
+            shadowOpacity: 0.1,
+            shadowOffset: {
+                width: 0,
+                height: 20
+            },
+            marginLeft: 20,
+            marginRight: 20,
+
+        },
+        inputStyleDD: {
+            fontSize: 16
+        },
+        input: {
+            fontSize: 16
+        },
+        placeholderStyle: {
+            fontSize: 16
+        },
+        //------------------------------- Css Món Ăn----------------------------------
+
+        listContainer: {
+            paddingHorizontal: 0,
+            alignItems: 'flex-start',
+        },
+        gridTotal: {
+            width: '100%',
+            height: 'auto'
+        },
+        // CSS cho gridItem
+        gridItem: {
+            width: Dimensions.get('window').width - 40,
+
+            paddingTop: 10,
+            paddingBottom: 10,
+            flexDirection: 'row',
+            marginLeft: 5,
+            borderBottomWidth: 1,
+            borderBottomColor: 'gray',
+        },
+
+        // CSS cho ảnh
+        image: {
+            width: 80,
+            height: 80,
+            borderRadius: 10,
+        },
+
+        // CSS cho phần view bên phải của ảnh
+        itemDetails: {
+            marginLeft: 20,
+            width: '80%',
+            justifyContent: 'center',
+            height: 80,
+        },
+
+        // CSS cho tên sản phẩm
+        itemName: {
+
+        },
+
+        // CSS cho giá sản phẩm
+        itemPrice: {
+            color: '#667080',
+        },
+        orderlist: {
+            flex: 1,
+            backgroundColor: "#ffffff",
+            padding: 10,
+            paddingLeft: 10,
+            paddingTop: Object.values(cartItems).length > 0 ? 5 : 10,
+            paddingRight: 10,
+            paddingBottom: 10,
+            borderRadius: 10,
+            shadowColor: "#0000001A",
+            shadowOpacity: 0.1,
+            shadowOffset: {
+                width: 0,
+                height: 20
+            },
+            marginLeft: 20,
+            marginRight: 20,
+        }
     });
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
     // ...

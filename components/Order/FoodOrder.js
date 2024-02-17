@@ -42,7 +42,7 @@ import {
 } from "firebase/storage";
 import { useRoute } from '@react-navigation/native';
 import { BottomSheet } from 'react-native-sheet';
-import SearchBar from "react-native-dynamic-search-bar";
+import { SearchBar } from 'react-native-elements';
 import { Dropdown } from 'react-native-element-dropdown';
 export const ImageAllFolderContext = createContext();
 
@@ -154,7 +154,7 @@ export default function FoodOrder({ route }) {
             setCartItems(foods ? foods : []);
         }
     }, [foods]); // Chỉ re-run khi foods thay đổi.
-    
+
     const [bottomSheetData, setBottomSheetData] = useState({});
     const screenHeight = Dimensions.get('window').height; // Lấy chiều cao màn hình
     const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
@@ -248,17 +248,17 @@ export default function FoodOrder({ route }) {
     }, []);
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-          setIsKeyboardVisible(true);
+            setIsKeyboardVisible(true);
         });
         const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-          setIsKeyboardVisible(false);
+            setIsKeyboardVisible(false);
         });
         return () => {
-          keyboardDidShowListener.remove();
-          keyboardDidHideListener.remove();
+            keyboardDidShowListener.remove();
+            keyboardDidHideListener.remove();
         };
     }, []);
-    
+
     const handleSelectCategory = (key) => {
         setSelectedCategory(key);
     };
@@ -298,21 +298,21 @@ export default function FoodOrder({ route }) {
             setCartItems((prevCartItems) => {
                 const key = Object.keys(bottomSheetData)[0];
                 const currentItem = Object.values(bottomSheetData)[0];
-    
+
                 if (currentItem) {
                     const newCartItems = { ...prevCartItems };
-    
+
                     // Lọc các mục có cùng key với key ban đầu
                     const filteredItems = Object.values(newCartItems).filter(
                         (item) => item.key.startsWith(key)
                     );
-    
+
                     if (filteredItems.length > 0) {
                         // Kiểm tra trùng discount
                         const existingItem = filteredItems.find(
                             (item) => item.discount === currentItem.discount
                         );
-    
+
                         if (existingItem) {
                             // Trùng key và discount, tăng quantity và cộng tổng giá trị
                             newCartItems[existingItem.key].quantity += currentItem.quantity;
@@ -336,7 +336,7 @@ export default function FoodOrder({ route }) {
                             totalPrice: currentItem.price * currentItem.quantity,
                         };
                     }
-    
+
                     return newCartItems;
                 } else {
                     // Xử lý khi currentItem không tồn tại (hiển thị thông báo lỗi hoặc thực hiện hành động khác)
@@ -348,22 +348,22 @@ export default function FoodOrder({ route }) {
         }
         setIsBottomSheetVisible(false);
     };
-    
+
     const addToCartSheet = (customKey, customDiscount) => {
         if (bottomSheetData) {
             setCartItems((prevCartItems) => {
                 const key = customKey;
                 const discount = customDiscount;
                 const currentItem = Object.values(cartItems)[0]; // Lấy currentItem từ cartItems
-        
+
                 if (currentItem) {
                     const newCartItems = { ...prevCartItems };
-        
+
                     // Kiểm tra xem có mục nào trong cartItems có cùng key và discount không
                     const existingCartItem = Object.values(newCartItems).find(
                         (item) => item.key === key && item.discount === discount
                     );
-        
+
                     if (existingCartItem) {
                         // Nếu đã tồn tại mục có cùng key và discount, cộng thêm quantity và tính lại totalPrice
                         newCartItems[existingCartItem.key].quantity += 1;
@@ -378,7 +378,7 @@ export default function FoodOrder({ route }) {
                             totalPrice: currentItem.price * currentItem.quantity,
                         };
                     }
-        
+
                     return newCartItems;
                 } else {
                     // Xử lý khi currentItem không tồn tại (hiển thị thông báo lỗi hoặc thực hiện hành động khác)
@@ -390,26 +390,26 @@ export default function FoodOrder({ route }) {
         }
         setIsBottomSheetVisible(false);
     };
-    
-    
-    
-    
+
+
+
+
 
     const removeFromCart = (key) => {
         setCartItems((prevCartItems) => {
             const newCartItems = { ...prevCartItems };
-    
+
             // Lọc các mục có cùng key với key ban đầu
             const filteredItems = Object.values(newCartItems).filter(
                 (item) => item.key.startsWith(key)
             );
-    
+
             if (filteredItems.length > 0) {
                 // Kiểm tra trùng discount
                 const existingItem = filteredItems.find(
                     (item) => item.discount === filteredItems[0].discount
                 );
-    
+
                 if (existingItem) {
                     // Trùng key và discount, giảm quantity và cập nhật tổng giá trị
                     existingItem.quantity -= 1;
@@ -421,11 +421,11 @@ export default function FoodOrder({ route }) {
                     }
                 }
             }
-    
+
             return newCartItems;
         });
     };
-    
+
     const addToCartItem = (key) => {
         setBottomSheetData((prevData) => {
             const currentItem = prevData[key];
@@ -547,7 +547,7 @@ export default function FoodOrder({ route }) {
     }, [searchQuery, selectedCategory]);
 
     const totalCartDiscountPrice = Object.values(cartItems).reduce(
-        (total, item) => total + (item.price * item.quantity - (item.price * item.quantity * item.discount/100 || 0)),
+        (total, item) => total + (item.price * item.quantity - (item.price * item.quantity * item.discount / 100 || 0)),
         0
     );
 
@@ -633,7 +633,7 @@ export default function FoodOrder({ route }) {
         listContainer: {
             paddingHorizontal: 10,
             alignItems: 'flex-start',
-            paddingBottom: Object.keys(cartItems).length > 0 ? 60 : 0 || isBottomSheetVisible?150:0,
+            paddingBottom: Object.keys(cartItems).length > 0 ? 60 : 0 || isBottomSheetVisible ? 150 : 0,
         },
         // image: {
 
@@ -708,7 +708,107 @@ export default function FoodOrder({ route }) {
         </TouchableOpacity>
     ));
     const webStyles = StyleSheet.create({
+        container_foodorder: {
+            flex: 1,
+            backgroundColor: "#ffffff",
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            bottom: 0,
+            right: 0
+        },
+        //------------------------------- Css Món Ăn----------------------------------
+        categoryButton: {
+            marginRight: 10,
+            borderRadius: 15,
+            paddingHorizontal: 16,
+            paddingVertical: 8, // Thay đổi thành marginVertical
+            borderWidth: 1,
+            borderColor: '#D3D3D3',
+            minHeight: 40,
+            marginBottom: 10,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        categoryButtonText: {
+            fontWeight: 'bold',
+        },
+        categoryButtonSelected: {
+            backgroundColor: '#667080',
+            borderColor: '#667080',
+        },
+        categoryButtonTextSelected: {
+            color: '#FFFFFF',
+        },
+        listContainer: {
+            paddingHorizontal: 10,
+            alignItems: 'flex-start',
+            paddingBottom: Object.keys(cartItems).length > 0 ? 60 : 0 || isBottomSheetVisible ? 150 : 0,
+        },
+        // image: {
 
+        //     width: '100%',
+        //     height: 150,
+        //     borderRadius: 10,
+        // },
+        // itemName: {
+
+        // },
+        // itemPrice: {
+
+        // },
+        // listContainer: {
+        //     paddingHorizontal: 10,
+        //     alignItems: 'flex-start',
+        //     height: '100%',
+        // },
+        gridTotal: {
+            width: '100%',
+            height: 'auto'
+        },
+        // CSS cho gridItem
+        gridItem: {
+            width: Dimensions.get('window').width - 40,
+
+            paddingTop: 20,
+            paddingBottom: 20,
+            flexDirection: 'row',
+            marginLeft: 10,
+            borderBottomWidth: 1,
+            borderBottomColor: 'gray',
+        },
+
+        // CSS cho ảnh
+        image: {
+            width: 80,
+            height: 80,
+            borderRadius: 10,
+        },
+        imageBottomSheetData: {
+            width: 80,
+            height: 80,
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderRadius: 10,
+        },
+        // CSS cho phần view bên phải của ảnh
+        itemDetails: {
+            marginLeft: 20,
+            width: '80%',
+            justifyContent: 'center',
+            height: 80,
+        },
+
+        // CSS cho tên sản phẩm
+        itemName: {
+            paddingBottom: 15
+        },
+
+        // CSS cho giá sản phẩm
+        itemPrice: {
+            color: '#667080',
+        },
     });
     console.log(cartItems)
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
@@ -719,18 +819,30 @@ export default function FoodOrder({ route }) {
 
         <View >
             <View style={{ flexDirection: 'row', marginTop: 'auto', marginBottom: 20 }}>
-                <SearchBar
-                    style={{ width: "auto", height: 50, marginLeft: 20, marginTop: 20 }}
-                    fontColor="#ffffff"
-                    iconColor="#ffffff"
-                    shadowColor="#282828"
-                    cancelIconColor="#ffffff"
-                    backgroundColor="#ffffff"
-                    placeholder="Tìm kiếm"
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    clearIconComponent={() => null}
-                />
+            <SearchBar
+                        placeholder="Tìm kiếm"
+                        onChangeText={setSearchQuery}
+                        value={searchQuery}
+                        inputStyle={{ color: 'black' }} // Đặt màu chữ trong input
+                        containerStyle={{
+                            backgroundColor: 'transparent', // Để background của container trong suốt
+                            borderBottomColor: 'transparent',
+                            borderTopColor: 'transparent',
+                            marginLeft: 0, // Loại bỏ lề trái
+                            marginRight: 0, // Loại bỏ lề phải
+                            height: 50,
+                            width: '100%', // Đảm bảo container chiếm full chiều rộng
+                            paddingHorizontal: 20, // Loại bỏ padding ngang nếu cần
+                            
+                        }}
+                        inputContainerStyle={{
+                            backgroundColor: '#ffffff',
+                            width: '100%', // Đảm bảo khung nhập chiếm full chiều rộng
+                        }}
+                        placeholderTextColor="black" // Màu của placeholder text
+                        searchIcon={{ color: 'black' }} // Màu icon tìm kiếm
+                        clearIcon={{ color: 'black' }} // Màu icon xóa
+                    />
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: 20, height: 'auto', width: 'auto' }}>
                 <TouchableOpacity onPress={() => handleSelectCategory('')} style={[finalStyles.categoryButton, selectedCategory === '' && finalStyles.categoryButtonSelected]}>
@@ -766,7 +878,7 @@ export default function FoodOrder({ route }) {
                                 ]}
                             >
                                 <View style={{ width: '20%' }}>
-                                    <Image source={{ uri: url}} style={finalStyles.image} />
+                                    <Image source={{ uri: url }} style={finalStyles.image} />
                                 </View>
                                 <View style={finalStyles.itemDetails}>
                                     <Text style={finalStyles.itemName}>{name}</Text>
@@ -803,7 +915,7 @@ export default function FoodOrder({ route }) {
             {isBottomSheetVisible && (
                 <View style={{
                     position: 'absolute',
-                    bottom:0,
+                    bottom: 0,
                     left: 0,
                     right: 0,
                     backgroundColor: 'white',
@@ -923,7 +1035,7 @@ export default function FoodOrder({ route }) {
                     </View>
                 </View>
             )}
-            {Object.keys(cartItems).length > 0 && !isBottomSheetVisible && !isKeyboardVisible? (
+            {Object.keys(cartItems).length > 0 && !isBottomSheetVisible && !isKeyboardVisible ? (
                 <View style={{
                     position: 'absolute',
                     bottom: 0,
@@ -972,7 +1084,7 @@ export default function FoodOrder({ route }) {
                                     const quantity = data.quantity;
                                     const totalPrice = price * quantity;
                                     const discount = data.discount;
-                                    const discountPrice = totalPrice * discount/100;
+                                    const discountPrice = totalPrice * discount / 100;
                                     const imageArray = imageAllFolder || [];
 
                                     // Find the URL for the specific key or provide a default URL if not found
@@ -1016,12 +1128,12 @@ export default function FoodOrder({ route }) {
                                                                         <IconAnt name="minuscircleo" size={24} color="#667080" />
                                                                     </TouchableOpacity>
                                                                     <Text style={{ marginLeft: 8, marginRight: 8 }}>{quantity}</Text>
-                                                                    <TouchableOpacity onPress={() => addToCartSheet(key,discount)}>
+                                                                    <TouchableOpacity onPress={() => addToCartSheet(key, discount)}>
                                                                         <IconAnt name="pluscircleo" size={24} color="#667080" />
                                                                     </TouchableOpacity>
                                                                 </>
                                                             ) : ( // Ngược lại, chỉ hiển thị nút tăng
-                                                                <TouchableOpacity onPress={() => addToCartSheet(key,discount)}>
+                                                                <TouchableOpacity onPress={() => addToCartSheet(key, discount)}>
                                                                     <IconAnt name="pluscircleo" size={24} color="#667080" />
                                                                 </TouchableOpacity>
                                                             )}
@@ -1083,7 +1195,7 @@ export default function FoodOrder({ route }) {
                                         if (origin === 'CreateOrder') {
                                             navigation.navigate('CreateOrder', { Foods: cartItems });
                                         } else if (origin === 'OrderDetails') {
-                                            navigation.navigate('OrderDetails', { Foods: cartItems,Orders:Orders, OrderID:OrderID });
+                                            navigation.navigate('OrderDetails', { Foods: cartItems, Orders: Orders, OrderID: OrderID });
                                         }
                                     }}
                                 >
@@ -1116,7 +1228,7 @@ export default function FoodOrder({ route }) {
                                 if (origin === 'CreateOrder') {
                                     navigation.navigate('CreateOrder', { Foods: cartItems });
                                 } else if (origin === 'OrderDetails') {
-                                    navigation.navigate('OrderDetails', { Foods: cartItems,Orders:Orders , OrderID:OrderID});
+                                    navigation.navigate('OrderDetails', { Foods: cartItems, Orders: Orders, OrderID: OrderID });
                                 }
                             }}
                         >
