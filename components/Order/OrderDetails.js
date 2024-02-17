@@ -1,53 +1,28 @@
-import React, { createContext, useEffect, useState, useRef, useContext } from "react";
-import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, AsyncStorage, Alert, SafeAreaView, ScrollView, ImageBackground, TextInput, FlatList, SectionList, Keyboard } from "react-native";
-import Icon from 'react-native-vector-icons/MaterialIcons';
-
+import React, { useEffect, useState, useRef } from "react";
+import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, SafeAreaView, ScrollView,  TextInput, FlatList, Keyboard } from "react-native";
 import { useNavigation } from '@react-navigation/native';
-import { Checkbox, DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
 import { FIREBASE_APP } from '../../FirebaseConfig';
-import { getDatabase, ref, onValue, push, get, set, query, orderByChild, equalTo, update } from 'firebase/database';
-import { BottomSheet } from 'react-native-sheet';
+import { getDatabase, ref, onValue, update } from 'firebase/database';
 import { Dropdown } from 'react-native-element-dropdown';
-import { getStorage, ref as storageRef, listAll, getDownloadURL } from "firebase/storage";
+import { getStorage, ref as storageRef } from "firebase/storage";
 import { useImageAllFolder } from "./FoodOrder"
 import IconAnt from 'react-native-vector-icons/AntDesign';
-import IconFontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { showMessage, hideMessage, } from "react-native-flash-message";
 // Lấy kích thước màn hình để hỗ trợ responsive
-const { width, height } = Dimensions.get('window');
 
 export default function OrderDetails({ route }) {
     const database = getDatabase(FIREBASE_APP);
-    const storage = getStorage(FIREBASE_APP);
     const { Orders } = route.params;
     const { OrderID } = route.params;
     // const IDOrder = "O" + titleOrderId
-    const [dataOrders, setDataOrders] = useState([]);
+
     const [dataRoom, setDataRoom] = useState([]);
-    const [dataFoods, setDataFoods] = useState([]);
-    const [dataCategories, setDataCategories] = useState([]);
-    const [dataFoodBonus, setDataFoodBonus] = useState([]);
-    const [dataDrinks, setDataDrinks] = useState([]);
-    const [dataDrink2ND, setDataDrink2ND] = useState([]);
-    const [dataToppings, setDataToppings] = useState([]);
-    const [dataGames, setDataGames] = useState([]);
     const [roomDropdownData, setRoomDropdownData] = useState([]);
     const navigation = useNavigation();
-    const [searchQuery, setSearchQuery] = useState('');
-    const [filteredOrders, setFilteredOrders] = useState([]);
-    const bottomSheet = useRef(null);
-    const bottomSheetCreate = useRef(null);
-    const bottomSheetFood = useRef(null);
-    const [orderCountByRoom, setOrderCountByRoom] = useState({});
-    const [currentRoom, setCurrentRoom] = useState('Tất cả');
     let [selectedRoom, setSelectedRoom] = useState(Object.values(Orders[3])[1] || '');
-    const [selectedCategory, setSelectedCategory] = useState('');
     const [customerName, setCustomerName] = useState(Object.values(Orders[4][1])[0]["CustomerName"] || '');
-    const [imageUrls, setImageUrls] = useState({});
-    const [imageAll, setImageAll] = useState({});
     const { imageAllFolder } = useImageAllFolder();
     const [discountTotal, setDiscountTotal] = useState('');
-    const screenHeight = Dimensions.get('window').height; // Lấy chiều cao màn hình
     const foods = route.params?.Foods || {};
     const [discount, setDiscount] = useState({});
     const [cartItems, setCartItems] = useState([]);
@@ -112,23 +87,8 @@ export default function OrderDetails({ route }) {
 
 
     useEffect(() => {
-        const ordersRef = ref(database, 'Orders');
         const roomRef = ref(database, 'Rooms');
-        const foodRef = ref(database, 'Foods');
-        const categoryRef = ref(database, 'Categories');
-        const drinkRef = ref(database, 'Drinks');
-        const drink2ndRef = ref(database, 'Drink2ND');
-        const foodbonusRef = ref(database, 'FoodBonus');
-        const gameRef = ref(database, 'Games');
-        const toppingRef = ref(database, 'Topping');
         // Tạo một biến để giữ các hàm hủy đăng ký
-        const unsubscribeOrders = onValue(ordersRef, (snapshot) => {
-            const ordersData = snapshot.val();
-            if (ordersData) {
-                setDataOrders(ordersData);
-            }
-        });
-
         const unsubscribeRooms = onValue(roomRef, (snapshot) => {
             const roomData = snapshot.val();
             if (roomData) {
@@ -136,66 +96,9 @@ export default function OrderDetails({ route }) {
             }
         });
 
-        const unsubscribeFoods = onValue(foodRef, (snapshot) => {
-            const foodData = snapshot.val();
-            if (foodData) {
-                setDataFoods(foodData);
-            }
-        });
-
-        const unsubscribeCategories = onValue(categoryRef, (snapshot) => {
-            const categoryData = snapshot.val();
-            if (categoryData) {
-                setDataCategories(categoryData);
-            }
-        });
-
-        const unsubscribeDrinks = onValue(drinkRef, (snapshot) => {
-            const drinkData = snapshot.val();
-            if (drinkData) {
-                setDataDrinks(drinkData);
-            }
-        });
-
-
-        const unsubscribeDrink2ND = onValue(drink2ndRef, (snapshot) => {
-            const drink2ndData = snapshot.val();
-            if (drink2ndData) {
-                setDataDrink2ND(drink2ndData);
-            }
-        });
-
-        const unsubscribeFoodBonus = onValue(foodbonusRef, (snapshot) => {
-            const foodbonusData = snapshot.val();
-            if (foodbonusData) {
-                setDataFoodBonus(foodbonusData);
-            }
-        });
-
-        const unsubscribeGames = onValue(gameRef, (snapshot) => {
-            const gameData = snapshot.val();
-            if (gameData) {
-                setDataGames(gameData);
-            }
-        });
-
-        const unsubscribeToppings = onValue(toppingRef, (snapshot) => {
-            const toppingData = snapshot.val();
-            if (toppingData) {
-                setDataToppings(toppingData);
-            }
-        });
         // Khi component bị unmount, gọi các hàm hủy đăng ký
         return () => {
-            unsubscribeOrders();
             unsubscribeRooms();
-            unsubscribeFoods();
-            unsubscribeCategories();
-            unsubscribeDrinks();
-            unsubscribeDrink2ND();
-            unsubscribeFoodBonus();
-            unsubscribeGames();
-            unsubscribeToppings();
         };
 
     }, []);
