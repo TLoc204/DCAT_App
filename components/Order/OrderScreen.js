@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import OrderDetails from './OrderDetails';
 import CreateOrder from './CreateOrder';
 import FoodOrder from './FoodOrder';
-import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, AsyncStorage, Alert, SafeAreaView, ScrollView, ImageBackground, TextInput, FlatList } from "react-native";
+import { View, TouchableOpacity } from "react-native";
 import Icon from 'react-native-vector-icons/MaterialIcons';
 const Stack = createNativeStackNavigator();
 

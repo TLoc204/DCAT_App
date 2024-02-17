@@ -7,14 +7,9 @@ import {
     Dimensions,
     Platform,
     StyleSheet,
-    AsyncStorage,
-    Alert,
-    SafeAreaView,
     ScrollView,
-    ImageBackground,
     TextInput,
     FlatList,
-    Modal,
     Keyboard
 } from "react-native";
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -26,13 +21,7 @@ import { FIREBASE_APP } from '../../FirebaseConfig';
 import {
     getDatabase,
     ref,
-    onValue,
-    push,
-    get,
-    set,
-    query,
-    orderByChild,
-    equalTo,
+    onValue
 } from 'firebase/database';
 import {
     getStorage,
@@ -40,10 +29,9 @@ import {
     listAll,
     getDownloadURL,
 } from "firebase/storage";
-import { useRoute } from '@react-navigation/native';
 import { BottomSheet } from 'react-native-sheet';
 import { SearchBar } from 'react-native-elements';
-import { Dropdown } from 'react-native-element-dropdown';
+
 export const ImageAllFolderContext = createContext();
 
 const theme = {
@@ -114,7 +102,6 @@ export const useImageAllFolder = () => {
 
 export default function FoodOrder({ route }) {
     const database = getDatabase(FIREBASE_APP);
-    const storage = getStorage(FIREBASE_APP);
     const [dataOrders, setDataOrders] = useState([]);
     const [dataRoom, setDataRoom] = useState([]);
     const [dataFoods, setDataFoods] = useState([]);
@@ -124,20 +111,16 @@ export default function FoodOrder({ route }) {
     const [dataDrink2ND, setDataDrink2ND] = useState([]);
     const [dataToppings, setDataToppings] = useState([]);
     const [dataGames, setDataGames] = useState([]);
-    const [roomDropdownData, setRoomDropdownData] = useState([]);
+
     const navigation = useNavigation();
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredOrders, setFilteredOrders] = useState([]);
     const bottomSheetFood = useRef(null);
-    const bottomSheetFoodItem = useRef(null);
-    const [orderCountByRoom, setOrderCountByRoom] = useState({});
-    const [currentRoom, setCurrentRoom] = useState('Tất cả');
-    const [selectedRoom, setSelectedRoom] = useState(null);
+
     const [selectedCategory, setSelectedCategory] = useState('');
-    const [imageUrls, setImageUrls] = useState({});
-    const [imageAll, setImageAll] = useState({});
+
     const { imageAllFolder } = useImageAllFolder();
-    const [showPlusIcons, setShowPlusIcons] = useState({});
+
     const foods = route.params?.Foods || {};
     const Orders = route.params?.Orders || {};
     const OrderID = route.params?.OrderID || {};
@@ -156,7 +139,6 @@ export default function FoodOrder({ route }) {
     }, [foods]); // Chỉ re-run khi foods thay đổi.
 
     const [bottomSheetData, setBottomSheetData] = useState({});
-    const screenHeight = Dimensions.get('window').height; // Lấy chiều cao màn hình
     const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
     const [initialDataLoaded, setInitialDataLoaded] = useState(false);
     useEffect(() => {
@@ -520,10 +502,7 @@ export default function FoodOrder({ route }) {
         0
     );
 
-    const totalCartPrice = Object.values(cartItems).reduce(
-        (total, item) => total + item.totalPrice,
-        0
-    );
+
     const handleSearch = () => {
         // Lấy dữ liệu từ getFilteredData()
         let data = getFilteredData();
@@ -587,9 +566,7 @@ export default function FoodOrder({ route }) {
     const closeFoodOrder = () => {
         bottomSheetFood.current.hide();
     };
-    const handleSubmit = async () => {
 
-    };
     const commonStyles = {
         container_order: {
             justifyContent: 'center',
@@ -702,11 +679,7 @@ export default function FoodOrder({ route }) {
 
     });
 
-    const renderedItems = filteredOrders.map(([key, data, url]) => (
-        <TouchableOpacity key={key} onPress={() => openFoodOrderItem(key, filteredOrders, url)}>
-            <IconAnt name="pluscircleo" size={24} color="#667080" />
-        </TouchableOpacity>
-    ));
+
     const webStyles = StyleSheet.create({
         container_foodorder: {
             flex: 1,
@@ -810,11 +783,11 @@ export default function FoodOrder({ route }) {
             color: '#667080',
         },
     });
-    console.log(cartItems)
+
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
     // ...
     // ...
-    const iconRendered = false;
+
     return (
 
         <View >

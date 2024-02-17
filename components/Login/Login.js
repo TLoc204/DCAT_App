@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import { Checkbox, DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
 import { FIREBASE_APP } from '../../FirebaseConfig';
-import { getDatabase, ref, onValue, push, get, set, query, orderByChild, equalTo } from 'firebase/database';
+import { getDatabase, ref, get} from 'firebase/database';
 // Lấy kích thước màn hình để hỗ trợ responsive
 const { width, height } = Dimensions.get('window');
 const theme = {
@@ -20,7 +20,6 @@ export default function Login() {
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [loading, setLoading] = useState(false);
     const [rememberPassword, setRememberPassword] = useState(false);
-    const [userAccount, setUserAccount] = useState([]);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const navigation = useNavigation();

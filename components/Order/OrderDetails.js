@@ -53,16 +53,7 @@ export default function OrderDetails({ route }) {
     const [cartItems, setCartItems] = useState([]);
     const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
     const [defaultImageUrl, setDefaultImageUrl] = useState('https://firebasestorage.googleapis.com/v0/b/dcat-c09a4.appspot.com/o/MacDinh.jpg?alt=media&token=d66af2a0-9be6-44cb-9eda-504f04c1763c');
-
-    const categoryMapping = {
-        D: dataDrinks,
-        DD: dataDrink2ND,
-        F: dataFoods,
-        Tp: dataToppings,
-        Fb: dataFoodBonus,
-        G: dataGames,
-    };
-    console.log(OrderID)
+    const [selectedPayment, setSelectedPayment] = useState('Cash');
     useEffect(() => {
         if (Object.keys(foods).length > 0) {
             setCartItems(foods);
@@ -243,46 +234,7 @@ export default function OrderDetails({ route }) {
         setSelectedRoom(selectedValue);
     };
 
-    const addToCart = (key, name, quantity, price) => {
-        setCartItems((prevCartItems) => {
-            const newCartItems = { ...prevCartItems };
 
-            if (newCartItems[key]) {
-                newCartItems[key].quantity += quantity;
-                newCartItems[key].totalPrice = newCartItems[key].price * newCartItems[key].quantity;
-
-                // Cập nhật giảm giá nếu có
-                if (newCartItems[key].discount !== undefined) {
-                    newCartItems[key].discountPrice = calculateTotalPrice(newCartItems[key]);
-                }
-            } else {
-                newCartItems[key] = { name, quantity, price, totalPrice: price * quantity };
-            }
-
-            return newCartItems;
-        });
-    };
-
-
-    const removeFromCart = (key) => {
-        setCartItems((prevCartItems) => {
-            const newCartItems = { ...prevCartItems };
-            if (newCartItems[key]) {
-                if (newCartItems[key].quantity > 1) {
-                    newCartItems[key].quantity -= 1;
-                    newCartItems[key].totalPrice = newCartItems[key].price * newCartItems[key].quantity;
-
-                    // Cập nhật giảm giá nếu có
-                    if (newCartItems[key].discount !== undefined) {
-                        newCartItems[key].discountPrice = calculateTotalPrice(newCartItems[key]);
-                    }
-                } else {
-                    delete newCartItems[key];
-                }
-            }
-            return newCartItems;
-        });
-    };
     const updateDiscount = (key, discountValue) => {
         setCartItems((prevCartItems) => {
             const newCartItems = { ...prevCartItems };
@@ -309,11 +261,6 @@ export default function OrderDetails({ route }) {
 
         return discountedPrice * quantity;
     };
-
-    const totalItemsInCart = Object.values(cartItems).reduce(
-        (total, item) => total + item.quantity,
-        0
-    );
 
     const totalCartPrice = Object.values(cartItems).reduce(
         (total, item) => total + item.totalPrice,
@@ -449,7 +396,8 @@ export default function OrderDetails({ route }) {
             try {
                 await update(orderRef, {
                     Delete: true,
-                    PaidDate: `${date} ${time}`
+                    PaidDate: `${date} ${time}`,
+                    PaymentMethods: selectedPayment
                 });
                 console.log("Cập nhật thành công!");
             } catch (error) {
@@ -457,7 +405,6 @@ export default function OrderDetails({ route }) {
             }
         } else {
             console.log('OrderID is missing');
-            // Xử lý khi không có OrderID
         }
         navigation.navigate('Order')
     };
@@ -482,8 +429,7 @@ export default function OrderDetails({ route }) {
             showMessage({
                 message: "Sửa đơn thành công",
                 type: "success",
-                icon: { icon: "success", position: "left" }, // Use the built-in icon
-                // Here you can pass your custom component
+                icon: { icon: "success", position: "left" }, 
                 renderCustomContent: () => (
                     <CustomMessageComponent
                         message="Sửa đơn thành công"
@@ -505,14 +451,14 @@ export default function OrderDetails({ route }) {
             customerName.length > 0) {
             handleSubmitPaid()
             showMessage({
-                message: "Thanh toán đơn hàng thành công",
+                message: `Thanh toán đơn hàng ${OrderID} thành công`,
                 type: "success",
                 icon: { icon: "success", position: "left" }, // Use the built-in icon
                 // Here you can pass your custom component
                 renderCustomContent: () => (
                     <CustomMessageComponent
-                        message="Thanh toán đơn hàng thành công"
-                        description="Đơn hàng của bạn đã được thanh toán thành công."
+                        message={`Thanh toán đơn hàng ${OrderID} thành công`}
+                        description={`Đơn hàng ${OrderID} đã được thanh toán thành công.`}
                         icon="checkcircle"
                     />
                 ),
@@ -524,6 +470,14 @@ export default function OrderDetails({ route }) {
             checkInput();
         }
     }
+    const paymentOptions = [
+        { label: 'Tiền mặt', value: 'Cash' },
+        { label: 'Momo', value: 'Momo' },
+        { label: 'Ngân hàng', value: 'Bank' },
+    ];
+    const handlePaymentChange = (option) => {
+        setSelectedPayment(option.value);
+    };
     const commonStyles = {
         container_order: {
             justifyContent: 'center',
@@ -996,11 +950,28 @@ export default function OrderDetails({ route }) {
                             <Text style={{ justifyContent: 'flex-start' }}>Giảm giá tổng</Text>
                             <Text style={{ justifyContent: 'flex-end' }}>{`${(totalCartDiscountPrice * discountTotal / 100) > 0 ? '-' : ''}${(totalCartPrice * discountTotal / 100).toLocaleString('vi-VN')}đ`}</Text>
                         </View>
-
-
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10, paddingTop: 10 }}>
                             <Text style={{ justifyContent: 'flex-start', fontWeight: 'bold' }}>Tổng cộng</Text>
                             <Text style={{ justifyContent: 'flex-end', fontWeight: 'bold' }}>{(discountTotal ? (totalCartDiscountPrice - (totalCartPrice * discountTotal / 100)) : totalCartDiscountPrice).toLocaleString('vi-VN')}đ</Text>
+                        </View>
+                    </View>
+                    <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Phương thức thanh toán</Text>
+                    <View style={finalStyles.input_cus}>
+                        <View style={finalStyles.pickerContainer}>
+                            <Dropdown
+                                style={finalStyles.dropdown}
+                                placeholderStyle={finalStyles.placeholderStyle}
+                                selectedTextStyle={finalStyles.selectedTextStyle}
+                                inputSearchStyle={finalStyles.inputSearchStyle}
+                                itemTextStyle={finalStyles.inputStyleDD}
+                                iconStyle={finalStyles.iconStyle}
+                                data={paymentOptions}
+                                maxHeight={300}
+                                labelField="label"
+                                valueField="value"
+                                value={selectedPayment}
+                                onChange={handlePaymentChange}
+                            />
                         </View>
                     </View>
                     <View>
@@ -1010,8 +981,8 @@ export default function OrderDetails({ route }) {
                             borderRadius: 15,
                             paddingVertical: 15,
                             marginHorizontal: 5,
-                            marginLeft: 15,
-                            marginRight: 15,
+                            marginLeft: 20,
+                            marginRight: 20,
                             marginTop: 15
                         }} onPress={() => {
                             handlePaidOrder()
@@ -1073,13 +1044,10 @@ export default function OrderDetails({ route }) {
                                 fontSize: 14,
                             }}>Sửa đơn</Text>
                         </TouchableOpacity>
-
                     </View>
                 </View>)
                 : null}
 
         </SafeAreaView>
     );
-
-
 }

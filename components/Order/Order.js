@@ -1,18 +1,14 @@
-import React, { useEffect, useState, useRef, useContext } from "react";
-import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, AsyncStorage, Alert, SafeAreaView, ScrollView, ImageBackground, TextInput, FlatList } from "react-native";
+import React, { useEffect, useState, useRef} from "react";
+import { View, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, SafeAreaView, ScrollView } from "react-native";
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
-import { Checkbox, DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
+import { DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
 import { FIREBASE_APP } from '../../FirebaseConfig';
-import { getDatabase, ref, onValue, push, get, set, query, orderByChild, equalTo } from 'firebase/database';
+import { getDatabase, ref, onValue } from 'firebase/database';
 import { BottomSheet } from 'react-native-sheet';
 import { SearchBar } from 'react-native-elements';
-import { Dropdown } from 'react-native-element-dropdown';
-import { getStorage, ref as storageRef, listAll, getDownloadURL } from "firebase/storage";
-import { useRoute } from '@react-navigation/native';
-import ContentLoader, { Rect, Circle } from 'react-content-loader/native';
-// Lấy kích thước màn hình để hỗ trợ responsive
-const { width, height } = Dimensions.get('window');
+
+import ContentLoader, { Rect } from 'react-content-loader/native';
 const theme = {
     ...DefaultTheme,
     roundness: 2,
@@ -23,41 +19,18 @@ const theme = {
 };
 export default function Order() {
     const database = getDatabase(FIREBASE_APP);
-    const storage = getStorage(FIREBASE_APP);
     const [dataOrders, setDataOrders] = useState([]);
     const [dataRoom, setDataRoom] = useState([]);
-    const [dataFoods, setDataFoods] = useState([]);
-    const [dataCategories, setDataCategories] = useState([]);
-    const [dataFoodBonus, setDataFoodBonus] = useState([]);
-    const [dataDrinks, setDataDrinks] = useState([]);
-    const [dataDrink2ND, setDataDrink2ND] = useState([]);
-    const [dataToppings, setDataToppings] = useState([]);
-    const [dataGames, setDataGames] = useState([]);
-    const [roomDropdownData, setRoomDropdownData] = useState([]);
     const navigation = useNavigation();
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredOrders, setFilteredOrders] = useState([]);
     const bottomSheet = useRef(null);
-    const bottomSheetCreate = useRef(null);
-    const bottomSheetFood = useRef(null);
     const [orderCountByRoom, setOrderCountByRoom] = useState({});
     const [currentRoom, setCurrentRoom] = useState('Tất cả');
-    const [selectedRoom, setSelectedRoom] = useState(null);
-    const [selectedCategory, setSelectedCategory] = useState('');
-    const [imageUrls, setImageUrls] = useState({});
-    const [imageAll, setImageAll] = useState({});
-    const screenHeight = Dimensions.get('window').height; // Lấy chiều cao màn hình
     const [isLoading, setIsLoading] = useState(true);
     useEffect(() => {
         const ordersRef = ref(database, 'Orders');
         const roomRef = ref(database, 'Rooms');
-        const foodRef = ref(database, 'Foods');
-        const categoryRef = ref(database, 'Categories');
-        const drinkRef = ref(database, 'Drinks');
-        const drink2ndRef = ref(database, 'Drink2ND');
-        const foodbonusRef = ref(database, 'FoodBonus');
-        const gameRef = ref(database, 'Games');
-        const toppingRef = ref(database, 'Topping');
         // Tạo một biến để giữ các hàm hủy đăng ký
         const unsubscribeOrders = onValue(ordersRef, (snapshot) => {
             const ordersData = snapshot.val();
@@ -73,66 +46,12 @@ export default function Order() {
             }
         });
 
-        const unsubscribeFoods = onValue(foodRef, (snapshot) => {
-            const foodData = snapshot.val();
-            if (foodData) {
-                setDataFoods(foodData);
-            }
-        });
-
-        const unsubscribeCategories = onValue(categoryRef, (snapshot) => {
-            const categoryData = snapshot.val();
-            if (categoryData) {
-                setDataCategories(categoryData);
-            }
-        });
-
-        const unsubscribeDrinks = onValue(drinkRef, (snapshot) => {
-            const drinkData = snapshot.val();
-            if (drinkData) {
-                setDataDrinks(drinkData);
-            }
-        });
-
-
-        const unsubscribeDrink2ND = onValue(drink2ndRef, (snapshot) => {
-            const drink2ndData = snapshot.val();
-            if (drink2ndData) {
-                setDataDrink2ND(drink2ndData);
-            }
-        });
-
-        const unsubscribeFoodBonus = onValue(foodbonusRef, (snapshot) => {
-            const foodbonusData = snapshot.val();
-            if (foodbonusData) {
-                setDataFoodBonus(foodbonusData);
-            }
-        });
-
-        const unsubscribeGames = onValue(gameRef, (snapshot) => {
-            const gameData = snapshot.val();
-            if (gameData) {
-                setDataGames(gameData);
-            }
-        });
-
-        const unsubscribeToppings = onValue(toppingRef, (snapshot) => {
-            const toppingData = snapshot.val();
-            if (toppingData) {
-                setDataToppings(toppingData);
-            }
-        });
+        
         // Khi component bị unmount, gọi các hàm hủy đăng ký
         return () => {
             unsubscribeOrders();
             unsubscribeRooms();
-            unsubscribeFoods();
-            unsubscribeCategories();
-            unsubscribeDrinks();
-            unsubscribeDrink2ND();
-            unsubscribeFoodBonus();
-            unsubscribeGames();
-            unsubscribeToppings();
+           
         };
 
     }, []);
@@ -374,11 +293,7 @@ export default function Order() {
         const room = dataRoom[roomKey];
         roomNames[roomKey] = room.Name;
     });
-    const handleSearchChange = (query) => {
-        if (query !== '') {
-            setSearchQuery(query);
-        }
-    };
+
     useEffect(() => {
         // Chuyển đổi dataRoom thành mảng cho Dropdown
         const roomOptions = Object.keys(dataRoom).map((key) => {
@@ -386,9 +301,7 @@ export default function Order() {
         });
         setRoomDropdownData(roomOptions);
     }, [dataRoom]);
-    const handleRoomChange = (selectedValue) => {
-        setSelectedRoom(selectedValue);
-    };
+
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
     return (
         <PaperProvider theme={theme}>
@@ -473,10 +386,9 @@ export default function Order() {
                                 width={Dimensions.get('window').width}
                                 height={Dimensions.get('window').height}
                                 viewBox={`0 0 ${Dimensions.get('window').width} ${Dimensions.get('window').height}`}
-                                backgroundColor="#ffffff"  // Change background color to white or a brighter color
-                                foregroundColor="#f3f3f3"   // Change foreground color to the previous background color
+                                backgroundColor="#ffffff" 
+                                foregroundColor="#f3f3f3"  
                             >
-                                {/* Define the placeholders shapes */}
 
                                 <Rect x="40" y="30" rx="4" ry="4" width="80%" height="15" />
                                 <Rect x="40" y="60" rx="4" ry="4" width="40%" height="15" />
@@ -589,11 +501,7 @@ export default function Order() {
                                 })
                         )}
                     </ScrollView>
-
-
-
                 </ScrollView>
-
             </SafeAreaView>
         </PaperProvider>
     );
