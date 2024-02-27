@@ -269,7 +269,7 @@ export default function OrderDetails({ route }) {
             orderDetailsData['OD1']['CustomerName'] = customerName || 'Khách hàng';
             try {
                 await update(orderRef, {
-                    "IdRoom": selectedRoom,
+                    "IdRoom": Object.values(selectedRoom)[1],
                     "OrderDetails": orderDetailsData,
                     "TotalAmount": totalCartPrice,
                     "TotalDiscountPrice": totalCartDiscountPrice,
