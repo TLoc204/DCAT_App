@@ -1,5 +1,5 @@
 import React, {  useEffect, useState, useRef } from "react";
-import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, SafeAreaView, ScrollView, TextInput, FlatList} from "react-native";
+import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, SafeAreaView, ScrollView, TextInput, FlatList,Keyboard} from "react-native";
 import { useNavigation } from '@react-navigation/native';
 import { FIREBASE_APP } from '../../FirebaseConfig';
 import { getDatabase, ref, onValue, get, set} from 'firebase/database';

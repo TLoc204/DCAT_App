@@ -299,7 +299,7 @@ export default function Order() {
         const roomOptions = Object.keys(dataRoom).map((key) => {
             return { label: dataRoom[key].Name, value: key };
         });
-        setRoomDropdownData(roomOptions);
+
     }, [dataRoom]);
 
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
