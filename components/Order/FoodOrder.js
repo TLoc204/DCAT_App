@@ -137,7 +137,10 @@ export default function FoodOrder({ route }) {
             setCartItems(foods ? foods : []);
         }
     }, [foods]); // Chỉ re-run khi foods thay đổi.
-
+    useEffect(() => {
+        setFilteredOrders(getFilteredData()); 
+    }, [selectedCategory, dataDrinks, dataDrink2ND, dataFoods, dataToppings, dataFoodBonus, dataGames]);
+    
     const [bottomSheetData, setBottomSheetData] = useState({});
     const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
     const [initialDataLoaded, setInitialDataLoaded] = useState(false);
@@ -270,11 +273,6 @@ export default function FoodOrder({ route }) {
                 ];
         }
     };
-    useEffect(() => {
-        if (initialDataLoaded) {
-            setFilteredOrders(getFilteredData());
-        }
-    }, [initialDataLoaded, searchQuery, selectedCategory]);
     const addToCart = () => {
         if (bottomSheetData) {
             setCartItems((prevCartItems) => {
