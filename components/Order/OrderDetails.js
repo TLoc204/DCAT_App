@@ -269,7 +269,7 @@ export default function OrderDetails({ route }) {
             orderDetailsData['OD1']['CustomerName'] = customerName || 'Khách hàng';
             try {
                 await update(orderRef, {
-                    "IdRoom": Object.values(selectedRoom)[1],
+                    "IdRoom": selectedRoom.value,
                     "OrderDetails": orderDetailsData,
                     "TotalAmount": totalCartPrice,
                     "TotalDiscountPrice": totalCartDiscountPrice,
@@ -285,7 +285,7 @@ export default function OrderDetails({ route }) {
         }
         navigation.navigate('Order')
     };
-
+    console.log(selectedRoom.value)
     const handleSubmitPaid = async () => {
         // Lấy OrderID từ route.params
         const { OrderID } = route.params;
@@ -682,7 +682,6 @@ export default function OrderDetails({ route }) {
             marginRight: 20,
         }
     });
-    console.log(cartItems)
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
     // ...
     // ...
