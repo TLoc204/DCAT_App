@@ -187,6 +187,7 @@ export default function CreateOrder({ route }) {
         });
         return formattedAmount;
     }
+    console.log(paymentArray);
     return (
         <SafeAreaView style={finalStyles.container_order}>
             <View style={{ marginBottom: '5%' }}>
@@ -232,17 +233,16 @@ export default function CreateOrder({ route }) {
                     <DataTable.Header style={styles.tableHeader}>
                         <DataTable.Title style={[styles.centerText, { flex: 0.5 }]}>#</DataTable.Title>
                         <DataTable.Title style={[styles.leftText, { flex: 2, maxHeight: 60, overflow: 'hidden' }]}>Tên món hàng</DataTable.Title>
-                        <DataTable.Title style={[styles.centerText, { flex: 2 }]}>Giá</DataTable.Title>
-                        <DataTable.Title style={[styles.rightText, { flex: 3 }]}>Chi tiết món hàng</DataTable.Title>
+                        <DataTable.Title style={[styles.centerText, { flex: 3 }]}>Ngày</DataTable.Title>
+                        <DataTable.Title style={[styles.rightText, { flex: 2 }]}>Giá</DataTable.Title>
                     </DataTable.Header>
                     {paymentArray.slice().reverse().map((rowData, index) => (
                         <DataTable.Row key={index} style={styles.tableBody}>
                             <DataTable.Cell style={[styles.centerText, { flex: 0.5 }]}>{rowData.key.substring(1)}</DataTable.Cell>
                             <DataTable.Cell style={[styles.leftText, { flex: 2 }]}><MarqueeText text={rowData.Name} /></DataTable.Cell>
-                            <DataTable.Cell style={[styles.centerText, { flex: 2 }]}>{formatCurrency(rowData.Price)}</DataTable.Cell>
-                            <DataTable.Cell style={[styles.rightText, { flex: 3 }]}><MarqueeText text={rowData.Description} /></DataTable.Cell>
+                            <DataTable.Cell style={[styles.centerText, { flex: 3 }]}>{rowData.CreatedDate}</DataTable.Cell>
+                            <DataTable.Cell style={[styles.rightText, { flex: 2 }]}><MarqueeText text={formatCurrency(rowData.Price)} /></DataTable.Cell>
                         </DataTable.Row>
-
                     ))}
 
                 </DataTable>
