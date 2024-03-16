@@ -112,7 +112,7 @@ export default function Order() {
         if (filteredOrders) {
             setTimeout(() => {
                 setIsLoading(false);
-            }, 2000); // 2000 milliseconds = 2 seconds
+            }, 1000); // 2000 milliseconds = 2 seconds
         }
         else setIsLoading(true);
     }, [filteredOrders]);
@@ -126,7 +126,7 @@ export default function Order() {
             setFilteredOrders(dataOrders);
             setTimeout(() => {
                 setIsLoading(false);
-            }, 2000); // 2000 milliseconds = 2 seconds
+            }, 1000); // 2000 milliseconds = 2 seconds
         } else {
             // Nếu chọn một phòng cụ thể, lọc orders theo phòng đó
             const filteredByRoom = Object.keys(dataOrders).reduce((acc, orderId) => {
@@ -139,7 +139,7 @@ export default function Order() {
             setFilteredOrders(filteredByRoom);
             setTimeout(() => {
                 setIsLoading(false);
-            }, 2000); // 2000 milliseconds = 2 seconds
+            }, 1000); // 2000 milliseconds = 2 seconds
         }
     };
 

@@ -285,7 +285,6 @@ export default function OrderDetails({ route }) {
         }
         navigation.navigate('Order')
     };
-    console.log(selectedRoom.value)
     const handleSubmitPaid = async () => {
         // Lấy OrderID từ route.params
         const { OrderID } = route.params;

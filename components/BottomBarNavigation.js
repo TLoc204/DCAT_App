@@ -5,6 +5,7 @@ import { Keyboard, View, } from 'react-native';
 import Home from './Home/Home';
 import OrderScreen from './Order/OrderScreen';
 import Setting from './Setting/Setting'
+import Payment from './Payment/Payment'
 import Statistics from './Statistics/Statistics'
 import { NavigationContainer, useIsFocused } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
@@ -53,6 +54,9 @@ const BottomNavigationBar = () => {
               else if (route.name === 'Setting') {
                 iconName = focused ? 'person' : 'person-outline';
               }
+              else if (route.name === 'Payment') {
+                iconName = focused ? 'wallet' : 'wallet-outline';
+              }
               else if (route.name === 'Statistics') {
                 iconName = focused ? 'bar-chart' : 'bar-chart-outline';
               }
@@ -83,6 +87,11 @@ const BottomNavigationBar = () => {
             name="OrderScreen"
             component={OrderScreen}
             options={{ headerShown: false, tabBarLabel: 'Đơn hàng' }}
+          />
+          <Tab.Screen
+            name="Payment"
+            component={Payment}
+            options={{ headerShown: false, tabBarLabel: 'Phiếu chi' }}
           />
           <Tab.Screen
             name="Setting"
