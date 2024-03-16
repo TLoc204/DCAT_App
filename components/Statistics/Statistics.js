@@ -1,55 +1,106 @@
 import React, { useEffect, useState } from "react";
 import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, AsyncStorage, Alert, SafeAreaView, ScrollView, ImageBackground } from "react-native";
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useNavigation } from '@react-navigation/native';
-import { Checkbox, Button, TextInput } from 'react-native-paper';
+import {
+  LineChart,
+  BarChart,
+  PieChart,
+  ProgressChart,
+  ContributionGraph,
+  StackedBarChart
+} from "react-native-chart-kit";
 import { FIREBASE_APP } from '../../FirebaseConfig';
-import { getDatabase, ref, onValue, push, get, set, query, orderByChild, equalTo } from 'firebase/database';
-import SearchableDropdown from 'react-native-searchable-dropdown';
+import { getDatabase, ref, onValue, get, set } from 'firebase/database';
 // Lấy kích thước màn hình để hỗ trợ responsive
 const { width, height } = Dimensions.get('window');
-import { getStorage, ref as storageRef, listAll, getDownloadURL } from "firebase/storage";
+
 
 export default function Statistics() {
-  // const storage = getStorage(); // Khởi tạo đối tượng storage
-
-  // const listAllItemsInFolder = async (folderPath) => {
-  //   const folderRef = storageRef(storage, folderPath);
-  //   try {
-  //     const items = await listAll(folderRef);
-  //     const itemDetails = [];
-
-  //     for (const item of items.items) {
-  //       const itemUrl = await getDownloadURL(item);
-  //       itemDetails.push({ name: item.name, url: itemUrl });
-  //     }
-
-  //     return itemDetails;
-  //   } catch (error) {
-  //     console.error("Error listing items in folder:", error);
-  //     return [];
-  //   }
-  // };
-
-  // const fetchAllItems = async () => {
-  //   try {
-  //     const folders = ["Topping", "Foods", "FoodBonus", "Drinks", "Drink2ND", "Games"];
-  //     const allItems = {};
-
-  //     for (const folder of folders) {
-  //       const items = await listAllItemsInFolder(folder);
-  //       allItems[folder] = items;
-  //     }
-
-  //     console.log("All items:", allItems);
-  //     // Bạn có thể xử lý tất cả các item ở đây, hoặc lưu chúng vào đối tượng để sử dụng sau này.
-  //   } catch (error) {
-  //     console.error("Error fetching all items:", error);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   fetchAllItems();
-  // }, []);
+  const database = getDatabase(FIREBASE_APP);
+  const [paymentData, setPaymentData] = useState([])
+  const [orderData, setOrderData] = useState([])
+  const [chartData, setChartData] = useState([]);
+  useEffect(() => {
+    const paymentRef = ref(database, 'Payment');
+    const orderRef = ref(database, 'Orders');
+    // Tạo một biến để giữ các hàm hủy đăng ký
+    const unsubscribePayments = onValue(paymentRef, (snapshot) => {
+      const payData = snapshot.val();
+      if (payData) {
+        setPaymentData(payData);
+      }
+    });
+    const unsubscribeOrders = onValue(orderRef, (snapshot) => {
+      const orderData = snapshot.val();0
+      if (orderData) {
+        setOrderData(orderData);
+      }
+    });
+    // Khi component bị unmount, gọi các hàm hủy đăng ký
+    return () => {
+      unsubscribePayments();
+      unsubscribeOrders();
+    };
+  }, []);
+  const commonStyles = {
+    container_statistics: {
+      justifyContent: 'center',
+      flex: 1,
+      backgroundColor: "#FFFFFF",
+    },
+  };
+  const mobileStyles = StyleSheet.create({
+    container_statistics: {
+      flex: 1,
+      paddingTop: "15%",
+    },
+  });
+  const webStyles = StyleSheet.create({
+    container_order: {
+      flex: 1,
+    },
+  });
+  const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
+  return (
+    <View style={finalStyles.container_statistics}>
+      <LineChart
+        data={{
+          labels: ["January", "February", "March", "April", "May", "June"],
+          datasets: [
+            {
+              data: [
+                693.000,70.000
+              ]
+            }
+          ]
+        }}
+        width={Dimensions.get("window").width}
+        height={220}
+        yAxisLabel=""
+        yAxisSuffix="k"
+        yAxisInterval={1} // optional, defaults to 1
+        chartConfig={{
+          backgroundColor: "#ffa900",
+          backgroundGradientFrom: "#FFE599",
+          backgroundGradientTo: "#FFE700",
+          decimalPlaces: 0, // optional, defaults to 2dp
+          color: (opacity = 1) => `rgba(255, 255, 159, ${opacity})`,
+          labelColor: (opacity = 1) => `black`,
+          style: {
+            borderRadius: 16
+          },
+          propsForDots: {
+            r: "6",
+            strokeWidth: "2",
+            stroke: "#ffa726"
+          }
+        }}
+        bezier
+        style={{
+          marginVertical: 8,
+          borderRadius: 16
+        }}
+      />
+    </View>
+  );
 
 }
