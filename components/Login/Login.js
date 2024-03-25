@@ -69,6 +69,7 @@ export default function Login() {
                         await AsyncStorage.setItem('username', username);
                         await AsyncStorage.setItem('password', password);
                         await AsyncStorage.setItem('role', user.IdRole);
+                        await AsyncStorage.setItem('name', user.Name);
                     }
                     navigation.navigate('BottomBarNavigation');
                 } else {

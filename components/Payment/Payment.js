@@ -187,13 +187,12 @@ export default function CreateOrder({ route }) {
         });
         return formattedAmount;
     }
-    console.log(paymentArray);
     return (
         <SafeAreaView style={finalStyles.container_order}>
             <View style={{ marginBottom: '5%' }}>
                 <Text style={{ marginLeft: 20, marginBottom: 10 }}>Tên món hàng</Text>
                 <View style={finalStyles.input_cus_payment}>
-                    <TextInput style={finalStyles.input} value={paymentName} onChangeText={(text) => { setPaymentName(text) }} autoFocus={true} />
+                    <TextInput style={finalStyles.input} value={paymentName} onChangeText={(text) => { setPaymentName(text) }} autoFocus={false} />
                 </View>
                 <Text style={{ marginLeft: 20, marginBottom: 10, marginTop: 10 }}>Giá</Text>
                 <View style={finalStyles.input_cus_payment}>
@@ -204,12 +203,12 @@ export default function CreateOrder({ route }) {
                         onChangeText={(text) => {
                             setPaymentPrice(text);
                         }}
-                        autoFocus={true}
+                        autoFocus={false}
                     />
                 </View>
                 <Text style={{ marginLeft: 20, marginBottom: 10, marginTop: 10 }}>Chi tiết món hàng</Text>
                 <View style={finalStyles.input_cus_payment}>
-                    <TextInput style={finalStyles.input} value={paymentDescription} onChangeText={(text) => { setPaymentDescription(text) }} autoFocus={true} />
+                    <TextInput style={finalStyles.input} value={paymentDescription} onChangeText={(text) => { setPaymentDescription(text) }} autoFocus={false} />
                 </View>
                 <View>
                     <TouchableOpacity style={{

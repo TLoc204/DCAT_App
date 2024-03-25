@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Keyboard, View, } from 'react-native';
 import Home from './Home/Home';
 import OrderScreen from './Order/OrderScreen';
-import Setting from './Setting/Setting'
+import Setting from './Setting/SettingScreen'
 import Payment from './Payment/Payment'
 import Statistics from './Statistics/Statistics'
 import { NavigationContainer, useIsFocused } from '@react-navigation/native';

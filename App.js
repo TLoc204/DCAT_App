@@ -5,7 +5,6 @@ import LoginScreen from './components/Login/Login';
 import BottomBarNavigation from './components/BottomBarNavigation';
 import { ImageAllFolderProvider } from './components/Order/FoodOrder'; // Import context
 import FlashMessage from "react-native-flash-message"; // Corrected import statement
-
 const Stack = createNativeStackNavigator();
 
 export default function App() {

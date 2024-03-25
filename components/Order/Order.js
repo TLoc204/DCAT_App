@@ -154,7 +154,7 @@ export default function Order() {
     const mobileStyles = StyleSheet.create({
         container_order: {
             flex: 1,
-            paddingTop: 68,
+            paddingTop: 50,
         },
         main_order: {
             flex: 1,
