@@ -52,7 +52,7 @@ export default function OrderDetails({ route }) {
                         const discount = subItem.Discount;
                         const quantity = subItem.Quantity;
                         const totalPrice = price * quantity;
-
+                        const image = subItem.Image;
                         // Tạo một key duy nhất cho mỗi sản phẩm dựa trên id và discount
                         let uniqueKey = `${idValue}_${discount}`;
 
@@ -73,6 +73,7 @@ export default function OrderDetails({ route }) {
                             price,
                             quantity,
                             totalPrice,
+                            image
                         };
 
                     }
@@ -262,7 +263,8 @@ export default function OrderDetails({ route }) {
                     "Quantity": item.quantity,
                     "Name": item.name,
                     "Discount": item.discount,
-                    "Price": item.price
+                    "Price": item.price,
+                    "Image": item.image
                 };
             });
 
@@ -684,6 +686,7 @@ export default function OrderDetails({ route }) {
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
     // ...
     // ...
+    console.log(cartItems)
     return (
         <SafeAreaView style={finalStyles.container_order}>
             <ScrollView>
@@ -720,6 +723,7 @@ export default function OrderDetails({ route }) {
                                 const [key, data] = item;
                                 const name = data.name;
                                 const price = data.price;
+                                const img = data.image;
                                 const quantity = data.quantity;
                                 const totalPrice = price * quantity || 0;
                                 const discountPrice = totalPrice * (data.discount / 100) || 0;
@@ -728,7 +732,7 @@ export default function OrderDetails({ route }) {
                                 const imageArray = imageAllFolder || [];
 
                                 // Find the URL for the specific key or provide a default URL if not found
-                                const url = imageArray.find((item) => item.name === `${key.split('_')[0]}.jpg`)?.url || defaultImageUrl;
+                                const url = imageArray.find((item) => item.name === img)?.url || defaultImageUrl;
                                 return (
                                     <View style={[finalStyles.gridTotal]}>
                                         <View

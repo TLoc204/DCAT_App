@@ -72,7 +72,7 @@ export const ImageAllFolderProvider = ({ children }) => {
 
     const fetchAllItems = async () => {
         try {
-            const folders = ["Toppings", "Foods", "FoodBonus", "Drinks", "Drink2ND", "Games"];
+            const folders = ["Topping", "Foods", "FoodBonus", "Drinks", "Drink2ND", "Games"];
             const allItems = {};
 
             for (const folder of folders) {
@@ -328,7 +328,6 @@ export default function FoodOrder({ route }) {
         }
         setIsBottomSheetVisible(false);
     };
-
     const addToCartSheet = (customKey, customDiscount) => {
         if (bottomSheetData) {
             setCartItems((prevCartItems) => {
@@ -527,7 +526,6 @@ export default function FoodOrder({ route }) {
         (total, item) => total + (item.price * item.quantity - (item.price * item.quantity * item.discount / 100 || 0)),
         0
     );
-
     //-------------------------------------------------------------End Add Food-------------------------------------------------------------
     const openFoodOrder = () => {
         bottomSheetFood.current.show();
@@ -541,6 +539,7 @@ export default function FoodOrder({ route }) {
                 const updatedData = {
                     name: itemValue.Name,
                     price: itemValue.Price,
+                    image:itemValue.Image,
                     quantity: 1,
                     discount: 0,
                     totalPrice: itemValue.Price // Khởi tạo totalPrice ban đầu với giá của sản phẩm
@@ -781,7 +780,7 @@ export default function FoodOrder({ route }) {
             color: '#667080',
         },
     });
-
+    
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
     // ...
     // ...
@@ -833,9 +832,10 @@ export default function FoodOrder({ route }) {
                     const [key, data] = item;
                     const name = data.Name;
                     const price = data.price;
+                    const img = data.Image;
                     const quantity = cartItems[key] ? cartItems[key].quantity : 0;
                     const imageArray = imageAllFolder || [];
-                    const url = imageArray.find((item) => item.name === `${key}.jpg`)?.url || defaultImageUrl;
+                    const url = imageArray.find((item) => item.name === img)?.url || defaultImageUrl;
 
 
                     return (
@@ -858,13 +858,9 @@ export default function FoodOrder({ route }) {
                                         <Text style={[finalStyles.itemPrice, { justifyContent: 'flex-start' }]}>{`${data.Price.toLocaleString('vi-VN')}đ`}</Text>
                                         <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 20 }}>
 
-
-
                                             <TouchableOpacity key={key} onPress={() => openFoodOrderItem(key, filteredOrders, url)}>
                                                 <IconAnt name="pluscircleo" size={24} color="#667080" />
                                             </TouchableOpacity>
-
-
                                         </View>
 
                                     </View>
@@ -1053,13 +1049,14 @@ export default function FoodOrder({ route }) {
                                     const name = data.name;
                                     const price = data.price;
                                     const quantity = data.quantity;
+                                    const img = data.image;
                                     const totalPrice = price * quantity;
                                     const discount = data.discount;
                                     const discountPrice = totalPrice * discount / 100;
                                     const imageArray = imageAllFolder || [];
 
                                     // Find the URL for the specific key or provide a default URL if not found
-                                    const url = imageArray.find((item) => item.name === `${key.split('_')[0]}.jpg`)?.url || defaultImageUrl;
+                                    const url = imageArray.find((item) => item.name === img)?.url || defaultImageUrl;
                                     return (
                                         <View style={[finalStyles.gridTotal]}>
                                             <View

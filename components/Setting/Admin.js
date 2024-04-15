@@ -3,16 +3,27 @@ import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Tex
 import { showMessage } from "react-native-flash-message";
 import * as ImagePicker from 'expo-image-picker';
 import { Dropdown } from 'react-native-element-dropdown';
-import { getDatabase, ref, onValue } from 'firebase/database';
+import { getDatabase, ref, onValue, get ,set} from 'firebase/database';
 import { FIREBASE_APP } from '../../FirebaseConfig';
 import { createResizedImage } from 'react-native-image-resizer';
+import {
+    getStorage,
+    ref as storageRef,
+    listAll,
+    getDownloadURL,
+    uploadBytesResumable
+} from "firebase/storage";
 export default function CreateOrder() {
     const database = getDatabase(FIREBASE_APP);
+    const storage = getStorage(FIREBASE_APP);
     const [categoryDropdownData, setCategoryDropdownData] = useState([]);
     const [dataCategory, setDataCategory] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
-    const [photo, setPhoto] = useState(null);
+    const [photo, setPhoto] = useState();
     const [resizedUri, setResizedUri] = useState(null);
+    const [name, setName]= useState();
+    const [price, setPrice]= useState();
+    const [note, setNote]= useState();
     useEffect(() => {
         const categoryRef = ref(database, 'Categories');
         const unsubscribeCategories = onValue(categoryRef, (snapshot) => {
@@ -36,6 +47,7 @@ export default function CreateOrder() {
     const handleCategoryChange = (selectedValue) => {
         setSelectedCategory(selectedValue);
     };
+
     const handleChoosePhoto = async () => {
         try {
             const options = {
@@ -44,31 +56,123 @@ export default function CreateOrder() {
             };
             const image = await ImagePicker.launchImageLibraryAsync(options);
             if (!image.cancelled) {
-                const uriParts = image.assets[0].uri.split('/');
-                const name = uriParts[uriParts.length - 1];
-                const newName = 'D3.jpg';
-                const newPath = image.assets[0].uri.replace(name, newName);
-                const updatedAssets = photo ? photo.assets.map(asset => {
-                    return { ...asset, uri: newPath };
-                }) : [];
-                const updatedImage = { ...image, assets: updatedAssets };
-                console.log(updatedImage);
-                setPhoto(updatedImage);
+                setPhoto(image);
             }
         } catch (error) {
             console.error('Error choosing photo:', error);
         }
     };
-    
+    const getLastKeyFromDatabase = async (ref) => {
+        let lastKey = '';
+        const snapshot = await get(ref);
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            const keys = Object.keys(data);
+            lastKey = keys.length.toString();
+        } else {
+            console.log("No data available");
+        }
+        return lastKey;
+    };
+    const handleSubmit = async () => {
+        try {
+            const uriParts = photo.assets[0]?.uri.split('/');
+            const nameImage = uriParts[uriParts.length - 1];
+            const response = await fetch(photo.assets[0]?.uri);
+            const blob = await response.blob();
+
+            // Chọn thư mục dựa vào selectedCategory
+            let folderName = '';
+            let keys = '';
+            let idCate = '';
+            switch (selectedCategory.value) {
+                case 'C1':
+                    const drinkRef = ref(database, "Drinks");
+                    const lastDrinkKey = await getLastKeyFromDatabase(drinkRef);
+                    keys = 'D' + (parseInt(lastDrinkKey) + 1);
+                    folderName = 'Drinks';
+                    idCate= 'C1'
+                    break;
+                case 'C2':
+                    const drink2ndRef = ref(database, "Drink2ND");
+                    const lastDrink2NDKey = await getLastKeyFromDatabase(drink2ndRef);
+                    keys = 'DD' + (parseInt(lastDrink2NDKey) + 1);
+                    folderName = 'Drink2ND';
+                    idCate= 'C2'
+                    break;
+                case 'C3':
+                    const foodRef = ref(database, "Foods");
+                    const lastFoodKey = await getLastKeyFromDatabase(foodRef);
+                    keys = 'F' + (parseInt(lastFoodKey) + 1);
+                    folderName = 'Foods';
+                    idCate= 'C3'
+                    break;
+                case 'C4':
+                    const toppingRef = ref(database, "Topping");
+                    const lastToppingKey = await getLastKeyFromDatabase(toppingRef);
+                    keys = 'Tp' + (parseInt(lastToppingKey) + 1);
+                    folderName = 'Topping';
+                    idCate= 'C4'
+                    break;
+                case 'C5':
+                    const foodBonusRef = ref(database, "FoodBonus");
+                    const lastFoodBonusKey = await getLastKeyFromDatabase(foodBonusRef);
+                    keys = 'Fb' + (parseInt(lastFoodBonusKey) + 1);
+                    folderName = 'FoodBonus';
+                    idCate= 'C5'
+                    break;
+                case 'C6':
+                    const gamesRef = ref(database, "Games");
+                    const lastGamesKey = await getLastKeyFromDatabase(gamesRef);
+                    keys = 'G' + (parseInt(lastGamesKey) + 1);
+                    folderName = 'Games';
+                    idCate= 'C6'
+                    break;
+
+                default:
+                    return;
+            }
+
+            const storageReference = storageRef(storage, `${folderName}/${nameImage}`);
+            const uploadTask = uploadBytesResumable(storageReference, blob);
+            const snapshot = await uploadTask;
+            const now = new Date();
+            const date = now.toISOString().split('T')[0]; // Ngày
+            const time = now.toTimeString().split(' ')[0]; // Thời gian
+            const newCategoriesData = {
+                "CreatedDate": `${date} ${time}`,
+                "UpdatedDate":`${date} ${time}`,
+                "IdCategory": idCate,
+                "Name": name,
+                "Note":note?note:'',
+                "Price":parseInt(price),
+                "Image": nameImage
+            };
+
+            await set(ref(database, `${folderName}/${keys}`), newCategoriesData)
+                .then(() => {
+                    
+                })
+                .catch((error) => {
+                    console.error('Failed to save order: ', error);
+                });
+            // Get the download URL
+            const downloadURL = await getDownloadURL(storageReference);
+            // Now you can save this downloadURL to your database
+            console.log("File available at", downloadURL);
 
 
+
+        } catch (error) {
+            console.error('Error uploading photo:', error);
+        }
+    };
 
     const commonStyles = {
         container_order: {
             justifyContent: 'center',
             flex: 1,
             backgroundColor: "#FFFFFF",
-
         },
         input_cus: {
             flex: 1,
@@ -89,7 +193,6 @@ export default function CreateOrder() {
         },
         placeholderStyle: {
             fontSize: 16,
-
         },
     };
 
@@ -101,9 +204,9 @@ export default function CreateOrder() {
         uploadText: {
             color: "blue",
         },
-        uploadTextUpdate:{
+        uploadTextUpdate: {
             color: "blue",
-            marginTop:10
+            marginTop: 10
         },
         image: {
             flex: 1,
@@ -111,15 +214,13 @@ export default function CreateOrder() {
             width: '100%',
             objectFit: 'contain',
         }
-        // Add other mobile styles here if needed
     });
 
     const webStyles = StyleSheet.create({
         // Add web specific styles here if needed
     });
-    console.log(photo?.assets[0].uri)
-    const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : { ...commonStyles, ...mobileStyles };
 
+    const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : { ...commonStyles, ...mobileStyles };
     return (
         <SafeAreaView style={finalStyles.container_order}>
             <ScrollView>
@@ -139,32 +240,48 @@ export default function CreateOrder() {
                     </View>
                     <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Tên món</Text>
                     <View style={finalStyles.input_cus}>
-                        <TextInput style={finalStyles.input} />
+                        <TextInput style={finalStyles.input} onChangeText={(text) => { setName(text) }} />
                     </View>
                     <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Ảnh món</Text>
                     <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 10, overflow: 'hidden' }}>
                         {photo
                             ? (
-                                <View style={{ width: '90%', height: 200,alignItems:'center' }}>
+                                <View style={{ width: '90%', height: 200, alignItems: 'center' }}>
                                     <Image source={{ uri: photo ? photo?.assets[0].uri : '' }} style={finalStyles.image} resizeMode="cover" />
                                     <TouchableOpacity onPress={handleChoosePhoto}>
-                                    <Text style={finalStyles.uploadTextUpdate}>Thay đổi</Text>
-                                </TouchableOpacity>
+                                        <Text style={finalStyles.uploadTextUpdate}>Thay đổi</Text>
+                                    </TouchableOpacity>
                                 </View>
                             )
                             : (
                                 <TouchableOpacity onPress={handleChoosePhoto}>
-                                    <Text style={finalStyles.uploadText}>Tải lên ảnh</Text>
+                                    <Text style={finalStyles.uploadText}>Tải ảnh lên</Text>
                                 </TouchableOpacity>
                             )}
                     </View>
                     <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Giá</Text>
                     <View style={finalStyles.input_cus}>
-                        <TextInput style={finalStyles.input} />
+                        <TextInput style={finalStyles.input} onChangeText={(text) => { setPrice(text) }}/>
                     </View>
                     <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Ghi chú</Text>
                     <View style={finalStyles.input_cus}>
-                        <TextInput style={finalStyles.input} />
+                        <TextInput style={finalStyles.input} onChangeText={(text) => { setNote(text) }}/>
+                    </View>
+                    <View>
+                        <TouchableOpacity style={{
+                            alignItems: "center",
+                            backgroundColor: "#667080",
+                            borderRadius: 15,
+                            paddingVertical: 15,
+                            marginHorizontal: 5,
+                            marginLeft: 20,
+                            marginRight: 20,
+                            marginTop: 15
+                        }} onPress={handleSubmit}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
+                                <Text style={{ color: '#ffffff' }}>Thêm món ăn</Text>
+                            </View>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </ScrollView>

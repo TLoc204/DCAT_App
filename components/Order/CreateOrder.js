@@ -251,7 +251,8 @@ export default function CreateOrder({ route }) {
                     "Quantity": item.quantity,
                     "Name": item.name,
                     "Discount": item.discount,
-                    "Price": item.price
+                    "Price": item.price,
+                    "Image":item.image
                 };
             });
 
@@ -655,6 +656,7 @@ export default function CreateOrder({ route }) {
                                 const [key, data] = item;
                                 const name = data.name;
                                 const price = data.price;
+                                const img = data.image;
                                 const totalPrice = data.totalPrice;
                                 const discountPrice = data.discountPrice || '';
                                 const quantity = data.quantity;
@@ -662,7 +664,7 @@ export default function CreateOrder({ route }) {
                                 const imageArray = imageAllFolder || [];
 
                                 // Find the URL for the specific key or provide a default URL if not found
-                                const url = imageArray.find((item) => item.name === `${key.split('_')[0]}.jpg`).url;
+                                const url = imageArray.find((item) => item.name === img).url;
                                 return (
                                     <View style={[finalStyles.gridTotal]}>
                                         <View
