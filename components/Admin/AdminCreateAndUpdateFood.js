@@ -292,7 +292,7 @@ export default function AdminCreateAndUpdateFood({route}) {
                     </View>
                     <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Giá</Text>
                     <View style={finalStyles.input_cus}>
-                        <TextInput style={finalStyles.input} value={price} onChangeText={(text) => { setPrice(text) }}/>
+                        <TextInput style={finalStyles.input} inputMode="numeric" value={price} onChangeText={(text) => { setPrice(text) }}/>
                     </View>
                     <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Ghi chú</Text>
                     <View style={finalStyles.input_cus}>
@@ -310,7 +310,7 @@ export default function AdminCreateAndUpdateFood({route}) {
                             marginTop: 15
                         }} onPress={handleSubmit}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
-                                <Text style={{ color: '#ffffff' }}>Thêm món ăn</Text>
+                                <Text style={{ color: '#ffffff' }}>{route.params?.adminRole==="Thêm mới"?"Thêm":"Cập nhật"}</Text>
                             </View>
                         </TouchableOpacity>
                     </View>
