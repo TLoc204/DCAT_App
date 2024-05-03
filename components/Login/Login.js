@@ -36,7 +36,7 @@ export default function Login() {
                 setUsername(savedUsername);
                 setPassword(savedPassword);
                 setRememberPassword(true);
-                navigation.navigate('BottomBarNavigation');
+                navigation.navigate('BottomNavigationBar');
             }
         };
         checkLoginInfo();
@@ -71,7 +71,7 @@ export default function Login() {
                         await AsyncStorage.setItem('role', user.IdRole);
                         await AsyncStorage.setItem('name', user.Name);
                     }
-                    navigation.navigate('BottomBarNavigation');
+                    navigation.navigate('BottomNavigationBar');
                 } else {
                     Alert.alert('Mật khẩu không đúng');
                 }

@@ -486,20 +486,12 @@ export default function FoodOrder({ route }) {
     };
 
 
-
-    const openModal = (itemData) => {
-        setIsBottomSheetVisible(true);
-    };
-
-    const closeModal = () => {
-        setIsBottomSheetVisible(false);
-    };
     const totalItemsInCart = Object.values(cartItems).reduce(
         (total, item) => total + item.quantity,
         0
     );
 
-
+    
     const handleSearch = () => {
         // Lấy dữ liệu từ getFilteredData()
         let data = getFilteredData();
@@ -780,7 +772,6 @@ export default function FoodOrder({ route }) {
             color: '#667080',
         },
     });
-    
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
     // ...
     // ...
@@ -916,7 +907,7 @@ export default function FoodOrder({ route }) {
                                     source={{
                                         uri: (imageAllFolder.find(
                                             (item) =>
-                                                item.name === `${Object.keys(bottomSheetData)[0]}.jpg`
+                                                item.name === `${Object.values(bottomSheetData)[0].image}`
                                         ) || {}).url,
                                     }}
                                     style={finalStyles.imageBottomSheetData}

@@ -686,7 +686,6 @@ export default function OrderDetails({ route }) {
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
     // ...
     // ...
-    console.log(cartItems)
     return (
         <SafeAreaView style={finalStyles.container_order}>
             <ScrollView>

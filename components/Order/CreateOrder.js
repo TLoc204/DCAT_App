@@ -1,8 +1,8 @@
-import React, {  useEffect, useState, useRef } from "react";
-import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, SafeAreaView, ScrollView, TextInput, FlatList,Keyboard} from "react-native";
+import React, { useEffect, useState, useRef } from "react";
+import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, SafeAreaView, ScrollView, TextInput, FlatList, Keyboard } from "react-native";
 import { useNavigation } from '@react-navigation/native';
 import { FIREBASE_APP } from '../../FirebaseConfig';
-import { getDatabase, ref, onValue, get, set} from 'firebase/database';
+import { getDatabase, ref, onValue, get, set } from 'firebase/database';
 import { Dropdown } from 'react-native-element-dropdown';
 import { useImageAllFolder } from "./FoodOrder"
 import IconAnt from 'react-native-vector-icons/AntDesign';
@@ -252,7 +252,7 @@ export default function CreateOrder({ route }) {
                     "Name": item.name,
                     "Discount": item.discount,
                     "Price": item.price,
-                    "Image":item.image
+                    "Image": item.image
                 };
             });
 
@@ -625,10 +625,6 @@ export default function CreateOrder({ route }) {
         <SafeAreaView style={finalStyles.container_order}>
             <ScrollView>
                 <View style={{ marginBottom: '20%' }}>
-                    <Text style={{ marginLeft: 20, marginBottom: 5 }}>Tên khách hàng</Text>
-                    <View style={finalStyles.input_cus}>
-                        <TextInput style={finalStyles.input} onChangeText={(text) => { setCustomerName(text) }} />
-                    </View>
                     <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Phòng</Text>
                     <View style={finalStyles.input_cus}>
                         <View style={finalStyles.pickerContainer}>
@@ -648,110 +644,117 @@ export default function CreateOrder({ route }) {
                             />
                         </View>
                     </View>
-                    <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Danh sách món</Text>
-                    <View style={finalStyles.orderlist}>
-                        <FlatList
-                            data={Object.entries(cartItems)}
-                            renderItem={({ item, index }) => {
-                                const [key, data] = item;
-                                const name = data.name;
-                                const price = data.price;
-                                const img = data.image;
-                                const totalPrice = data.totalPrice;
-                                const discountPrice = data.discountPrice || '';
-                                const quantity = data.quantity;
+                    <View>
+                        <Text style={{ marginLeft: 20, marginBottom: 5 }}>Tên khách hàng</Text>
+                        <View style={finalStyles.input_cus}>
+                            <TextInput style={finalStyles.input} onChangeText={(text) => { setCustomerName(text) }} />
+                        </View>
+                        <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Danh sách món</Text>
+                        <View style={finalStyles.orderlist}>
+                            <FlatList
+                                data={Object.entries(cartItems)}
+                                renderItem={({ item, index }) => {
+                                    const [key, data] = item;
+                                    const name = data.name;
+                                    const price = data.price;
+                                    const img = data.image;
+                                    const totalPrice = data.totalPrice;
+                                    const discountPrice = data.discountPrice || '';
+                                    const quantity = data.quantity;
 
-                                const imageArray = imageAllFolder || [];
+                                    const imageArray = imageAllFolder || [];
 
-                                // Find the URL for the specific key or provide a default URL if not found
-                                const url = imageArray.find((item) => item.name === img).url;
-                                return (
-                                    <View style={[finalStyles.gridTotal]}>
-                                        <View
-                                            style={[
-                                                finalStyles.gridItem,
-                                                index === Object.entries(cartItems).length - 1
-                                                    ? { borderBottomWidth: 0 } // No border for the last item
-                                                    : { borderBottomWidth: 1, borderBottomColor: 'gray' },
-                                            ]}
-                                        >
+                                    // Find the URL for the specific key or provide a default URL if not found
+                                    const url = imageArray.find((item) => item.name === img).url;
+                                    return (
+                                        <View style={[finalStyles.gridTotal]}>
+                                            <View
+                                                style={[
+                                                    finalStyles.gridItem,
+                                                    index === Object.entries(cartItems).length - 1
+                                                        ? { borderBottomWidth: 0 } // No border for the last item
+                                                        : { borderBottomWidth: 1, borderBottomColor: 'gray' },
+                                                ]}
+                                            >
 
-                                            <View style={{ width: '20%' }}>
-                                                <Image source={{ uri: url }} style={finalStyles.image} />
-                                            </View>
-                                            <View style={finalStyles.itemDetails}>
-                                                <Text style={finalStyles.itemName}>{name}</Text>
-                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                    <Text>Giảm giá:</Text>
-                                                    {cartItems[key].discount !== undefined ? ( // Kiểm tra nếu có giá trị discount thì hiển thị nó
-                                                        <Text>{cartItems[key].discount}%</Text>
-                                                    ) : ( // Nếu không có giá trị discount thì cho phép người dùng nhập
-                                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                            <TextInput
-                                                                value={discount[key] || ''} // Use the discount value from the discount object
-                                                                inputMode="decimal"
-                                                                onChangeText={(text) => {
-                                                                    // Update the discount for the specific item in the discount object
-                                                                    setDiscount((prevDiscount) => ({
-                                                                        ...prevDiscount,
-                                                                        [key]: text,
-                                                                    }));
-                                                                }}
-                                                                onEndEditing={() => {
-                                                                    // Update the discount for the specific item in cartItems
-                                                                    updateDiscount(key, discount[key]);
-                                                                    // Clear the discount state for the specific item
-                                                                    setDiscount((prevDiscount) => ({
-                                                                        ...prevDiscount,
-                                                                        [key]: '',
-                                                                    }));
-                                                                }}
-                                                            />
-                                                            <Text>%</Text>
-                                                        </View>
-                                                    )}
+                                                <View style={{ width: '20%' }}>
+                                                    <Image source={{ uri: url }} style={finalStyles.image} />
                                                 </View>
-
-                                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                    <View>
-                                                        {cartItems[key].discount !== 0 ? ( // Check if there is a discount for the item
+                                                <View style={finalStyles.itemDetails}>
+                                                    <Text style={finalStyles.itemName}>{name}</Text>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                        <Text>Giảm giá:</Text>
+                                                        {cartItems[key].discount !== undefined ? ( // Kiểm tra nếu có giá trị discount thì hiển thị nó
+                                                            <Text>{cartItems[key].discount}%</Text>
+                                                        ) : ( // Nếu không có giá trị discount thì cho phép người dùng nhập
                                                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                                <Text style={[finalStyles.itemPrice, { justifyContent: 'flex-start', textDecorationLine: 'line-through' }]}>{`${totalPrice.toLocaleString('vi-VN')}đ`}</Text>
-                                                                <Text style={[finalStyles.itemPrice, { marginLeft: 5 }]}>{`${(totalPrice - discountPrice).toLocaleString('vi-VN')}đ`}</Text>
+                                                                <TextInput
+                                                                    value={discount[key] || ''} // Use the discount value from the discount object
+                                                                    inputMode="decimal"
+                                                                    onChangeText={(text) => {
+                                                                        // Update the discount for the specific item in the discount object
+                                                                        setDiscount((prevDiscount) => ({
+                                                                            ...prevDiscount,
+                                                                            [key]: text,
+                                                                        }));
+                                                                    }}
+                                                                    onEndEditing={() => {
+                                                                        // Update the discount for the specific item in cartItems
+                                                                        updateDiscount(key, discount[key]);
+                                                                        // Clear the discount state for the specific item
+                                                                        setDiscount((prevDiscount) => ({
+                                                                            ...prevDiscount,
+                                                                            [key]: '',
+                                                                        }));
+                                                                    }}
+                                                                />
+                                                                <Text>%</Text>
                                                             </View>
-                                                        ) : (
-                                                            <Text style={finalStyles.itemPrice}>{`${totalPrice.toLocaleString('vi-VN')}đ`}</Text>
                                                         )}
                                                     </View>
-                                                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 50 }}>
 
-                                                        <Text style={{ marginLeft: 8, marginRight: 8 }}>SL: {quantity}</Text>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                        <View>
+                                                            {cartItems[key].discount !== 0 ? ( // Check if there is a discount for the item
+                                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                                    <Text style={[finalStyles.itemPrice, { justifyContent: 'flex-start', textDecorationLine: 'line-through' }]}>{`${totalPrice.toLocaleString('vi-VN')}đ`}</Text>
+                                                                    <Text style={[finalStyles.itemPrice, { marginLeft: 5 }]}>{`${(totalPrice - discountPrice).toLocaleString('vi-VN')}đ`}</Text>
+                                                                </View>
+                                                            ) : (
+                                                                <Text style={finalStyles.itemPrice}>{`${totalPrice.toLocaleString('vi-VN')}đ`}</Text>
+                                                            )}
+                                                        </View>
+                                                        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 50 }}>
 
+                                                            <Text style={{ marginLeft: 8, marginRight: 8 }}>SL: {quantity}</Text>
+
+                                                        </View>
                                                     </View>
                                                 </View>
                                             </View>
                                         </View>
+                                    );
+                                }}
+                                numColumns={1}
+                                keyExtractor={(item) => item[0]}
+                                contentContainerStyle={[finalStyles.listContainer]}
+                            />
+                            <View>
+                                <TouchableOpacity style={{
+                                    alignItems: "center",
+                                    backgroundColor: "#667080",
+                                    borderRadius: 15,
+                                    paddingVertical: 15,
+                                    marginHorizontal: 5,
+                                }} onPress={() => navigation.navigate('FoodOrder', { Foods: cartItems, origin: 'CreateOrder' })}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
+                                        <Text style={{ color: '#ffffff' }}>Thêm món</Text>
                                     </View>
-                                );
-                            }}
-                            numColumns={1}
-                            keyExtractor={(item) => item[0]}
-                            contentContainerStyle={[finalStyles.listContainer]}
-                        />
-                        <View>
-                            <TouchableOpacity style={{
-                                alignItems: "center",
-                                backgroundColor: "#667080",
-                                borderRadius: 15,
-                                paddingVertical: 15,
-                                marginHorizontal: 5,
-                            }} onPress={() => navigation.navigate('FoodOrder', { Foods: cartItems, origin: 'CreateOrder' })}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
-                                    <Text style={{ color: '#ffffff' }}>Thêm món</Text>
-                                </View>
-                            </TouchableOpacity>
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
+
                     <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 5 }}>Giảm giá </Text>
                     <View style={finalStyles.input_cus}>
                         <TextInput style={finalStyles.input} onChangeText={(text) => { setDiscountTotal(text) }} />
