@@ -243,7 +243,7 @@ export default function AdminCreateAndUpdateFood({ route }) {
                     const time = now.toTimeString().split(' ')[0]; // Thời gian
                     try {
                         await update(Ref, {
-                            "Price": price,
+                            "Price": parseInt(price),
                             "Name": name,
                             "Note": note,
                             "Image":nameImage,
@@ -284,7 +284,7 @@ export default function AdminCreateAndUpdateFood({ route }) {
                     const time = now.toTimeString().split(' ')[0]; // Thời gian
                     try {
                         await update(Ref, {
-                            "Price": price,
+                            "Price": parseInt(price),
                             "Name": name,
                             "Note": note,
                             "UpdatedDate":`${date} ${time}`,
