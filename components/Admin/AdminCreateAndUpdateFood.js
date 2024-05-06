@@ -204,44 +204,38 @@ export default function AdminCreateAndUpdateFood({ route }) {
             }
             else {
                 if(photo){
-                     deleteItemFromFirebase(key, imageName);
+                    deleteItemFromFirebase(key, imageName);
                     const itemTypePrefix = key.match(/[A-Za-z]+/)[0];
                     const uriParts = photo.assets[0]?.uri.split('/');
                     const nameImage = uriParts[uriParts.length - 1];
                     const response = await fetch(photo.assets[0]?.uri);
                     const blob = await response.blob();
-                    let folderName = '';
-                    let idCate = '';
-                    switch (selectedCategory || itemTypePrefix) {
-                        case 'C1':
-                            folderName = 'Drinks';
-                            idCate = 'C1'
+                    let itemType = '';
+
+                    switch (itemTypePrefix) {
+                        case 'D':
+                            itemType = 'Drinks';
                             break;
-                        case 'C2':
-                            folderName = 'Drink2ND';
-                            idCate = 'C2'
+                        case 'F':
+                            itemType = 'Foods';
                             break;
-                        case 'C3':
-                            folderName = 'Foods';
-                            idCate = 'C3'
+                        case 'DD':
+                            itemType = 'Drink2ND';
                             break;
-                        case 'C4':
-                            folderName = 'Topping';
-                            idCate = 'C4'
+                        case 'Tp':
+                            itemType = 'Topping';
                             break;
-                        case 'C5':
-                            folderName = 'FoodBonus';
-                            idCate = 'C5'
+                        case 'Fb':
+                            itemType = 'FoodBonus';
                             break;
-                        case 'C6':
-                            folderName = 'Games';
-                            idCate = 'C6'
+                        case 'G':
+                            itemType = 'Games';
                             break;
-                        default:
+                        default: 
                             return;
                     }
-                    const Ref = ref(database, `${folderName}/${key}`);
-                    const storageReference = storageRef(storage, `${folderName}/${nameImage}`);
+                    const Ref = ref(database, `${itemType}/${key}`);
+                    const storageReference = storageRef(storage, `${itemType}/${nameImage}`);
                     const uploadTask = uploadBytesResumable(storageReference, blob);
                     const snapshot = await uploadTask;
                     const now = new Date();
@@ -340,23 +334,15 @@ export default function AdminCreateAndUpdateFood({ route }) {
         }
         const imageRef = storageRef(storage, `${dataStorage}/${ImageName}`);
         // Xóa item từ Firebase
-        remove(dataRef)
-        .then(() => {
-            console.log("Item removed successfully from Firebase");
-
             // Xóa ảnh từ Firebase Storage
             deleteObject(imageRef)
                 .then(() => {
-                    console.log("Image removed successfully from Firebase Storage");
+
                     // Nếu muốn cập nhật lại danh sách hiển thị, bạn có thể thêm code ở đây
                 })
                 .catch((error) => {
                     console.error("Error removing image from Firebase Storage: ", error);
                 });
-        })
-        .catch((error) => {
-            console.error("Error removing item from Firebase: ", error);
-        });
     };
     const commonStyles = {
         container_order: {
