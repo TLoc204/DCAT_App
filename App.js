@@ -29,12 +29,12 @@ function BottomNavigationBar() {
   const [isFoodOrderRoute, setIsFoodOrderRoute] = useState(false);
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-      console.log('Keyboard Shown');
+
       setIsKeyboardVisible(true);
     });
 
     const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-      console.log('Keyboard Hidden');
+
       setIsKeyboardVisible(false);
     });
 

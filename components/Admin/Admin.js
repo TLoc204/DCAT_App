@@ -448,7 +448,7 @@ export default function Admin() {
                                             <Text style={[finalStyles.itemPrice, { justifyContent: 'flex-start' }]}>{`${data.Price.toLocaleString('vi-VN')}đ`}</Text>
                                             <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 20 }}>
 
-                                                <TouchableOpacity onPress={()=> navigation.navigate('AdminCreateAndUpdateFood',{adminRole:"Cập nhật",key:key,name:name,price:price,image:img,note:note,category:category})}>
+                                                <TouchableOpacity onPress={()=> navigation.navigate('AdminCreateAndUpdateFood',{adminRole:"Cập nhật",key:key,name:name,price:price,image:url,imageName:img,note:note,category:category})}>
                                                     <IconAnt name="edit" size={24} color="#667080" />
                                                 </TouchableOpacity>
                                                 
