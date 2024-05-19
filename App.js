@@ -185,11 +185,12 @@ function OrderScreen() {
         name="FoodOrder"
         component={FoodOrder}
         options={({ route }) => ({
+          
           headerShown: true,
           headerTitleAlign: 'center',
           title: "Danh mục",
           headerLeft: () => (
-            <TouchableOpacity onPress={() => navigation.navigate('CreateOrder')}>
+            <TouchableOpacity onPress={() => route.params.origin === "CreateOrder" ?navigation.navigate('CreateOrder'):navigation.navigate('OrderDetails',{origin: 'OrderDetails', Orders: route.params?.Orders, OrderID: route.params?.OrderID })}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Icon name="arrow-back-ios" size={24} color="#667080" />
               </View>
@@ -203,7 +204,7 @@ function OrderScreen() {
         options={({ route }) => ({
           headerShown: true,
           headerTitleAlign: 'center',
-          title: "Sửa đơn & Thanh toán ",
+          title: "Cập nhật & Thanh toán ",
           headerLeft: () => (
             <TouchableOpacity onPress={() => navigation.navigate('Order')}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>

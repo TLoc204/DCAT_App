@@ -45,12 +45,16 @@ const theme = {
 
 export const ImageAllFolderProvider = ({ children }) => {
     const [imageAllFolder, setImageAllFolder] = useState({});
+    const [shouldFetch, setShouldFetch] = useState(true);
     const database = getDatabase(FIREBASE_APP);
     const storage = getStorage(FIREBASE_APP);
 
     useEffect(() => {
-        fetchAllItems();
-    }, []);
+        if (shouldFetch) {
+            fetchAllItems();
+            setShouldFetch(false); // Đặt lại shouldFetch sau khi fetch dữ liệu
+        }
+    }, [shouldFetch]); 
 
     const listAllItemsInFolder = async (folderPath) => {
         const folderRef = storageRef(storage, folderPath);
@@ -86,7 +90,7 @@ export const ImageAllFolderProvider = ({ children }) => {
     };
 
     return (
-        <ImageAllFolderContext.Provider value={{ imageAllFolder }}>
+        <ImageAllFolderContext.Provider value={{ imageAllFolder , setShouldFetch }}>
             {children}
         </ImageAllFolderContext.Provider>
     );

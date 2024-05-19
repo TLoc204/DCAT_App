@@ -1,31 +1,34 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, TextInput, Platform, Image, Keyboard } from "react-native";
-import { showMessage } from "react-native-flash-message";
 import * as ImagePicker from 'expo-image-picker';
 import { Dropdown } from 'react-native-element-dropdown';
-import { getDatabase, ref, onValue, get, set,update,remove } from 'firebase/database';
+import { getDatabase, ref, onValue, get, set, update, remove } from 'firebase/database';
 import { FIREBASE_APP } from '../../FirebaseConfig';
 import { useImageAllFolder } from "../Order/FoodOrder";
 import { createResizedImage } from 'react-native-image-resizer';
+import { showMessage, hideMessage } from "react-native-flash-message";
+import IconAnt from 'react-native-vector-icons/AntDesign';
+import { NavigationContainer, useIsFocused, useNavigation } from '@react-navigation/native';
 import {
     getStorage,
     ref as storageRef,
     listAll,
     getDownloadURL,
     uploadBytesResumable,
-    deleteObject 
+    deleteObject
 } from "firebase/storage";
 export default function AdminCreateAndUpdateFood({ route }) {
+    const navigation = useNavigation();
     const database = getDatabase(FIREBASE_APP);
     const storage = getStorage(FIREBASE_APP);
-    const { imageAllFolder } = useImageAllFolder();
+    const { imageAllFolder, setShouldFetch } = useImageAllFolder();
     const [categoryDropdownData, setCategoryDropdownData] = useState([]);
     const [dataCategory, setDataCategory] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [photoUpdate, setPhotoUpdate] = useState();
     const [photo, setPhoto] = useState();
-    const [imageName , setImageName] = useState();
-    const [key,setKey]= useState();
+    const [imageName, setImageName] = useState();
+    const [key, setKey] = useState();
     const [resizedUri, setResizedUri] = useState(null);
     const [name, setName] = useState();
     const [price, setPrice] = useState();
@@ -83,6 +86,9 @@ export default function AdminCreateAndUpdateFood({ route }) {
             if (!image.cancelled) {
                 setPhoto(image);
             }
+            else {
+                setPhoto();
+            }
             setDisplayPhoto(true);
         } catch (error) {
             console.error('Error choosing photo:', error);
@@ -110,13 +116,23 @@ export default function AdminCreateAndUpdateFood({ route }) {
             setImageName(route.params?.imageName)
             setKey(route.params?.key)
         }
-    },[])
+    }, [])
+    const CustomMessageComponent = ({ message, description, icon }) => {
+        return (
+            <View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, marginLeft: -30, marginTop: 10 }}>
+                    <IconAnt name={icon} size={24} color={'#ffffff'} />
+                    <Text style={{ marginLeft: 10, color: '#ffffff' }}>{message}</Text>
+                </View>
+                <Text style={{ marginLeft: 5, color: '#ffffff' }}>{description}</Text>
+            </View>
+        );
+    };
     const handleSubmit = async () => {
         try {
             if (route.params?.adminRole === "Thêm mới") {
                 const uriParts = photo.assets[0]?.uri.split('/');
                 const nameImage = uriParts[uriParts.length - 1];
-                console.log(nameImage)
                 const response = await fetch(photo.assets[0]?.uri);
                 const blob = await response.blob();
 
@@ -195,15 +211,32 @@ export default function AdminCreateAndUpdateFood({ route }) {
                     .catch((error) => {
                         console.error('Failed to save order: ', error);
                     });
-                // Get the download URL
-                const downloadURL = await getDownloadURL(storageReference);
+                showMessage({
+                    message: "Tạo món thành công",
+                    type: "success",
+                    icon: { icon: "success", position: "left" }, // Use the built-in icon
+                    // Here you can pass your custom component
+                    renderCustomContent: () => (
+                        <CustomMessageComponent
+                            message="Tạo món thành công"
+                            description={`Món ${name} được thêm thành công`}
+                            icon="checkcircle"
+                        />
+                    ),
+                });
+                setTimeout(() => {
+                    hideMessage();
+                }, 2000);
                 setName('');
                 setPhoto('');
                 setNote('');
                 setPrice('');
+                setSelectedCategory('');
+                setShouldFetch(true);
+                navigation.navigate('Admin');
             }
             else {
-                if(photo){
+                if (photo) {
                     deleteItemFromFirebase(key, imageName);
                     const itemTypePrefix = key.match(/[A-Za-z]+/)[0];
                     const uriParts = photo.assets[0]?.uri.split('/');
@@ -231,7 +264,7 @@ export default function AdminCreateAndUpdateFood({ route }) {
                         case 'G':
                             itemType = 'Games';
                             break;
-                        default: 
+                        default:
                             return;
                     }
                     const Ref = ref(database, `${itemType}/${key}`);
@@ -246,13 +279,37 @@ export default function AdminCreateAndUpdateFood({ route }) {
                             "Price": parseInt(price),
                             "Name": name,
                             "Note": note,
-                            "Image":nameImage,
-                            "UpdatedDate":`${date} ${time}`,
+                            "Image": nameImage,
+                            "UpdatedDate": `${date} ${time}`,
                         });
                     } catch (error) {
                         console.error("Lỗi khi cập nhật:", error);
                     }
-                }else{
+                    showMessage({
+                        message: "Cập nhật món thành công",
+                        type: "success",
+                        icon: { icon: "success", position: "left" }, // Use the built-in icon
+                        // Here you can pass your custom component
+                        renderCustomContent: () => (
+                            <CustomMessageComponent
+                                message="Cập nhật món thành công"
+                                description={`Món ${name} đã được cập nhật thành công`}
+                                icon="checkcircle"
+                            />
+                        ),
+                    });
+                    setTimeout(() => {
+                        hideMessage();
+                    }, 2000);
+                    setName('');
+                    setPhoto('');
+                    setNote('');
+                    setPrice('');
+                    setSelectedCategory('');
+                    setShouldFetch(true);
+                    navigation.navigate('Admin');
+                    
+                } else {
                     const itemTypePrefix = key.match(/[A-Za-z]+/)[0];
                     let itemType = '';
 
@@ -287,19 +344,40 @@ export default function AdminCreateAndUpdateFood({ route }) {
                             "Price": parseInt(price),
                             "Name": name,
                             "Note": note,
-                            "UpdatedDate":`${date} ${time}`,
+                            "UpdatedDate": `${date} ${time}`,
                         });
                     } catch (error) {
                         console.error("Lỗi khi cập nhật:", error);
                     }
-
+                    showMessage({
+                        message: "Cập nhật món thành công",
+                        type: "success",
+                        icon: { icon: "success", position: "left" }, // Use the built-in icon
+                        // Here you can pass your custom component
+                        renderCustomContent: () => (
+                            <CustomMessageComponent
+                                message="Cập nhật món thành công"
+                                description={`Món ${name} được cập nhật thành công`}
+                                icon="checkcircle"
+                            />
+                        ),
+                    });
+                    setTimeout(() => {
+                        hideMessage();
+                    }, 2000);
+                    setName('');
+                    setPhoto('');
+                    setNote('');
+                    setPrice('');
+                    setSelectedCategory('');
+                    navigation.navigate('Admin');
                 }
             }
         } catch (error) {
             console.error('Error uploading photo:', error);
         }
     };
-    const deleteItemFromFirebase = (itemId,ImageName) => {
+    const deleteItemFromFirebase = (itemId, ImageName) => {
         let dataRef;
         let dataStorage;
         const onlyLetters = itemId.replace(/[^a-zA-Z]/g, '');
@@ -334,15 +412,15 @@ export default function AdminCreateAndUpdateFood({ route }) {
         }
         const imageRef = storageRef(storage, `${dataStorage}/${ImageName}`);
         // Xóa item từ Firebase
-            // Xóa ảnh từ Firebase Storage
-            deleteObject(imageRef)
-                .then(() => {
+        // Xóa ảnh từ Firebase Storage
+        deleteObject(imageRef)
+            .then(() => {
 
-                    // Nếu muốn cập nhật lại danh sách hiển thị, bạn có thể thêm code ở đây
-                })
-                .catch((error) => {
-                    console.error("Error removing image from Firebase Storage: ", error);
-                });
+                // Nếu muốn cập nhật lại danh sách hiển thị, bạn có thể thêm code ở đây
+            })
+            .catch((error) => {
+                console.error("Error removing image from Firebase Storage: ", error);
+            });
     };
     const commonStyles = {
         container_order: {

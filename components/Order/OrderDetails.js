@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, SafeAreaView, ScrollView,  TextInput, FlatList, Keyboard } from "react-native";
+import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, SafeAreaView, ScrollView, TextInput, FlatList, Keyboard } from "react-native";
 import { useNavigation } from '@react-navigation/native';
 import { FIREBASE_APP } from '../../FirebaseConfig';
 import { getDatabase, ref, onValue, update } from 'firebase/database';
@@ -8,14 +8,16 @@ import { getStorage, ref as storageRef } from "firebase/storage";
 import { useImageAllFolder } from "./FoodOrder"
 import IconAnt from 'react-native-vector-icons/AntDesign';
 import { showMessage, hideMessage, } from "react-native-flash-message";
+import { Canvas } from 'react-native-canvas';
 // Lấy kích thước màn hình để hỗ trợ responsive
+import TcpSocket from 'react-native-tcp-socket';
 
 export default function OrderDetails({ route }) {
-    const database = getDatabase(FIREBASE_APP);
+    const database = getDatabase(FIREBASE_APP); 
     const { Orders } = route.params;
     const { OrderID } = route.params;
     // const IDOrder = "O" + titleOrderId
-
+    const iconv = require('iconv-lite');
     const [dataRoom, setDataRoom] = useState([]);
     const [roomDropdownData, setRoomDropdownData] = useState([]);
     const navigation = useNavigation();
@@ -29,6 +31,10 @@ export default function OrderDetails({ route }) {
     const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
     const [defaultImageUrl, setDefaultImageUrl] = useState('https://firebasestorage.googleapis.com/v0/b/dcat-c09a4.appspot.com/o/MacDinh.jpg?alt=media&token=d66af2a0-9be6-44cb-9eda-504f04c1763c');
     const [selectedPayment, setSelectedPayment] = useState('Cash');
+    const [printing, setPrinting] = useState(false);
+    const [isConnected, setIsConnected] = useState(false);
+    const canvasRef = useRef(null);
+
     useEffect(() => {
         if (Object.keys(foods).length > 0) {
             setCartItems(foods);
@@ -214,6 +220,157 @@ export default function OrderDetails({ route }) {
 
 
     }
+
+
+    let data = '\x0a';
+    data += '                     DCAT\n';
+    data += "              Hoa don thanh toan\n\n";
+    data += '----------------------------------------------\n\n';
+    data += 'Stt  Ten mon            SL   Gia    Thanh tien\n';
+    
+    let stt = 1;
+    let totalPrice = 0;
+    let totalPriceDiscount = 0;
+    
+    function formatTextWrap(text, width) {
+        // Hàm loại bỏ dấu từ mỗi từ
+        function removeAccents(word) {
+            const accentsMap = {
+                'á': 'a', 'à': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
+                'ă': 'a', 'ắ': 'a', 'ằ': 'a', 'ẳ': 'a', 'ẵ': 'a', 'ặ': 'a',
+                'â': 'a', 'ấ': 'a', 'ầ': 'a', 'ẩ': 'a', 'ẫ': 'a', 'ậ': 'a',
+                'đ': 'd',
+                'é': 'e', 'è': 'e', 'ẻ': 'e', 'ẽ': 'e', 'ẹ': 'e',
+                'ê': 'e', 'ế': 'e', 'ề': 'e', 'ể': 'e', 'ễ': 'e', 'ệ': 'e',
+                'í': 'i', 'ì': 'i', 'ỉ': 'i', 'ĩ': 'i', 'ị': 'i',
+                'ó': 'o', 'ò': 'o', 'ỏ': 'o', 'õ': 'o', 'ọ': 'o',
+                'ô': 'o', 'ố': 'o', 'ồ': 'o', 'ổ': 'o', 'ỗ': 'o', 'ộ': 'o',
+                'ơ': 'o', 'ớ': 'o', 'ờ': 'o', 'ở': 'o', 'ỡ': 'o', 'ợ': 'o',
+                'ú': 'u', 'ù': 'u', 'ủ': 'u', 'ũ': 'u', 'ụ': 'u',
+                'ư': 'u', 'ứ': 'u', 'ừ': 'u', 'ử': 'u', 'ữ': 'u', 'ự': 'u',
+                'ý': 'y', 'ỳ': 'y', 'ỷ': 'y', 'ỹ': 'y', 'ỵ': 'y',
+                'Á': 'A', 'À': 'A', 'Ả': 'A', 'Ã': 'A', 'Ạ': 'A',
+                'Ă': 'A', 'Ắ': 'A', 'Ằ': 'A', 'Ẳ': 'A', 'Ẵ': 'A', 'Ặ': 'A',
+                'Â': 'A', 'Ấ': 'A', 'Ầ': 'A', 'Ẩ': 'A', 'Ẫ': 'A', 'Ậ': 'A',
+                'Đ': 'D',
+                'É': 'E', 'È': 'E', 'Ẻ': 'E', 'Ẽ': 'E', 'Ẹ': 'E',
+                'Ê': 'E', 'Ế': 'E', 'Ề': 'E', 'Ể': 'E', 'Ễ': 'E', 'Ệ': 'E',
+                'Í': 'I', 'Ì': 'I', 'Ỉ': 'I', 'Ĩ': 'I', 'Ị': 'I',
+                'Ó': 'O', 'Ò': 'O', 'Ỏ': 'O', 'Õ': 'O', 'Ọ': 'O',
+                'Ô': 'O', 'Ố': 'O', 'Ồ': 'O', 'Ổ': 'O', 'Ỗ': 'O', 'Ộ': 'O',
+                'Ơ': 'O', 'Ớ': 'O', 'Ờ': 'O', 'Ở': 'O', 'Ỡ': 'O', 'Ợ': 'O',
+                'Ú': 'U', 'Ù': 'U', 'Ủ': 'U', 'Ũ': 'U', 'Ụ': 'U',
+                'Ư': 'U', 'Ứ': 'U', 'Ừ': 'U', 'Ử': 'U', 'Ữ': 'U', 'Ự': 'U',
+                'Ý': 'Y', 'Ỳ': 'Y', 'Ỷ': 'Y', 'Ỹ': 'Y', 'Ỵ': 'Y'
+            };
+    
+            let newWord = '';
+            for (let i = 0; i < word.length; i++) {
+                const char = word[i];
+                const replacement = accentsMap[char];
+                newWord += replacement || char;
+            }
+            return newWord;
+        }
+    
+        let result = [];
+        let line = '';
+    
+        for (const word of text.split(' ')) {
+            const sanitizedWord = removeAccents(word); // Loại bỏ dấu từ mỗi từ
+            if (line.length + sanitizedWord.length + 1 > width) {
+                result.push(line.trim());
+                line = '';
+            }
+            line += sanitizedWord + ' ';
+        }
+        if (line.trim().length > 0) {
+            result.push(line.trim());
+        }
+    
+        return result;
+    }
+    
+    
+    for (const key in cartItems) {
+        if (cartItems.hasOwnProperty(key)) {
+            const item = cartItems[key];
+            const itemNameWrapped = formatTextWrap(item.name, 16); // Sử dụng hàm formatTextWrap
+            const itemPrice = item.price
+            const itemQuantity = item.quantity;
+            const itemTotalPrice = item.totalPrice;
+    
+            // Dòng đầu tiên của itemName
+            data += ` ${stt.toString().padEnd(3)} ${itemNameWrapped[0].padEnd(16)}   ${itemQuantity.toString().padEnd(2)}   ${itemPrice.toLocaleString('vi-VN').toString().padEnd(6)}   ${itemTotalPrice.toLocaleString('vi-VN').toString().padStart(8)}\n`;
+    
+            // Các dòng tiếp theo của itemName
+            for (let i = 1; i < itemNameWrapped.length; i++) {
+                data += `     ${itemNameWrapped[i].padEnd(16)}\n`;
+            }
+    
+            stt++;
+            totalPrice += item.totalPrice;
+            totalPriceDiscount += item.totalPrice * (1 - item.discount / 100);
+        }
+    }
+    
+    data += '----------------------------------------------\n';
+    if(totalPriceDiscount<totalPrice){ 
+        data += `Tong${totalPrice.toLocaleString('vi-VN').toString().padStart(42)}\n`;
+    }else{
+        data += `Tong cong${totalPrice.toLocaleString('vi-VN').toString().padStart(37)}\n`;
+    }
+    let discountPrint = (totalPriceDiscount - totalPrice).toLocaleString('vi-VN').toString();
+    if(totalPriceDiscount<totalPrice){
+        data += `Giam gia${discountPrint.padStart(38)}\n`;
+    }
+    if(totalPriceDiscount<totalPrice){
+        data += `Tong cong${totalPriceDiscount.toLocaleString('vi-VN').toString().padStart(37)}\n`;
+    }
+    data += `\n`;
+    data += `         Cam on quy khach, hen gap lai!`;
+    data += `\n`;
+    data += `\n`;
+    data += `\n`;
+    data += `\n`;
+    data += `\n`;
+    data += `\n`;
+    data += `\n`;
+    console.log(data)
+    console.log(totalPriceDiscount)
+    // Hàm in hóa đơn
+    const utf8Text = iconv.encode(data, 'utf8').toString();
+    const controller = new AbortController();
+    const signal = controller.signal;
+    
+    // Thiết lập thời gian hủy bỏ sau 5 giây
+    setTimeout(() => controller.abort(), 5000);
+    const printBill = async () => {
+        try {
+            const url = 'http://192.168.1.251:9100'; // Thay đổi địa chỉ URL theo địa chỉ của máy in và cổng
+    
+            const data = `${utf8Text}\x1b\x4f \x1B\x69` // Thay đổi dữ liệu in tùy thuộc vào định dạng yêu cầu bởi máy in
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain',
+                },
+                signal,
+                mode:"no-cors",
+                body: data, // Dữ liệu cần in
+            });
+    
+            if (response.ok) {
+                console.log('Dữ liệu đã được gửi thành công đến máy in');
+            } else {
+                console.error('Đã xảy ra lỗi khi gửi dữ liệu đến máy in:', response.statusText);
+            }
+        } catch (error) {
+            
+        }
+    };
+
+
     //-----------------------------------------------------------End Room-------------------------------------------------------------
     const handleSubmit = async () => {
         // Lấy OrderID từ route.params
@@ -333,7 +490,7 @@ export default function OrderDetails({ route }) {
             showMessage({
                 message: "Sửa đơn thành công",
                 type: "success",
-                icon: { icon: "success", position: "left" }, 
+                icon: { icon: "success", position: "left" },
                 renderCustomContent: () => (
                     <CustomMessageComponent
                         message="Sửa đơn thành công"
@@ -730,7 +887,7 @@ export default function OrderDetails({ route }) {
 
                                 const imageArray = imageAllFolder || [];
 
-                                // Find the URL for the specific key or provide a default URL if not found
+
                                 const url = imageArray.find((item) => item.name === img)?.url || defaultImageUrl;
                                 return (
                                     <View style={[finalStyles.gridTotal]}>
@@ -738,7 +895,7 @@ export default function OrderDetails({ route }) {
                                             style={[
                                                 finalStyles.gridItem,
                                                 index === Object.entries(cartItems).length - 1
-                                                    ? { borderBottomWidth: 0 } // No border for the last item
+                                                    ? { borderBottomWidth: 0 }
                                                     : { borderBottomWidth: 1, borderBottomColor: 'gray' },
                                             ]}
                                         >
@@ -755,19 +912,19 @@ export default function OrderDetails({ route }) {
                                                     ) : ( // Nếu không có giá trị discount thì cho phép người dùng nhập
                                                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                             <TextInput
-                                                                value={discount[key] || ''} // Use the discount value from the discount object
+                                                                value={discount[key] || ''}
                                                                 inputMode="decimal"
                                                                 onChangeText={(text) => {
-                                                                    // Update the discount for the specific item in the discount object
+
                                                                     setDiscount((prevDiscount) => ({
                                                                         ...prevDiscount,
                                                                         [key]: text,
                                                                     }));
                                                                 }}
                                                                 onEndEditing={() => {
-                                                                    // Update the discount for the specific item in cartItems
+
                                                                     updateDiscount(key, discount[key]);
-                                                                    // Clear the discount state for the specific item
+
                                                                     setDiscount((prevDiscount) => ({
                                                                         ...prevDiscount,
                                                                         [key]: '',
@@ -781,7 +938,7 @@ export default function OrderDetails({ route }) {
 
                                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <View>
-                                                        {cartItems[key].discount !== 0 ? ( // Check if there is a discount for the item
+                                                        {cartItems[key].discount !== 0 ? (
                                                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                                 <Text style={[finalStyles.itemPrice, { justifyContent: 'flex-start', textDecorationLine: 'line-through' }]}>{`${totalPrice.toLocaleString('vi-VN')}đ`}</Text>
                                                                 <Text style={[finalStyles.itemPrice, { marginLeft: 5 }]}>{`${(totalPrice - discountPrice).toLocaleString('vi-VN')}đ`}</Text>
@@ -832,7 +989,7 @@ export default function OrderDetails({ route }) {
                         <View style={{ justifyContent: 'space-between', paddingBottom: 10, paddingTop: 10, borderBottomWidth: 1, borderBottomColor: 'gray', }}>
                             <Text style={{ justifyContent: 'flex-start' }}>Các món khuyến mãi</Text>
                             {Object.entries(cartItems).filter(([key, data]) => data.discount !== undefined && data.discount > 0).map(([key, data], index) => {
-                                if (data.discount !== undefined && data.discount > 0) { // Check if there is a discount
+                                if (data.discount !== undefined && data.discount > 0) {
                                     return (
 
                                         <View key={key} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -845,7 +1002,7 @@ export default function OrderDetails({ route }) {
 
                                     );
                                 } else {
-                                    return null; // Don't render if there's no discount
+                                    return null;
                                 }
                             })}
                         </View>
@@ -889,7 +1046,7 @@ export default function OrderDetails({ route }) {
                             marginRight: 20,
                             marginTop: 15
                         }} onPress={() => {
-                            handlePaidOrder()
+                            printBill()
                         }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
                                 <Text style={{ color: '#ffffff' }}>Thanh toán</Text>

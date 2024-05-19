@@ -21,7 +21,15 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/p-high-resolution-logo-transparent.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "INTERNET",
+        "BLUETOOTH",
+        "BLUETOOTH_AMIN"
+      ],
+      "package": "com.thanh9462.BanHang"
     },
     "web": {
       "favicon": "./assets/p-high-resolution-logo-transparent.png"
