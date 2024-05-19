@@ -19,6 +19,7 @@ export default function OrderDetails({ route }) {
     // const IDOrder = "O" + titleOrderId
     const iconv = require('iconv-lite');
     const [dataRoom, setDataRoom] = useState([]);
+    const [dataPrint, setDataPrint] = useState([]);
     const [roomDropdownData, setRoomDropdownData] = useState([]);
     const navigation = useNavigation();
     let [selectedRoom, setSelectedRoom] = useState(Object.values(Orders[3])[1] || '');
@@ -95,6 +96,7 @@ export default function OrderDetails({ route }) {
 
     useEffect(() => {
         const roomRef = ref(database, 'Rooms');
+        const printRef = ref(database, 'Print');
         // Tạo một biến để giữ các hàm hủy đăng ký
         const unsubscribeRooms = onValue(roomRef, (snapshot) => {
             const roomData = snapshot.val();
@@ -102,10 +104,17 @@ export default function OrderDetails({ route }) {
                 setDataRoom(roomData);
             }
         });
+        const unsubscribePrint = onValue(printRef, (snapshot) => {
+            const printData = snapshot.val();
+            if (printData) {
+                setDataPrint(printData);
+            }
+        });
 
         // Khi component bị unmount, gọi các hàm hủy đăng ký
         return () => {
             unsubscribeRooms();
+            unsubscribePrint();
         };
 
     }, []);
@@ -160,7 +169,6 @@ export default function OrderDetails({ route }) {
             return newCartItems;
         });
     };
-
     const calculateTotalPrice = (item) => {
         const price = item.price || 0;
         const quantity = item.quantity || 0;
@@ -221,12 +229,15 @@ export default function OrderDetails({ route }) {
 
     }
 
-
+    const now = new Date();
+    const date = now.toISOString().split('T')[0]; // Ngày
+    const time = now.toTimeString().split(' ')[0]; // Thời gian
     let data = '\x0a';
     data += '                     DCAT\n';
     data += "              Hoa don thanh toan\n\n";
-    data += '----------------------------------------------\n\n';
-    data += 'Stt  Ten mon            SL   Gia    Thanh tien\n';
+    data += `${`So hoa don:${OrderID.replace("O", "")}`.padEnd(1) + `Ngay:${date + ' ' + time}`.padStart(33)}\n`;
+    data += '----------------------------------------------\n';
+    data += 'Stt Ten mon            SL   Gia    Thanh tien\n';
     
     let stt = 1;
     let totalPrice = 0;
@@ -301,7 +312,7 @@ export default function OrderDetails({ route }) {
             const itemTotalPrice = item.totalPrice;
     
             // Dòng đầu tiên của itemName
-            data += ` ${stt.toString().padEnd(3)} ${itemNameWrapped[0].padEnd(16)}   ${itemQuantity.toString().padEnd(2)}   ${itemPrice.toLocaleString('vi-VN').toString().padEnd(6)}   ${itemTotalPrice.toLocaleString('vi-VN').toString().padStart(8)}\n`;
+            data += ` ${stt.toString().padEnd(2)} ${itemNameWrapped[0].padEnd(16)}   ${itemQuantity.toString().padEnd(2)}   ${itemPrice.toLocaleString('vi-VN').toString().padEnd(6)}   ${itemTotalPrice.toLocaleString('vi-VN').toString().padStart(8)}\n`;
     
             // Các dòng tiếp theo của itemName
             for (let i = 1; i < itemNameWrapped.length; i++) {
@@ -318,7 +329,7 @@ export default function OrderDetails({ route }) {
     if(totalPriceDiscount<totalPrice){ 
         data += `Tong${totalPrice.toLocaleString('vi-VN').toString().padStart(42)}\n`;
     }else{
-        data += `Tong cong${totalPrice.toLocaleString('vi-VN').toString().padStart(37)}\n`;
+        data += `Tong cong${totalPrice.toLocaleString('vi-VN').toString().padStart(36)}\n`;
     }
     let discountPrint = (totalPriceDiscount - totalPrice).toLocaleString('vi-VN').toString();
     if(totalPriceDiscount<totalPrice){
@@ -337,25 +348,26 @@ export default function OrderDetails({ route }) {
     data += `\n`;
     data += `\n`;
     console.log(data)
-    console.log(totalPriceDiscount)
+
     // Hàm in hóa đơn
     const utf8Text = iconv.encode(data, 'utf8').toString();
     const controller = new AbortController();
     const signal = controller.signal;
-    
+    const ip = dataPrint.Ip;
+    const port = dataPrint.Port;
     // Thiết lập thời gian hủy bỏ sau 5 giây
     setTimeout(() => controller.abort(), 5000);
     const printBill = async () => {
         try {
-            const url = 'http://192.168.1.251:9100'; // Thay đổi địa chỉ URL theo địa chỉ của máy in và cổng
+            const url = `http://${ip}:${port}`; // Thay đổi địa chỉ URL theo địa chỉ của máy in và cổng
     
             const data = `${utf8Text}\x1b\x4f \x1B\x69` // Thay đổi dữ liệu in tùy thuộc vào định dạng yêu cầu bởi máy in
             const response = await fetch(url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'text/plain',
-                },
+                headers: {},
                 signal,
+                redirect: 'manual', // Không tự động chuyển hướng
+                credentials: 'omit', 
                 mode:"no-cors",
                 body: data, // Dữ liệu cần in
             });
