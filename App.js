@@ -84,7 +84,7 @@ function BottomNavigationBar() {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'OrderScreen') {
             iconName = focused ? 'cart' : 'cart-outline';
-          } else if (route.name === 'Setting') {
+          } else if (route.name === 'SettingScreen') {
             iconName = focused ? 'person' : 'person-outline';
           } else if (route.name === 'Payment') {
             iconName = focused ? 'wallet' : 'wallet-outline';
@@ -127,7 +127,7 @@ function BottomNavigationBar() {
         options={{ headerShown: false, tabBarLabel: 'Phiếu chi' }}
       />
       <Tab.Screen
-        name="Setting"
+        name="SettingScreen"
         component={SettingScreen}
         options={{ headerShown: false, tabBarLabel: 'Tôi' }}
       />

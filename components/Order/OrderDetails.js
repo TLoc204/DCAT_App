@@ -10,7 +10,6 @@ import IconAnt from 'react-native-vector-icons/AntDesign';
 import { showMessage, hideMessage, } from "react-native-flash-message";
 
 // Lấy kích thước màn hình để hỗ trợ responsive
-import ThermalPrinterModule from 'react-native-thermal-printer';
 export default function OrderDetails({ route }) {
     const database = getDatabase(FIREBASE_APP);
     const { Orders } = route.params;
@@ -29,12 +28,12 @@ export default function OrderDetails({ route }) {
     const [discount, setDiscount] = useState({});
     const [cartItems, setCartItems] = useState([]);
     const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-    const [defaultImageUrl, setDefaultImageUrl] = useState('https://firebasestorage.googleapis.com/v0/b/dcat-c09a4.appspot.com/o/MacDinh.jpg?alt=media&token=d66af2a0-9be6-44cb-9eda-504f04c1763c');
+    const [defaultImageUrl, setDefaultImageUrl] = useState('https://firebasestorage.googleapis.com/v0/b/dcat-c09a4.appspot.com/o/logoDCAT_Trang.jpg?alt=media&token=a0caf069-f241-42bb-91e2-849c1817cada');
     const [selectedPayment, setSelectedPayment] = useState('Cash');
     const [printing, setPrinting] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
     const canvasRef = useRef(null);
-    console.log(ThermalPrinterModule);
+
     useEffect(() => {
         if (Object.keys(foods).length > 0) {
             setCartItems(foods);
@@ -377,50 +376,7 @@ export default function OrderDetails({ route }) {
                 console.error('Đã xảy ra lỗi khi gửi dữ liệu đến máy in:', response.statusText);
             }
         } catch (error) {
-
-        }
-    };
-    const netPrint = async () => {
-        try {
-            if (!ThermalPrinterModule) {
-                throw new Error('ThermalPrinterModule không được khởi tạo.');
-            }
-    
-            console.log('Thuộc tính của ThermalPrinterModule:', Object.keys(ThermalPrinterModule));
-    
-            if (!ThermalPrinterModule.printTcp) {
-                throw new Error('Phương thức printTcp không tồn tại.');
-            }
-    
-            ThermalPrinterModule.defaultConfig = {
-                ...ThermalPrinterModule.defaultConfig,
-                ip: '192.168.1.251',
-                port: 9100,
-                autoCut: false,
-                timeout: 30000, // milliseconds (version >= 2.2.0)
-            };
-    
-            console.log('Cấu hình mặc định đã được cập nhật:', ThermalPrinterModule.defaultConfig);
-    
-            // Kiểm tra nếu phương thức là một function
-            if (typeof ThermalPrinterModule.printTcp !== 'function') {
-                throw new Error('printTcp không phải là một function.');
-            }
-            console.log(ThermalPrinterModule.printTcp)
-            // Gọi phương thức printTcp
-            await ThermalPrinterModule.printTcp({
-                ip: '192.168.1.251',
-                port: 9100,
-                printerDpi:203,
-
-                payload: 'hello world',
-                printerWidthMM: 50,
-                timeout: 30000, // in milliseconds (version >= 2.2.0)
-              });
-    
-            console.log('In thành công.');
-        } catch (err) {
-            console.error('Lỗi khi in:', err);
+            console.log(error)
         }
     };
 
@@ -564,6 +520,7 @@ export default function OrderDetails({ route }) {
             selectedRoom &&
             customerName.length > 0) {
             handleSubmitPaid()
+            printBill()
             showMessage({
                 message: `Thanh toán đơn hàng ${OrderID} thành công`,
                 type: "success",
@@ -1099,7 +1056,7 @@ export default function OrderDetails({ route }) {
                             marginRight: 20,
                             marginTop: 15
                         }} onPress={() => {
-                            netPrint()
+                            handlePaidOrder()
                         }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
                                 <Text style={{ color: '#ffffff' }}>Thanh toán</Text>

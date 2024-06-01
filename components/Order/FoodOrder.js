@@ -131,7 +131,7 @@ export default function FoodOrder({ route }) {
     const [discount, setDiscount] = useState({});
     const [cartItems, setCartItems] = useState([]);
     const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-    const [defaultImageUrl, setDefaultImageUrl] = useState('https://firebasestorage.googleapis.com/v0/b/dcat-c09a4.appspot.com/o/MacDinh.jpg?alt=media&token=d66af2a0-9be6-44cb-9eda-504f04c1763c');
+    const [defaultImageUrl, setDefaultImageUrl] = useState('https://firebasestorage.googleapis.com/v0/b/dcat-c09a4.appspot.com/o/logoDCAT_Trang.jpg?alt=media&token=a0caf069-f241-42bb-91e2-849c1817cada');
     useEffect(() => {
         // Chỉ cập nhật cartItems nếu foods thực sự thay đổi.
         const currentFoods = JSON.stringify(foods);
