@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "729078324594",
+    "firebase_url": "https://dcat-c09a4-default-rtdb.firebaseio.com",
+    "project_id": "dcat-c09a4",
+    "storage_bucket": "dcat-c09a4.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:729078324594:android:020bbbb1aff01409d691eb",
+        "android_client_info": {
+          "package_name": "com.company.Dcat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "729078324594-l7lddst8unv6ufb6t07slj16hp3ic8gn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCi9qdbDsEZdgdkPhSbTyEWkqPy4yCauOE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "729078324594-l7lddst8unv6ufb6t07slj16hp3ic8gn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

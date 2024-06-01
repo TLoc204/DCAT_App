@@ -19,14 +19,20 @@ import Order from './components/Order/Order';
 import { TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AdminCreateAndUpdateFood from './components/Admin/AdminCreateAndUpdateFood';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { FIREBASE_APP } from './FirebaseConfig';
+import { getDatabase, ref, onValue } from 'firebase/database';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 function BottomNavigationBar() {
   const isFocused = useIsFocused();
   const navigation = useNavigation();
+  const database = getDatabase(FIREBASE_APP);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [isFoodOrderRoute, setIsFoodOrderRoute] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState({ username: '', role: '' });
+  const [dataRole, setDataRole] = useState({});
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
 
@@ -42,8 +48,32 @@ function BottomNavigationBar() {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
     };
+  }, [])
+  useEffect(() => {
+    const roleRef = ref(database, 'Roles');
+    const unsubscribeRole = onValue(roleRef, (snapshot) => {
+      const roleData = snapshot.val();
+      if (roleData) {
+        setDataRole(roleData);
+      }
+    });
+    return () => {
+      unsubscribeRole();
+    };
   }, []);
-
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const username = await AsyncStorage.getItem('name');
+        const storedRole = await AsyncStorage.getItem('role');
+        const role = storedRole && dataRole[storedRole] ? dataRole[storedRole].Name : 'Unknown';
+        setLoggedInUser({ username, role });
+      } catch (error) {
+        console.error('Error retrieving user data:', error);
+      }
+    };
+    fetchUserData();
+  }, [dataRole]);
 
   return (
     <Tab.Navigator
@@ -78,11 +108,14 @@ function BottomNavigationBar() {
         component={Home}
         options={{ headerShown: false, tabBarLabel: 'Trang chủ' }}
       />
-      <Tab.Screen
-        name="Statistics"
-        component={Statistics}
-        options={{ headerShown: false, tabBarLabel: 'Thống kê' }}
-      />
+      
+      {loggedInUser.role === 'Admin' && (
+        <Tab.Screen
+          name="Statistics"
+          component={Statistics}
+          options={{ headerShown: false, tabBarLabel: 'Thống kê' }}
+        />
+      )}
       <Tab.Screen
         name="OrderScreen"
         component={OrderScreen}

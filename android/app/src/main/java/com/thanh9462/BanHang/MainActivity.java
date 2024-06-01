@@ -1,4 +1,4 @@
-package com.banhang;
+package com.thanh9462.BanHang;
 
 import android.os.Build;
 import android.os.Bundle;

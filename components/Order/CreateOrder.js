@@ -8,8 +8,10 @@ import { useImageAllFolder } from "./FoodOrder"
 import IconAnt from 'react-native-vector-icons/AntDesign';
 import { showMessage, hideMessage, } from "react-native-flash-message";
 // Lấy kích thước màn hình để hỗ trợ responsive
-
+// import { onMessage, getToken,getMessaging } from 'firebase/messaging';
+// import * as Notifications from 'expo-notifications';
 export default function CreateOrder({ route }) {
+    // const messaging = getMessaging(FIREBASE_APP);
     const database = getDatabase(FIREBASE_APP);
     const [dataRoom, setDataRoom] = useState([]);
     const [roomDropdownData, setRoomDropdownData] = useState([]);
@@ -22,7 +24,13 @@ export default function CreateOrder({ route }) {
     const [discount, setDiscount] = useState({});
     const [cartItems, setCartItems] = useState([]);
     const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-
+    // useEffect(() => {
+    //     const messaging = getMessaging();
+    //     onMessage(messaging, (payload) => {
+    //       console.log('Message received. ', payload);
+    //       // ...
+    //     });
+    // }, []);
     useEffect(() => {
         // Chỉ cập nhật cartItems nếu foods thực sự thay đổi.
         const currentFoods = JSON.stringify(foods);
@@ -59,6 +67,7 @@ export default function CreateOrder({ route }) {
             keyboardDidHideListener.remove();
         };
     }, []);
+
     //-----------------------------------------------------------Room-----------------------------------------------------------------
     const roomNames = {};
     // Duyệt qua dataTables và lưu tên của các bàn vào tableNames

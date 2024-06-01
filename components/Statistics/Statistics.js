@@ -232,7 +232,7 @@ export default function Statistics() {
         <TouchableOpacity style={finalStyles.dropdownDate} onPress={openDropDate}>
           <Text>{currentDate}</Text>
         </TouchableOpacity>
-        <BottomSheet ref={bottomSheetDate} height={280}>
+        <BottomSheet ref={bottomSheetDate} height={220}>
           <TouchableOpacity onPress={() => handleSelectDate('Hôm nay')}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20, marginBottom: 10,marginLeft:10, borderTopWidth: 1, borderColor: "#DCDCDC", paddingTop: 5 }}>
               <View style={finalStyles.checkIconContainer}>
@@ -257,14 +257,14 @@ export default function Statistics() {
               <Text style={{ marginLeft: 10, marginTop: 10 }}>Tháng trước</Text>
             </View>
           </TouchableOpacity>
-          <TouchableOpacity >
+          {/* <TouchableOpacity >
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, marginBottom: 10,marginLeft:10, borderTopWidth: 1, borderColor: "#DCDCDC", paddingTop: 5 }}>
               <View style={finalStyles.checkIconContainer}>
                 {currentDate === 'Tùy chỉnh thời gian' && <Icon name="check" size={20} color="#667080" />}
               </View>
               <Text style={{ marginLeft: 10, marginTop: 10 }}>Tùy chỉnh thời gian</Text>
             </View>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </BottomSheet>
       </View>
       <View style={finalStyles.main_statistics_item}>

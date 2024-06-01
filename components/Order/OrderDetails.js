@@ -8,12 +8,11 @@ import { getStorage, ref as storageRef } from "firebase/storage";
 import { useImageAllFolder } from "./FoodOrder"
 import IconAnt from 'react-native-vector-icons/AntDesign';
 import { showMessage, hideMessage, } from "react-native-flash-message";
-import { Canvas } from 'react-native-canvas';
-// Lấy kích thước màn hình để hỗ trợ responsive
-import TcpSocket from 'react-native-tcp-socket';
 
+// Lấy kích thước màn hình để hỗ trợ responsive
+import ThermalPrinterModule from 'react-native-thermal-printer';
 export default function OrderDetails({ route }) {
-    const database = getDatabase(FIREBASE_APP); 
+    const database = getDatabase(FIREBASE_APP);
     const { Orders } = route.params;
     const { OrderID } = route.params;
     // const IDOrder = "O" + titleOrderId
@@ -35,7 +34,7 @@ export default function OrderDetails({ route }) {
     const [printing, setPrinting] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
     const canvasRef = useRef(null);
-
+    console.log(ThermalPrinterModule);
     useEffect(() => {
         if (Object.keys(foods).length > 0) {
             setCartItems(foods);
@@ -235,14 +234,14 @@ export default function OrderDetails({ route }) {
     let data = '\x0a';
     data += '                     DCAT\n';
     data += "              Hoa don thanh toan\n\n";
-    data += `${`So hoa don:${OrderID.replace("O", "")}`.padEnd(1) + `Ngay:${date + ' ' + time}`.padStart(33)}\n`;
-    data += '----------------------------------------------\n';
-    data += 'Stt Ten mon            SL   Gia    Thanh tien\n';
-    
+    data += `${`So hoa don:${OrderID.replace("O", "")}`.padEnd(1) + `Ngay:${date + ' ' + time}`.padStart(35)}\n`;
+    data += '-----------------------------------------------\n';
+    data += 'Stt Ten mon            SL   Gia      Thanh tien\n';
+
     let stt = 1;
     let totalPrice = 0;
     let totalPriceDiscount = 0;
-    
+
     function formatTextWrap(text, width) {
         // Hàm loại bỏ dấu từ mỗi từ
         function removeAccents(word) {
@@ -274,7 +273,7 @@ export default function OrderDetails({ route }) {
                 'Ư': 'U', 'Ứ': 'U', 'Ừ': 'U', 'Ử': 'U', 'Ữ': 'U', 'Ự': 'U',
                 'Ý': 'Y', 'Ỳ': 'Y', 'Ỷ': 'Y', 'Ỹ': 'Y', 'Ỵ': 'Y'
             };
-    
+
             let newWord = '';
             for (let i = 0; i < word.length; i++) {
                 const char = word[i];
@@ -283,10 +282,10 @@ export default function OrderDetails({ route }) {
             }
             return newWord;
         }
-    
+
         let result = [];
         let line = '';
-    
+
         for (const word of text.split(' ')) {
             const sanitizedWord = removeAccents(word); // Loại bỏ dấu từ mỗi từ
             if (line.length + sanitizedWord.length + 1 > width) {
@@ -298,11 +297,11 @@ export default function OrderDetails({ route }) {
         if (line.trim().length > 0) {
             result.push(line.trim());
         }
-    
+
         return result;
     }
-    
-    
+
+
     for (const key in cartItems) {
         if (cartItems.hasOwnProperty(key)) {
             const item = cartItems[key];
@@ -310,33 +309,33 @@ export default function OrderDetails({ route }) {
             const itemPrice = item.price
             const itemQuantity = item.quantity;
             const itemTotalPrice = item.totalPrice;
-    
+            const discountFood = item.discount;
             // Dòng đầu tiên của itemName
-            data += ` ${stt.toString().padEnd(2)} ${itemNameWrapped[0].padEnd(16)}   ${itemQuantity.toString().padEnd(2)}   ${itemPrice.toLocaleString('vi-VN').toString().padEnd(6)}   ${itemTotalPrice.toLocaleString('vi-VN').toString().padStart(8)}\n`;
-    
+            data += ` ${stt.toString().padEnd(2)} ${(itemNameWrapped[0]+ (discountFood>0?` (${discountFood}%)`:'')).padEnd(16)}   ${itemQuantity.toString().padEnd(2)}   ${itemPrice.toLocaleString('vi-VN').toString().padEnd(8)}   ${(itemTotalPrice * (1 - discountFood/ 100)).toLocaleString('vi-VN').toString().padStart(8)}\n`;
+
             // Các dòng tiếp theo của itemName
             for (let i = 1; i < itemNameWrapped.length; i++) {
                 data += `     ${itemNameWrapped[i].padEnd(16)}\n`;
             }
-    
+
             stt++;
             totalPrice += item.totalPrice;
             totalPriceDiscount += item.totalPrice * (1 - item.discount / 100);
         }
     }
-    
-    data += '----------------------------------------------\n';
-    if(totalPriceDiscount<totalPrice){ 
-        data += `Tong${totalPrice.toLocaleString('vi-VN').toString().padStart(42)}\n`;
-    }else{
-        data += `Tong cong${totalPrice.toLocaleString('vi-VN').toString().padStart(36)}\n`;
+
+    data += '-----------------------------------------------\n';
+    if (totalPriceDiscount < totalPrice) {
+        data += `Tong${totalPrice.toLocaleString('vi-VN').toString().padStart(43)}\n`;
+    } else {
+        data += `Tong cong${totalPrice.toLocaleString('vi-VN').toString().padStart(38)}\n`;
     }
     let discountPrint = (totalPriceDiscount - totalPrice).toLocaleString('vi-VN').toString();
-    if(totalPriceDiscount<totalPrice){
-        data += `Giam gia${discountPrint.padStart(38)}\n`;
+    if (totalPriceDiscount < totalPrice) {
+        data += `Giam gia${discountPrint.padStart(39)}\n`;
     }
-    if(totalPriceDiscount<totalPrice){
-        data += `Tong cong${totalPriceDiscount.toLocaleString('vi-VN').toString().padStart(37)}\n`;
+    if (totalPriceDiscount < totalPrice) {
+        data += `Tong cong${totalPriceDiscount.toLocaleString('vi-VN').toString().padStart(38)}\n`;
     }
     data += `\n`;
     data += `         Cam on quy khach, hen gap lai!`;
@@ -360,28 +359,70 @@ export default function OrderDetails({ route }) {
     const printBill = async () => {
         try {
             const url = `http://${ip}:${port}`; // Thay đổi địa chỉ URL theo địa chỉ của máy in và cổng
-    
+
             const data = `${utf8Text}\x1b\x4f \x1B\x69` // Thay đổi dữ liệu in tùy thuộc vào định dạng yêu cầu bởi máy in
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {},
                 signal,
                 redirect: 'manual', // Không tự động chuyển hướng
-                credentials: 'omit', 
-                mode:"no-cors",
+                credentials: 'omit',
+                mode: "no-cors",
                 body: data, // Dữ liệu cần in
             });
-    
+
             if (response.ok) {
                 console.log('Dữ liệu đã được gửi thành công đến máy in');
             } else {
                 console.error('Đã xảy ra lỗi khi gửi dữ liệu đến máy in:', response.statusText);
             }
         } catch (error) {
-            
+
         }
     };
+    const netPrint = async () => {
+        try {
+            if (!ThermalPrinterModule) {
+                throw new Error('ThermalPrinterModule không được khởi tạo.');
+            }
+    
+            console.log('Thuộc tính của ThermalPrinterModule:', Object.keys(ThermalPrinterModule));
+    
+            if (!ThermalPrinterModule.printTcp) {
+                throw new Error('Phương thức printTcp không tồn tại.');
+            }
+    
+            ThermalPrinterModule.defaultConfig = {
+                ...ThermalPrinterModule.defaultConfig,
+                ip: '192.168.1.251',
+                port: 9100,
+                autoCut: false,
+                timeout: 30000, // milliseconds (version >= 2.2.0)
+            };
+    
+            console.log('Cấu hình mặc định đã được cập nhật:', ThermalPrinterModule.defaultConfig);
+    
+            // Kiểm tra nếu phương thức là một function
+            if (typeof ThermalPrinterModule.printTcp !== 'function') {
+                throw new Error('printTcp không phải là một function.');
+            }
+            console.log(ThermalPrinterModule.printTcp)
+            // Gọi phương thức printTcp
+            await ThermalPrinterModule.printTcp({
+                ip: '192.168.1.251',
+                port: 9100,
+                printerDpi:203,
 
+                payload: 'hello world',
+                printerWidthMM: 50,
+                timeout: 30000, // in milliseconds (version >= 2.2.0)
+              });
+    
+            console.log('In thành công.');
+        } catch (err) {
+            console.error('Lỗi khi in:', err);
+        }
+    };
 
     //-----------------------------------------------------------End Room-------------------------------------------------------------
     const handleSubmit = async () => {
@@ -1058,7 +1099,7 @@ export default function OrderDetails({ route }) {
                             marginRight: 20,
                             marginTop: 15
                         }} onPress={() => {
-                            printBill()
+                            netPrint()
                         }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
                                 <Text style={{ color: '#ffffff' }}>Thanh toán</Text>
