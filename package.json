@@ -42,6 +42,7 @@
     "expo-status-bar": "~1.6.0",
     "expo-system-ui": "~2.4.0",
     "firebase": "^10.12.2",
+    "git": "^0.1.5",
     "iconv-lite": "^0.6.3",
     "metro-react-native-babel-preset": "^0.65.0",
     "react": "18.2.0",
