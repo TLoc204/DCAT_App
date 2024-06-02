@@ -27,7 +27,10 @@
         "WRITE_EXTERNAL_STORAGE",
         "INTERNET",
         "BLUETOOTH",
-        "BLUETOOTH_ADMIN"
+        "BLUETOOTH_ADMIN",
+        "ACCESS_WIFI_STATE",
+        "ACCESS_NETWORK_STATE",
+        "CHANGE_NETWORK_STATE"
       ],
       "package": "com.thanh9462.BanHang"
     },

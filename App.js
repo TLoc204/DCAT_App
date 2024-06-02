@@ -104,8 +104,8 @@ function BottomNavigationBar() {
         },
       })}
     >
-      <Tab.Screen
-        name="Home"
+      <Tab.Screen  
+        name="HomeScreen"
         component={HomeScreen}
         options={{ headerShown: false, tabBarLabel: 'Trang chủ' }}
       />

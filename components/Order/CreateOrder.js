@@ -208,16 +208,14 @@ export default function CreateOrder({ route }) {
                     if (snapshot.exists()) {
                         const data = snapshot.val();
                         const orderKeys = Object.keys(data);
-                        lastOrderKey = orderKeys[orderKeys.length - 1];
-                    } else {
-                        console.log("No data available");
+                        lastOrderKey = orderKeys.length + 1;
                     }
                 })
                 .catch((error) => {
                     console.error(error);
                 });
-
-            const newOrderKey = 'O' + (parseInt(lastOrderKey.substring(1)) + 1);
+            
+            const newOrderKey = 'O' + (parseInt(lastOrderKey) + 1);
 
             let orderDetailsData = {};
             Object.values(cartItems).forEach((item, index) => {
