@@ -139,7 +139,7 @@ export default function AdminCreateAndUpdateFood({ route }) {
                 if (photo) {
                     uriParts = photo.assets[0]?.uri.split('/');
                     nameImage = uriParts[uriParts.length - 1];
-                    response = await fetch(photo.assets[0]?.uri);
+                    response = (await fetch(photo.assets[0]?.uri)).hasOwnProperty();
                 }
 
                 if (response) { // Kiểm tra xem response có tồn tại không trước khi gọi response.blob()
