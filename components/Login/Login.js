@@ -246,7 +246,7 @@ export default function Login() {
             <View style={finalStyles.container}>
                 <View style={finalStyles.logoContainer}>
                     <Image
-                        source={require('../../assets/logoDCAT_Trang.jpg')}
+                        source={require('../../assets/logoDCAT_Trang.png')}
                         resizeMode={"stretch"}
                         style={finalStyles.logo}
                     />

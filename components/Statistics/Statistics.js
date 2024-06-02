@@ -75,11 +75,11 @@ export default function Statistics() {
     }));
 
     const filteredData = orderArray.filter((data) => {
-      const orderDate = data.CreatedDate.split(' ')[0];
-      const orderTime = data.CreatedDate.split(' ')[1];
+      const orderDate = data.PaidDate.split(' ')[0];
+      const orderTime = data.PaidDate.split(' ')[1];
       const isTodayStart = orderDate >= startDate.toISOString().split('T')[0] && orderTime.split(':')[0] >= 6;
       const isTodayEnd = orderDate <= endDate.toISOString().split('T')[0] && orderTime.split(':')[0] < 6;
-      if (data.Delete === false) {
+      if (data.Delete === true) {
         if (orderDate >= startDate.toISOString().split('T')[0] && isTodayStart && orderDate < (endDate.toISOString().split('T')[0])) {
           return true;
         } else if (orderDate >= startDate.toISOString().split('T')[0] && isTodayEnd && orderDate <= (endDate.toISOString().split('T')[0])) {

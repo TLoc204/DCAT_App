@@ -17,6 +17,7 @@ import {
     uploadBytesResumable,
     deleteObject
 } from "firebase/storage";
+
 export default function AdminCreateAndUpdateFood({ route }) {
     const navigation = useNavigation();
     const database = getDatabase(FIREBASE_APP);
@@ -83,7 +84,7 @@ export default function AdminCreateAndUpdateFood({ route }) {
                 quality: 1,
             };
             const image = await ImagePicker.launchImageLibraryAsync(options);
-            if (!image.cancelled) {
+            if (!image.canceled) {
                 setPhoto(image);
             }
             else {
@@ -131,11 +132,20 @@ export default function AdminCreateAndUpdateFood({ route }) {
     const handleSubmit = async () => {
         try {
             if (route.params?.adminRole === "Thêm mới") {
-                const uriParts = photo.assets[0]?.uri.split('/');
-                const nameImage = uriParts[uriParts.length - 1];
-                const response = await fetch(photo.assets[0]?.uri);
-                const blob = await response.blob();
+                let uriParts = '';
+                let nameImage = '';
+                let response = '';
+                let blob = ''
+                if (photo) {
+                    uriParts = photo.assets[0]?.uri.split('/');
+                    nameImage = uriParts[uriParts.length - 1];
+                    response = await fetch(photo.assets[0]?.uri);
+                }
 
+                if (response) { // Kiểm tra xem response có tồn tại không trước khi gọi response.blob()
+                    blob = await response.blob();
+                    // Tiếp tục xử lý với blob ở đây
+                }
                 // Chọn thư mục dựa vào selectedCategory
                 let folderName = '';
                 let keys = '';
@@ -187,10 +197,9 @@ export default function AdminCreateAndUpdateFood({ route }) {
                     default:
                         return;
                 }
-
                 const storageReference = storageRef(storage, `${folderName}/${nameImage}`);
                 const uploadTask = uploadBytesResumable(storageReference, blob);
-                const snapshot = await uploadTask;
+                const snapshot = uploadTask;
                 const now = new Date();
                 const date = now.toISOString().split('T')[0]; // Ngày
                 const time = now.toTimeString().split(' ')[0]; // Thời gian
@@ -201,7 +210,7 @@ export default function AdminCreateAndUpdateFood({ route }) {
                     "Name": name,
                     "Note": note ? note : '',
                     "Price": parseInt(price),
-                    "Image": nameImage
+                    "Image": photo ? nameImage : ''
                 };
 
                 await set(ref(database, `${folderName}/${keys}`), newCategoriesData)
@@ -237,13 +246,27 @@ export default function AdminCreateAndUpdateFood({ route }) {
             }
             else {
                 if (photo) {
-                    deleteItemFromFirebase(key, imageName);
                     const itemTypePrefix = key.match(/[A-Za-z]+/)[0];
-                    const uriParts = photo.assets[0]?.uri.split('/');
-                    const nameImage = uriParts[uriParts.length - 1];
-                    const response = await fetch(photo.assets[0]?.uri);
-                    const blob = await response.blob();
+                    let uriParts = photo.assets[0]?.uri.split('/'); // Sử dụng let thay vì const
+                    let nameImage = uriParts[uriParts.length - 1];
+                    let response = '';
+                    let blob = '';
+                    
+                    if (photo) {
+                        uriParts = photo.assets[0]?.uri.split('/'); // Gán lại giá trị cho uriParts
+                        nameImage = uriParts[uriParts.length - 1];
+                        response = (await fetch(photo.assets[0]?.uri)).hasOwnProperty();
+                    }
+                    
+                    if (response) {
+                        blob = await response.blob();
+                        // Tiếp tục xử lý với blob ở đây
+                    }
+                    const storageReference = storageRef(storage, `${itemType}/${nameImage}`);
+                    const uploadTask = uploadBytesResumable(storageReference, blob);
+                    const snapshot = uploadTask;
                     let itemType = '';
+                    
 
                     switch (itemTypePrefix) {
                         case 'D':
@@ -268,9 +291,6 @@ export default function AdminCreateAndUpdateFood({ route }) {
                             return;
                     }
                     const Ref = ref(database, `${itemType}/${key}`);
-                    const storageReference = storageRef(storage, `${itemType}/${nameImage}`);
-                    const uploadTask = uploadBytesResumable(storageReference, blob);
-                    const snapshot = await uploadTask;
                     const now = new Date();
                     const date = now.toISOString().split('T')[0]; // Ngày
                     const time = now.toTimeString().split(' ')[0]; // Thời gian
@@ -308,7 +328,7 @@ export default function AdminCreateAndUpdateFood({ route }) {
                     setSelectedCategory('');
                     setShouldFetch(true);
                     navigation.navigate('Admin');
-                    
+
                 } else {
                     const itemTypePrefix = key.match(/[A-Za-z]+/)[0];
                     let itemType = '';

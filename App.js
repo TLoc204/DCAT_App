@@ -16,6 +16,7 @@ import OrderDetails from './components/Order/OrderDetails';
 import CreateOrder from './components/Order/CreateOrder';
 import FoodOrder from './components/Order/FoodOrder';
 import Order from './components/Order/Order';
+import HomeDetail from './components/Home/HomeDetail'
 import { TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AdminCreateAndUpdateFood from './components/Admin/AdminCreateAndUpdateFood';
@@ -105,7 +106,7 @@ function BottomNavigationBar() {
     >
       <Tab.Screen
         name="Home"
-        component={Home}
+        component={HomeScreen}
         options={{ headerShown: false, tabBarLabel: 'Trang chủ' }}
       />
       
@@ -132,6 +133,35 @@ function BottomNavigationBar() {
         options={{ headerShown: false, tabBarLabel: 'Tôi' }}
       />
     </Tab.Navigator>
+  );
+}
+function HomeScreen() {
+  const navigation = useNavigation();
+
+  return (
+    <Stack.Navigator initialRouteName="Home">
+      <Stack.Screen
+        name="Home"
+        component={Home}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="HomeDetail"
+        component={HomeDetail}
+        options={({ navigation }) => ({
+          headerShown: true,
+          headerTitleAlign: 'center',
+          title: 'Home Detail',
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Icon name="arrow-back-ios" size={24} color="#667080" />
+              </View>
+            </TouchableOpacity>
+          ),
+        })}
+      />
+    </Stack.Navigator>
   );
 }
 function SettingScreen() {

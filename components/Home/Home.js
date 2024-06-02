@@ -8,6 +8,7 @@ import {
   onValue
 } from 'firebase/database';
 import { useImageAllFolder } from "../Order/FoodOrder"
+import { useNavigation } from '@react-navigation/native';
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
   const database = getDatabase(FIREBASE_APP);
@@ -340,7 +341,7 @@ const App = () => {
             </Text>
           </View>
           <ImageBackground
-            source={require('../../assets/logoDCAT_Trang.jpg')}
+            source={require('../../assets/logoDCAT_Trang.png')}
             resizeMode={"cover"}
             style={{
               width: 80,
@@ -361,32 +362,43 @@ const App = () => {
           ))}
         </ScrollView>
         <ScrollView horizontal style={styles.scrollView} showsHorizontalScrollIndicator={false}>
-  {filteredOrders.map(([id, data]) => {
-    const name = data.Name;
-    const imageArray = Array.isArray(imageAllFolder) ? imageAllFolder : [{ name: "", url: defaultImageUrl }];
-    const url = imageArray.find((item) => item.name === data.Image)?.url || defaultImageUrl;
+          {filteredOrders.map(([id, data]) => {
+            const name = data.Name;
+            const imageArray = Array.isArray(imageAllFolder) ? imageAllFolder : [{ name: "", url: defaultImageUrl }];
+            const url = imageArray.find((item) => item.name === data.Image)?.url || defaultImageUrl;
 
-    return (
-      <View key={id} style={styles.card}>
-        <View style={styles.cardInner}>
-          <ImageBackground
-            source={{ uri: url }} // Update the base URL accordingly
-            resizeMode={'stretch'}
-            imageStyle={styles.image}
-            style={styles.imageBackground}
-          >
-            <View style={styles.textContainer}>
-              <Text style={styles.nameText}>{name}</Text>
-              <View style={styles.row}>
-                <Text style={styles.priceText}>{data.Price} VND</Text>
-              </View>
-            </View>
-          </ImageBackground>
-        </View>
-      </View>
-    );
-  })}
-</ScrollView>
+            const navigation = useNavigation();
+
+            const handleCardPress = () => {
+              // Navigate to a different screen with ID and data
+              navigation.navigate('HomeDetail', {
+                idHomeDetail: id,
+                dataHomeDetail: data,
+                urlHomeDetail:url
+              });
+            };
+
+            return (
+              <TouchableOpacity key={id} style={styles.card} onPress={handleCardPress}>
+                <View style={styles.cardInner}>
+                  <ImageBackground
+                    source={{ uri: url }} // Update the base URL accordingly
+                    resizeMode={'stretch'}
+                    imageStyle={styles.image}
+                    style={styles.imageBackground}
+                  >
+                    <View style={styles.textContainer}>
+                      <Text style={styles.nameText}>{name}</Text>
+                      <View style={styles.row}>
+                        <Text style={styles.priceText}>Giá: {data.Price.toLocaleString('vi-VN')} VND</Text>
+                      </View>
+                    </View>
+                  </ImageBackground>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
 
 
       </ScrollView>

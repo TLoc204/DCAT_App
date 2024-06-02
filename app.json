@@ -4,40 +4,41 @@
     "slug": "BanHang",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logoDCAT_Trang.jpg",
+    "icon": "./assets/logoDCAT_Trang.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/logoDCAT_Trang.jpg",
+      "image": "./assets/logoDCAT_Trang.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": [
       "**/*"
     ],
-    "plugins": [
-      "@react-native-firebase/app",
-      "@react-native-firebase/messaging"
-    ],
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logoDCAT_Trang.jpg",
+        "foregroundImage": "./assets/logoDCAT_Trang.png",
         "backgroundColor": "#ffffff"
       },
-      "googleServicesFile": "./android/app/google-services.json",
       "permissions": [
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
         "INTERNET",
         "BLUETOOTH",
-        "BLUETOOTH_AMIN"
+        "BLUETOOTH_ADMIN"
       ],
       "package": "com.thanh9462.BanHang"
     },
     "web": {
-      "favicon": "./assets/logoDCAT_Trang.jpg"
-    }
+      "favicon": "./assets/logoDCAT_Trang.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "7fc4885e-9345-479a-8947-4d798ff3168a"
+      }
+    },
+    "owner": "thanh9462"
   }
 }
