@@ -274,7 +274,7 @@ export default function CreateOrder({ route }) {
                 "Delete": false,
                 "IdRoom": Object.values(selectedRoom)[1] || 'Rm3',
                 "OrderDetails": orderDetailsData,
-                "PaidDate": ``,
+                "PaidDate": `${date} ${time}`,
                 "TotalAmount": totalCartPrice,
                 "TotalDiscountPrice": totalCartDiscountPrice,
                 "DiscountTotal": discountTotal || 0

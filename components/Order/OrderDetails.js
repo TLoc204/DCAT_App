@@ -379,12 +379,12 @@ export default function OrderDetails({ route }) {
             console.log(error)
         }
     };
-
+    console.log(selectedRoom)
     //-----------------------------------------------------------End Room-------------------------------------------------------------
     const handleSubmit = async () => {
         // Lấy OrderID từ route.params
         const { OrderID } = route.params;
-
+    
         // Kiểm tra xem OrderID có tồn tại không
         if (OrderID) {
             const orderRef = ref(database, `Orders/${OrderID}`);
@@ -396,7 +396,7 @@ export default function OrderDetails({ route }) {
                 const itemId = item.key.split('_')[0];
                 const itemTypePrefix = itemId.match(/[A-Za-z]+/)[0];
                 let itemType = '';
-
+    
                 switch (itemTypePrefix) {
                     case 'D':
                         itemType = 'IdDrink';
@@ -419,11 +419,11 @@ export default function OrderDetails({ route }) {
                     default:
                         console.log("Unknown item type");
                 }
-
+    
                 if (!orderDetailsData[orderKey]) {
                     orderDetailsData[orderKey] = {};
                 }
-
+    
                 orderDetailsData[orderKey][itemKey] = {
                     [itemType]: itemId,
                     "Quantity": item.quantity,
@@ -433,26 +433,28 @@ export default function OrderDetails({ route }) {
                     "Image": item.image
                 };
             });
-
+    
             orderDetailsData['OD1']['CustomerName'] = customerName || 'Khách hàng';
+    
             try {
                 await update(orderRef, {
-                    "IdRoom": selectedRoom.value,
+                    "IdRoom": selectedRoom,
                     "OrderDetails": orderDetailsData,
                     "TotalAmount": totalCartPrice,
                     "TotalDiscountPrice": totalCartDiscountPrice,
                     "DiscountTotal": discountTotal || 0
                 });
                 console.log("Cập nhật thành công!");
-            } catch (error) {
+                navigation.navigate('Order'); // Điều hướng tới màn hình Order sau khi cập nhật thành công
+            } catch (error) {   
                 console.error("Lỗi khi cập nhật:", error);
             }
         } else {
             console.log('OrderID is missing');
             // Xử lý khi không có OrderID
         }
-        navigation.navigate('Order')
     };
+    
     const handleSubmitPaid = async () => {
         // Lấy OrderID từ route.params
         const { OrderID } = route.params;
