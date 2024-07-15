@@ -15,7 +15,7 @@ import com.facebook.soloader.SoLoader;
 
 import expo.modules.ApplicationLifecycleDispatcher;
 import expo.modules.ReactNativeHostWrapper;
-
+import com.facebook.flipper.reactnative.ReactNativeFlipper; // Thêm dòng này
 import java.util.List;
 
 public class MainApplication extends Application implements ReactApplication {
