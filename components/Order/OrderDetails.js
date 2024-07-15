@@ -8,7 +8,10 @@ import { getStorage, ref as storageRef } from "firebase/storage";
 import { useImageAllFolder } from "./FoodOrder"
 import IconAnt from 'react-native-vector-icons/AntDesign';
 import { showMessage, hideMessage, } from "react-native-flash-message";
-
+import {
+    NetPrinter,
+    COMMANDS
+  } from 'react-native-thermal-receipt-printer';
 // Lấy kích thước màn hình để hỗ trợ responsive
 export default function OrderDetails({ route }) {
     const database = getDatabase(FIREBASE_APP);
@@ -233,7 +236,7 @@ export default function OrderDetails({ route }) {
     let data = '\x0a';
     data += '                     DCAT\n';
     data += "              Hoa don thanh toan\n\n";
-    data += `${`So hoa don:${OrderID.replace("O", "")}`.padEnd(1) + `Ngay:${date + ' ' + time}`.padStart(35)}\n`;
+    data += `${`So hoa don:${OrderID.replace("O", "")}`.padEnd(1) + `Ngay:${date + ' ' + time}`.padStart(34)}\n`;
     data += '-----------------------------------------------\n';
     data += 'Stt Ten mon            SL   Gia      Thanh tien\n';
 
@@ -341,12 +344,8 @@ export default function OrderDetails({ route }) {
     data += `\n`;
     data += `\n`;
     data += `\n`;
-    data += `\n`;
-    data += `\n`;
-    data += `\n`;
-    data += `\n`;
     console.log(data)
-
+    
     // Hàm in hóa đơn
     const utf8Text = iconv.encode(data, 'utf8').toString();
     const controller = new AbortController();
@@ -366,7 +365,7 @@ export default function OrderDetails({ route }) {
                 signal,
                 redirect: 'manual', // Không tự động chuyển hướng
                 credentials: 'omit',
-                mode: "no-cors",
+                mode: "cors", // Thay đổi sang "cors" nếu có thể
                 body: data, // Dữ liệu cần in
             });
 
@@ -379,7 +378,30 @@ export default function OrderDetails({ route }) {
             console.log(error)
         }
     };
-    console.log(selectedRoom)
+    const handlePrint = () => {
+        // Khởi tạo Net Printer
+        NetPrinter.init().then(() => {
+          console.log('Net Printer initialized');
+    
+          // Kết nối đến máy in mạng
+          NetPrinter.connectPrinter(`${ip}`, port)  // Thay thế bằng IP và port của máy in của bạn
+            .then((printer) => {
+              console.log(`Connected to printer: ${printer}`);
+                
+              // In văn bản
+              NetPrinter.printText(
+                `${utf8Text}`
+              );
+            })
+            .catch((error) => {
+              console.error(error);
+              Alert.alert("Error", "Failed to connect to printer");
+            });
+        }).catch((error) => {
+          console.error(error);
+          Alert.alert("Error", "Failed to initialize printer");
+        });
+      };
     //-----------------------------------------------------------End Room-------------------------------------------------------------
     const handleSubmit = async () => {
         // Lấy OrderID từ route.params
@@ -522,7 +544,7 @@ export default function OrderDetails({ route }) {
             selectedRoom &&
             customerName.length > 0) {
             handleSubmitPaid()
-            printBill()
+            handlePrint()
             showMessage({
                 message: `Thanh toán đơn hàng ${OrderID} thành công`,
                 type: "success",

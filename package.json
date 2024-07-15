@@ -29,7 +29,6 @@
     "@react-navigation/stack": "^6.3.20",
     "body-parser": "^1.20.2",
     "buffer": "^6.0.3",
-    "curved-bottom-navigation-bar": "^2.0.5",
     "d3-shape": "^3.2.0",
     "esc-pos-encoder": "^2.0.1",
     "expo": "~49.0.15",
