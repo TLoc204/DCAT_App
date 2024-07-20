@@ -337,7 +337,7 @@ const App = () => {
                 fontSize: 20,
                 fontWeight: "bold",
               }}>
-              {"Explore the world"}
+              {" "}
             </Text>
           </View>
           <ImageBackground

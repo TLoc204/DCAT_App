@@ -1,6 +1,7 @@
 package com.thanh9462.BanHang;
 
 import android.app.Application;
+import android.content.Context;
 import android.content.res.Configuration;
 import androidx.annotation.NonNull;
 
@@ -12,11 +13,13 @@ import com.facebook.react.config.ReactFeatureFlags;
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
 import com.facebook.react.defaults.DefaultReactNativeHost;
 import com.facebook.soloader.SoLoader;
-
 import expo.modules.ApplicationLifecycleDispatcher;
 import expo.modules.ReactNativeHostWrapper;
-import com.facebook.flipper.reactnative.ReactNativeFlipper; // Thêm dòng này
+
 import java.util.List;
+
+// Các import statements cần thiết cho Flipper
+import java.lang.reflect.InvocationTargetException;
 
 public class MainApplication extends Application implements ReactApplication {
 
@@ -69,8 +72,9 @@ public class MainApplication extends Application implements ReactApplication {
       DefaultNewArchitectureEntryPoint.load();
     }
     if (BuildConfig.DEBUG) {
-      ReactNativeFlipper.initializeFlipper(this, getReactNativeHost().getReactInstanceManager());
+      initializeFlipper(this);
     }
+    
     ApplicationLifecycleDispatcher.onApplicationCreate(this);
   }
 
@@ -78,5 +82,17 @@ public class MainApplication extends Application implements ReactApplication {
   public void onConfigurationChanged(@NonNull Configuration newConfig) {
     super.onConfigurationChanged(newConfig);
     ApplicationLifecycleDispatcher.onConfigurationChanged(this, newConfig);
+  }
+
+  private static void initializeFlipper(Context context) {
+    if (BuildConfig.DEBUG) {
+      try {
+        // Load Flipper only in debug builds
+        Class<?> aClass = Class.forName("com.facebook.flipper.ReactNativeFlipper");
+        aClass.getMethod("initializeFlipper", Context.class).invoke(null, context);
+      } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+        e.printStackTrace();
+      }
+    }
   }
 }

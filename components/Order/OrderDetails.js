@@ -11,7 +11,7 @@ import { showMessage, hideMessage, } from "react-native-flash-message";
 import {
     NetPrinter,
     COMMANDS
-  } from 'react-native-thermal-receipt-printer';
+} from 'react-native-thermal-receipt-printer';
 // Lấy kích thước màn hình để hỗ trợ responsive
 export default function OrderDetails({ route }) {
     const database = getDatabase(FIREBASE_APP);
@@ -313,7 +313,7 @@ export default function OrderDetails({ route }) {
             const itemTotalPrice = item.totalPrice;
             const discountFood = item.discount;
             // Dòng đầu tiên của itemName
-            data += ` ${stt.toString().padEnd(2)} ${(itemNameWrapped[0]+ (discountFood>0?` (${discountFood}%)`:'')).padEnd(16)}   ${itemQuantity.toString().padEnd(2)}   ${itemPrice.toLocaleString('vi-VN').toString().padEnd(8)}   ${(itemTotalPrice * (1 - discountFood/ 100)).toLocaleString('vi-VN').toString().padStart(8)}\n`;
+            data += ` ${stt.toString().padEnd(2)} ${(itemNameWrapped[0] + (discountFood > 0 ? ` (${discountFood}%)` : '')).padEnd(16)}   ${itemQuantity.toString().padEnd(2)}   ${itemPrice.toLocaleString('vi-VN').toString().padEnd(8)}   ${(itemTotalPrice * (1 - discountFood / 100)).toLocaleString('vi-VN').toString().padStart(8)}\n`;
 
             // Các dòng tiếp theo của itemName
             for (let i = 1; i < itemNameWrapped.length; i++) {
@@ -345,7 +345,7 @@ export default function OrderDetails({ route }) {
     data += `\n`;
     data += `\n`;
     console.log(data)
-    
+
     // Hàm in hóa đơn
     const utf8Text = iconv.encode(data, 'utf8').toString();
     const controller = new AbortController();
@@ -379,34 +379,40 @@ export default function OrderDetails({ route }) {
         }
     };
     const handlePrint = () => {
-        // Khởi tạo Net Printer
-        NetPrinter.init().then(() => {
-          console.log('Net Printer initialized');
+        if (Object.values(cartItems).length > 0 &&
+            selectedRoom &&
+            customerName.length > 0) {
+            handleSubmit();
+            NetPrinter.init().then(() => {
+                console.log('Net Printer initialized');
     
-          // Kết nối đến máy in mạng
-          NetPrinter.connectPrinter(`${ip}`, port)  // Thay thế bằng IP và port của máy in của bạn
-            .then((printer) => {
-              console.log(`Connected to printer: ${printer}`);
-                
-              // In văn bản
-              NetPrinter.printText(
-                `${utf8Text}`
-              );
-            })
-            .catch((error) => {
-              console.error(error);
-              Alert.alert("Error", "Failed to connect to printer");
+                // Kết nối đến máy in mạng
+                NetPrinter.connectPrinter(`${ip}`, port)  // Thay thế bằng IP và port của máy in của bạn
+                    .then((printer) => {
+                        console.log(`Connected to printer: ${printer}`);
+    
+                        // In văn bản
+                        NetPrinter.printText(
+                            `${utf8Text}`
+                        );
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                        Alert.alert("Error", "Failed to connect to printer");
+                    });
+            }).catch((error) => {
+                console.error(error);
+                Alert.alert("Error", "Failed to initialize printer");
             });
-        }).catch((error) => {
-          console.error(error);
-          Alert.alert("Error", "Failed to initialize printer");
-        });
-      };
+        } else {
+            checkInput();
+        }
+    };
     //-----------------------------------------------------------End Room-------------------------------------------------------------
     const handleSubmit = async () => {
         // Lấy OrderID từ route.params
         const { OrderID } = route.params;
-    
+
         // Kiểm tra xem OrderID có tồn tại không
         if (OrderID) {
             const orderRef = ref(database, `Orders/${OrderID}`);
@@ -418,7 +424,7 @@ export default function OrderDetails({ route }) {
                 const itemId = item.key.split('_')[0];
                 const itemTypePrefix = itemId.match(/[A-Za-z]+/)[0];
                 let itemType = '';
-    
+
                 switch (itemTypePrefix) {
                     case 'D':
                         itemType = 'IdDrink';
@@ -441,11 +447,11 @@ export default function OrderDetails({ route }) {
                     default:
                         console.log("Unknown item type");
                 }
-    
+
                 if (!orderDetailsData[orderKey]) {
                     orderDetailsData[orderKey] = {};
                 }
-    
+
                 orderDetailsData[orderKey][itemKey] = {
                     [itemType]: itemId,
                     "Quantity": item.quantity,
@@ -455,9 +461,9 @@ export default function OrderDetails({ route }) {
                     "Image": item.image
                 };
             });
-    
+
             orderDetailsData['OD1']['CustomerName'] = customerName || 'Khách hàng';
-    
+
             try {
                 await update(orderRef, {
                     "IdRoom": selectedRoom,
@@ -468,7 +474,7 @@ export default function OrderDetails({ route }) {
                 });
                 console.log("Cập nhật thành công!");
                 navigation.navigate('Order'); // Điều hướng tới màn hình Order sau khi cập nhật thành công
-            } catch (error) {   
+            } catch (error) {
                 console.error("Lỗi khi cập nhật:", error);
             }
         } else {
@@ -476,7 +482,7 @@ export default function OrderDetails({ route }) {
             // Xử lý khi không có OrderID
         }
     };
-    
+
     const handleSubmitPaid = async () => {
         // Lấy OrderID từ route.params
         const { OrderID } = route.params;
