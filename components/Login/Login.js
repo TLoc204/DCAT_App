@@ -65,12 +65,12 @@ export default function Login() {
                 const { Password } = user;
                 if (password == Password) {
                     // Nếu kiểm tra đăng nhập thành công, thì mới chuyển đến màn hình 'Order'
-                    if (rememberPassword) {
+                    
                         await AsyncStorage.setItem('username', username);
                         await AsyncStorage.setItem('password', password);
                         await AsyncStorage.setItem('role', user.IdRole);
                         await AsyncStorage.setItem('name', user.Name);
-                    }
+                    
                     navigation.navigate('BottomNavigationBar');
                 } else {
                     Alert.alert('Mật khẩu không đúng');
@@ -280,14 +280,14 @@ export default function Login() {
                     </TouchableOpacity>
                 </View>
 
-                <View style={finalStyles.checkboxContainer}>
+                {/* <View style={finalStyles.checkboxContainer}>
                     <Checkbox.Android
                         status={rememberPassword ? 'checked' : 'unchecked'}
                         color="#667080"
                         onPress={() => setRememberPassword(!rememberPassword)}
                     />
                     <Text>Nhớ mật khẩu</Text>
-                </View>
+                </View> */}
 
                 <TouchableOpacity
                     style={finalStyles.button}

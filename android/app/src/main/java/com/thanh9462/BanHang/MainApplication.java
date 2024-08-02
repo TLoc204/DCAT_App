@@ -21,6 +21,8 @@ import java.util.List;
 // Các import statements cần thiết cho Flipper
 import java.lang.reflect.InvocationTargetException;
 
+import com.google.firebase.FirebaseApp; // Import thêm FirebaseApp
+
 public class MainApplication extends Application implements ReactApplication {
 
   private final ReactNativeHost mReactNativeHost =
@@ -75,6 +77,7 @@ public class MainApplication extends Application implements ReactApplication {
       initializeFlipper(this);
     }
     
+    FirebaseApp.initializeApp(this); // Khởi tạo Firebase tại đây
     ApplicationLifecycleDispatcher.onApplicationCreate(this);
   }
 

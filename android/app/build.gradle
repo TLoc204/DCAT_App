@@ -1,6 +1,6 @@
 apply plugin: "com.android.application"
 apply plugin: "com.facebook.react"
-
+apply plugin: 'com.google.gms.google-services'
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
 react {
@@ -67,7 +67,8 @@ android {
 
 dependencies {
     implementation "com.facebook.react:react-native:+"
-
+    implementation 'com.google.firebase:firebase-analytics:21.0.1'
+    implementation 'com.google.firebase:firebase-messaging:23.0.0'
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";
     def isWebpAnimatedEnabled = (findProperty('expo.webp.animated') ?: "") == "true";

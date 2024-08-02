@@ -8,6 +8,7 @@ import { useImageAllFolder } from "../Order/FoodOrder";
 import { createResizedImage } from 'react-native-image-resizer';
 import { showMessage, hideMessage } from "react-native-flash-message";
 import IconAnt from 'react-native-vector-icons/AntDesign';
+import { useFocusEffect } from '@react-navigation/native';
 import { NavigationContainer, useIsFocused, useNavigation } from '@react-navigation/native';
 import {
     getStorage,
@@ -83,18 +84,19 @@ export default function AdminCreateAndUpdateFood({ route }) {
                 quality: 1,
             };
             const result = await ImagePicker.launchImageLibraryAsync(options);
-
+    
             if (!result.canceled) {
                 setPhoto(result);
+                setDisplayPhoto(true);
             } else {
                 setPhoto(null);
+                setDisplayPhoto(false);
             }
-
-            setDisplayPhoto(true);
         } catch (error) {
             console.error('Error choosing photo:', error);
         }
     };
+    
     const getLastKeyFromDatabase = async (ref) => {
         let lastKey = '';
         const snapshot = await get(ref);
@@ -129,22 +131,30 @@ export default function AdminCreateAndUpdateFood({ route }) {
             </View>
         );
     };
+    console.log(photo)
     const handleSubmit = async () => {
         try {
             if (route.params?.adminRole === "Thêm mới") {
-                let uriParts = '';
-                let nameImage = '';
+                let uriParts = photo.assets[0]?.uri.split('/');
+                let nameImage = uriParts[uriParts.length - 1];
                 let response = '';
-                let blob = ''
+                let blob = '';
                 if (photo) {
-                    uriParts = photo.assets[0]?.uri.split('/');
-                    nameImage = uriParts[uriParts.length - 1];
-                    response = (await fetch(photo.assets[0]?.uri)).hasOwnProperty();
-                }
+                    try {
+                        uriParts = photo.assets[0]?.uri.split('/');
+                        nameImage = uriParts[uriParts.length - 1];
+                        response = await fetch(photo.assets[0]?.uri);
 
-                if (response) { // Kiểm tra xem response có tồn tại không trước khi gọi response.blob()
-                    blob = await response.blob();
-                    // Tiếp tục xử lý với blob ở đây
+                        if (response.ok) {
+                            blob = await response.blob();
+                        } else {
+                            console.error('Error fetching the photo URI:', response.statusText);
+                            return;
+                        }
+                    } catch (error) {
+                        console.error('Error fetching the photo URI:', error);
+                        return;
+                    }
                 }
                 // Chọn thư mục dựa vào selectedCategory
                 let folderName = '';
@@ -197,9 +207,44 @@ export default function AdminCreateAndUpdateFood({ route }) {
                     default:
                         return;
                 }
+                
                 const storageReference = storageRef(storage, `${folderName}/${nameImage}`);
-                const uploadTask = uploadBytesResumable(storageReference, blob);
-                const snapshot = uploadTask;
+
+                if (blob) {
+                    try {
+                        const uploadTask = uploadBytesResumable(storageReference, blob);
+                        uploadTask.on('state_changed',
+                            (snapshot) => {
+                                // Observe state change events such as progress, pause, and resume
+                                // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+                                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                                console.log('Upload is ' + progress + '% done');
+                                switch (snapshot.state) {
+                                    case 'paused':
+                                        console.log('Upload is paused');
+                                        break;
+                                    case 'running':
+                                        console.log('Upload is running');
+                                        break;
+                                }
+                            },
+                            (error) => {
+                                // Handle unsuccessful uploads
+                                console.error('Error uploading image:', error);
+                            },
+                            () => {
+                                // Handle successful uploads on complete
+                                console.log('Image uploaded successfully');
+                            }
+                        );
+                    } catch (error) {
+                        console.error('Error uploading image:', error);
+                        return;
+                    }
+                } else {
+                    console.error('No blob available for upload');
+                    return;
+                }
                 const now = new Date();
                 const date = now.toISOString().split('T')[0]; // Ngày
                 const time = now.toTimeString().split(' ')[0]; // Thời gian
@@ -241,118 +286,122 @@ export default function AdminCreateAndUpdateFood({ route }) {
                 setNote('');
                 setPrice('');
                 setSelectedCategory('');
-                setShouldFetch(true);
                 navigation.navigate('Admin');
+                useFocusEffect(
+                    React.useCallback(() => {
+                        setShouldFetch(true);
+                    }, [])
+                );
             }
             else {
                 if (photo) {
-                    // deleteItemFromFirebase(key,imageName)
-                    // const itemTypePrefix = key.match(/[A-Za-z]+/)[0];
-                    // let uriParts = photo.assets[0]?.uri.split('/');
-                    // let nameImage = uriParts[uriParts.length - 1];
-                    // let response = '';
-                    // let blob = '';
+                    deleteItemFromFirebase(key,imageName)
+                    const itemTypePrefix = key.match(/[A-Za-z]+/)[0];
+                    let uriParts = photo.assets[0]?.uri.split('/');
+                    let nameImage = uriParts[uriParts.length - 1];
+                    let response = '';
+                    let blob = '';
 
-                    // if (photo) {
-                    //     try {
-                    //         uriParts = photo.assets[0]?.uri.split('/');
-                    //         nameImage = uriParts[uriParts.length - 1];
-                    //         response = await fetch(photo.assets[0]?.uri);
+                    if (photo) {
+                        try {
+                            uriParts = photo.assets[0]?.uri.split('/');
+                            nameImage = uriParts[uriParts.length - 1];
+                            response = await fetch(photo.assets[0]?.uri);
 
-                    //         if (response.ok) {
-                    //             blob = await response.blob();
-                    //         } else {
-                    //             console.error('Error fetching the photo URI:', response.statusText);
-                    //             return;
-                    //         }
-                    //     } catch (error) {
-                    //         console.error('Error fetching the photo URI:', error);
-                    //         return;
-                    //     }
-                    // }
+                            if (response.ok) {
+                                blob = await response.blob();
+                            } else {
+                                console.error('Error fetching the photo URI:', response.statusText);
+                                return;
+                            }
+                        } catch (error) {
+                            console.error('Error fetching the photo URI:', error);
+                            return;
+                        }
+                    }
 
-                    // let itemType = '';
-                    // switch (itemTypePrefix) {
-                    //     case 'D':
-                    //         itemType = 'Drinks';
-                    //         break;
-                    //     case 'F':
-                    //         itemType = 'Foods';
-                    //         break;
-                    //     case 'DD':
-                    //         itemType = 'Drink2ND';
-                    //         break;
-                    //     case 'Tp':
-                    //         itemType = 'Topping';
-                    //         break;
-                    //     case 'Fb':
-                    //         itemType = 'FoodBonus';
-                    //         break;
-                    //     case 'G':
-                    //         itemType = 'Games';
-                    //         break;
-                    //     default:
-                    //         console.error("Unknown item type");
-                    //         return;
-                    // }
+                    let itemType = '';
+                    switch (itemTypePrefix) {
+                        case 'D':
+                            itemType = 'Drinks';
+                            break;
+                        case 'F':
+                            itemType = 'Foods';
+                            break;
+                        case 'DD':
+                            itemType = 'Drink2ND';
+                            break;
+                        case 'Tp':
+                            itemType = 'Topping';
+                            break;
+                        case 'Fb':
+                            itemType = 'FoodBonus';
+                            break;
+                        case 'G':
+                            itemType = 'Games';
+                            break;
+                        default:
+                            console.error("Unknown item type");
+                            return;
+                    }
 
-                    // const Ref = ref(database, `${itemType}/${key}`);
-                    // const storageReference = storageRef(storage, `${itemType}/${nameImage}`);
+                    const Ref = ref(database, `${itemType}/${key}`);
+                    const storageReference = storageRef(storage, `${itemType}/${nameImage}`);
 
-                    // if (blob) {
-                    //     try {
-                    //         const uploadTask = uploadBytesResumable(storageReference, blob);
-                    //         uploadTask.on('state_changed',
-                    //             (snapshot) => {
-                    //                 // Observe state change events such as progress, pause, and resume
-                    //                 // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-                    //                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    //                 console.log('Upload is ' + progress + '% done');
-                    //                 switch (snapshot.state) {
-                    //                     case 'paused':
-                    //                         console.log('Upload is paused');
-                    //                         break;
-                    //                     case 'running':
-                    //                         console.log('Upload is running');
-                    //                         break;
-                    //                 }
-                    //             },
-                    //             (error) => {
-                    //                 // Handle unsuccessful uploads
-                    //                 console.error('Error uploading image:', error);
-                    //             },
-                    //             () => {
-                    //                 // Handle successful uploads on complete
-                    //                 console.log('Image uploaded successfully');
-                    //             }
-                    //         );
-                    //     } catch (error) {
-                    //         console.error('Error uploading image:', error);
-                    //         return;
-                    //     }
-                    // } else {
-                    //     console.error('No blob available for upload');
-                    //     return;
-                    // }
+                    if (blob) {
+                        try {
+                            const uploadTask = uploadBytesResumable(storageReference, blob);
+                            uploadTask.on('state_changed',
+                                (snapshot) => {
+                                    // Observe state change events such as progress, pause, and resume
+                                    // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+                                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                                    console.log('Upload is ' + progress + '% done');
+                                    switch (snapshot.state) {
+                                        case 'paused':
+                                            console.log('Upload is paused');
+                                            break;
+                                        case 'running':
+                                            console.log('Upload is running');
+                                            break;
+                                    }
+                                },
+                                (error) => {
+                                    // Handle unsuccessful uploads
+                                    console.error('Error uploading image:', error);
+                                },
+                                () => {
+                                    // Handle successful uploads on complete
+                                    console.log('Image uploaded successfully');
+                                }
+                            );
+                        } catch (error) {
+                            console.error('Error uploading image:', error);
+                            return;
+                        }
+                    } else {
+                        console.error('No blob available for upload');
+                        return;
+                    }
 
-                    // const now = new Date();
-                    // const date = now.toISOString().split('T')[0]; // Ngày
-                    // const time = now.toTimeString().split(' ')[0]; // Thời gian
+                    const now = new Date();
+                    const date = now.toISOString().split('T')[0]; // Ngày
+                    const time = now.toTimeString().split(' ')[0]; // Thời gian
 
-                    // try {
-                    //     await update(Ref, {
-                    //         "Price": parseInt(price),
-                    //         "Name": name,
-                    //         "Note": note,
-                    //         "Image": nameImage,
-                    //         "UpdatedDate": `${date} ${time}`,
-                    //     });
-                    //     console.log("Cập nhật thành công!");
-                    // } catch (error) {
-                    //     console.error("Lỗi khi cập nhật:", error);
-                    // }
+                    try {
+                        await update(Ref, {
+                            "Price": parseInt(price),
+                            "Name": name,
+                            "Note": note,
+                            "Image": nameImage,
+                            "UpdatedDate": `${date} ${time}`,
+                        });
+                        console.log("Cập nhật thành công!");
+                    } catch (error) {
+                        console.error("Lỗi khi cập nhật:", error);
+                    }
 
-                    // navigation.navigate('Admin');
+                    navigation.navigate('Admin');
 
                 } else {
                     const itemTypePrefix = key.match(/[A-Za-z]+/)[0];

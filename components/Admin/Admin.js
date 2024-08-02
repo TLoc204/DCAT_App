@@ -9,6 +9,7 @@ import { useImageAllFolder } from "../Order/FoodOrder";
 import { SearchBar } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
 import IconAnt from 'react-native-vector-icons/AntDesign';
+import { useFocusEffect } from '@react-navigation/native';
 import { createResizedImage } from 'react-native-image-resizer';
 import {
     getStorage,
@@ -22,7 +23,12 @@ export default function Admin() {
     const database = getDatabase(FIREBASE_APP);
     const storage = getStorage(FIREBASE_APP);
     const navigation = useNavigation();
-    const { imageAllFolder } = useImageAllFolder();
+    const { imageAllFolder, setShouldFetch } = useImageAllFolder();
+    useFocusEffect(
+        React.useCallback(() => {
+            setShouldFetch(true);
+        }, [])
+    );
     const [dataFoods, setDataFoods] = useState([]);
     const [dataCategories, setDataCategories] = useState([]);
     const [dataFoodBonus, setDataFoodBonus] = useState([]);

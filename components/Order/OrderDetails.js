@@ -10,8 +10,10 @@ import IconAnt from 'react-native-vector-icons/AntDesign';
 import { showMessage, hideMessage, } from "react-native-flash-message";
 import {
     NetPrinter,
+    ColumnAlignment,
     COMMANDS
-} from 'react-native-thermal-receipt-printer';
+} from '@nhaanh/react-native-thermal-receipt-printer-image-qr';
+
 // Lấy kích thước màn hình để hỗ trợ responsive
 export default function OrderDetails({ route }) {
     const database = getDatabase(FIREBASE_APP);
@@ -229,23 +231,102 @@ export default function OrderDetails({ route }) {
 
 
     }
+    // function removeAccents(word) {
+    //     const accentsMap = {
+    //         'á': 'a', 'à': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
+    //         'ă': 'a', 'ắ': 'a', 'ằ': 'a', 'ẳ': 'a', 'ẵ': 'a', 'ặ': 'a',
+    //         'â': 'a', 'ấ': 'a', 'ầ': 'a', 'ẩ': 'a', 'ẫ': 'a', 'ậ': 'a',
+    //         'đ': 'd',
+    //         'é': 'e', 'è': 'e', 'ẻ': 'e', 'ẽ': 'e', 'ẹ': 'e',
+    //         'ê': 'e', 'ế': 'e', 'ề': 'e', 'ể': 'e', 'ễ': 'e', 'ệ': 'e',
+    //         'í': 'i', 'ì': 'i', 'ỉ': 'i', 'ĩ': 'i', 'ị': 'i',
+    //         'ó': 'o', 'ò': 'o', 'ỏ': 'o', 'õ': 'o', 'ọ': 'o',
+    //         'ô': 'o', 'ố': 'o', 'ồ': 'o', 'ổ': 'o', 'ỗ': 'o', 'ộ': 'o',
+    //         'ơ': 'o', 'ớ': 'o', 'ờ': 'o', 'ở': 'o', 'ỡ': 'o', 'ợ': 'o',
+    //         'ú': 'u', 'ù': 'u', 'ủ': 'u', 'ũ': 'u', 'ụ': 'u',
+    //         'ư': 'u', 'ứ': 'u', 'ừ': 'u', 'ử': 'u', 'ữ': 'u', 'ự': 'u',
+    //         'ý': 'y', 'ỳ': 'y', 'ỷ': 'y', 'ỹ': 'y', 'ỵ': 'y',
+    //         'Á': 'A', 'À': 'A', 'Ả': 'A', 'Ã': 'A', 'Ạ': 'A',
+    //         'Ă': 'A', 'Ắ': 'A', 'Ằ': 'A', 'Ẳ': 'A', 'Ẵ': 'A', 'Ặ': 'A',
+    //         'Â': 'A', 'Ấ': 'A', 'Ầ': 'A', 'Ẩ': 'A', 'Ẫ': 'A', 'Ậ': 'A',
+    //         'Đ': 'D',
+    //         'É': 'E', 'È': 'E', 'Ẻ': 'E', 'Ẽ': 'E', 'Ẹ': 'E',
+    //         'Ê': 'E', 'Ế': 'E', 'Ề': 'E', 'Ể': 'E', 'Ễ': 'E', 'Ệ': 'E',
+    //         'Í': 'I', 'Ì': 'I', 'Ỉ': 'I', 'Ĩ': 'I', 'Ị': 'I',
+    //         'Ó': 'O', 'Ò': 'O', 'Ỏ': 'O', 'Õ': 'O', 'Ọ': 'O',
+    //         'Ô': 'O', 'Ố': 'O', 'Ồ': 'O', 'Ổ': 'O', 'Ỗ': 'O', 'Ộ': 'O',
+    //         'Ơ': 'O', 'Ớ': 'O', 'Ờ': 'O', 'Ở': 'O', 'Ỡ': 'O', 'Ợ': 'O',
+    //         'Ú': 'U', 'Ù': 'U', 'Ủ': 'U', 'Ũ': 'U', 'Ụ': 'U',
+    //         'Ư': 'U', 'Ứ': 'U', 'Ừ': 'U', 'Ử': 'U', 'Ữ': 'U', 'Ự': 'U',
+    //         'Ý': 'Y', 'Ỳ': 'Y', 'Ỷ': 'Y', 'Ỹ': 'Y', 'Ỵ': 'Y'
+    //     };
+
+    //     let newWord = '';
+    //     for (let i = 0; i < word.length; i++) {
+    //         const char = word[i];
+    //         const replacement = accentsMap[char];
+    //         newWord += replacement || char;
+    //     }
+    //     return newWord;
+    // }
+
+    // function formatCurrency(amount) {
+    //     return amount.toLocaleString('vi-VN');
+    // }
+
+
+
+    // let orderList = [];
+    // let stt = 1;
+    // console.log(cartItems)
+    // for (const key in cartItems) {
+    //     if (cartItems.hasOwnProperty(key)) {
+    //         const item = cartItems[key];
+    //         const itemName = removeAccents(item.name); // Loại bỏ dấu tiếng Việt
+    //         const itemNameWithDiscount = itemName + (item.discount > 0 ? ` (${item.discount}%)` : '');
+    //         const itemQuantity = item.quantity.toString();
+    //         const itemPrice = formatCurrency(item.totalPrice);
+    //         const totalPriceDiscount = formatCurrency(item.totalPrice * (1 - item.discount / 100));
+    //         // Thêm vào orderList với định dạng mong muốn
+    //         orderList.push([stt.toString(), itemNameWithDiscount, itemQuantity, itemPrice, totalPriceDiscount]);
+    //         stt++;
+    //     }
+    // }
+    // function calculateTotal(orderList) {
+    //     return orderList.reduce((total, item) => {
+    //         let priceString = item[3]; // Ví dụ: "5.000đ"
+    //         let priceNumber = parseFloat(priceString.replace('đ', '').replace(/\./g, '').replace(',', '.'));
+    //         return total + priceNumber;
+    //     }, 0).toLocaleString('vi-VN');
+    // }
+
+    // function calculateDiscountTotal(orderList) {
+    //     return orderList.reduce((total, item) => {
+    //         let priceString = item[4]; // Ví dụ: "5.000đ"
+    //         let priceNumber = parseFloat(priceString.replace('đ', '').replace(/\./g, '').replace(',', '.'));
+    //         return total + priceNumber;
+    //     }, 0).toLocaleString('vi-VN');
+    // }
+
+    // let total = calculateTotal(orderList);
+    // let totalDiscount = calculateDiscountTotal(orderList);
+    // let totalAll = (parseFloat(total.replace(/\./g, '').replace(',', '.')) - parseFloat(totalDiscount.replace(/\./g, '').replace(',', '.'))).toLocaleString('vi-VN');
 
     const now = new Date();
     const date = now.toISOString().split('T')[0]; // Ngày
     const time = now.toTimeString().split(' ')[0]; // Thời gian
-    let data = '\x0a';
-    data += '                     DCAT\n';
-    data += "              Hoa don thanh toan\n\n";
-    data += `${`So hoa don:${OrderID.replace("O", "")}`.padEnd(1) + `Ngay:${date + ' ' + time}`.padStart(34)}\n`;
-    data += '-----------------------------------------------\n';
-    data += 'Stt Ten mon            SL   Gia      Thanh tien\n';
-
+    const BOLD_ON = COMMANDS.TEXT_FORMAT.TXT_BOLD_ON;
+    const BOLD_OFF = COMMANDS.TEXT_FORMAT.TXT_BOLD_OFF;
+    const CENTER = COMMANDS.TEXT_FORMAT.TXT_ALIGN_CT;
+    const LEFT = COMMANDS.TEXT_FORMAT.TXT_ALIGN_LT;
+    const RIGHT = COMMANDS.TEXT_FORMAT.TXT_ALIGN_RT;
+    const OFF_CENTER = COMMANDS.TEXT_FORMAT.TXT_ALIGN_LT;
+    let data = '';
     let stt = 1;
     let totalPrice = 0;
     let totalPriceDiscount = 0;
-
+    
     function formatTextWrap(text, width) {
-        // Hàm loại bỏ dấu từ mỗi từ
         function removeAccents(word) {
             const accentsMap = {
                 'á': 'a', 'à': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
@@ -275,7 +356,7 @@ export default function OrderDetails({ route }) {
                 'Ư': 'U', 'Ứ': 'U', 'Ừ': 'U', 'Ử': 'U', 'Ữ': 'U', 'Ự': 'U',
                 'Ý': 'Y', 'Ỳ': 'Y', 'Ỷ': 'Y', 'Ỹ': 'Y', 'Ỵ': 'Y'
             };
-
+    
             let newWord = '';
             for (let i = 0; i < word.length; i++) {
                 const char = word[i];
@@ -284,130 +365,138 @@ export default function OrderDetails({ route }) {
             }
             return newWord;
         }
-
+    
         let result = [];
         let line = '';
-
+    
         for (const word of text.split(' ')) {
-            const sanitizedWord = removeAccents(word); // Loại bỏ dấu từ mỗi từ
+            const sanitizedWord = removeAccents(word);
             if (line.length + sanitizedWord.length + 1 > width) {
                 result.push(line.trim());
-                line = '';
+                line = ' ';
             }
             line += sanitizedWord + ' ';
         }
         if (line.trim().length > 0) {
             result.push(line.trim());
         }
-
+    
         return result;
     }
-
-
+    
     for (const key in cartItems) {
         if (cartItems.hasOwnProperty(key)) {
             const item = cartItems[key];
-            const itemNameWrapped = formatTextWrap(item.name, 16); // Sử dụng hàm formatTextWrap
-            const itemPrice = item.price
+            const itemNameWrapped = formatTextWrap(item.name, 15); // Đảm bảo chiều rộng phù hợp
+            const itemPrice = item.price;
             const itemQuantity = item.quantity;
             const itemTotalPrice = item.totalPrice;
             const discountFood = item.discount;
-            // Dòng đầu tiên của itemName
-            data += ` ${stt.toString().padEnd(2)} ${(itemNameWrapped[0] + (discountFood > 0 ? ` (${discountFood}%)` : '')).padEnd(16)}   ${itemQuantity.toString().padEnd(2)}   ${itemPrice.toLocaleString('vi-VN').toString().padEnd(8)}   ${(itemTotalPrice * (1 - discountFood / 100)).toLocaleString('vi-VN').toString().padStart(8)}\n`;
-
-            // Các dòng tiếp theo của itemName
-            for (let i = 1; i < itemNameWrapped.length; i++) {
-                data += `     ${itemNameWrapped[i].padEnd(16)}\n`;
+    
+            let formattedName = itemNameWrapped[0];
+            // Nếu có giảm giá và tên món không bị chia ra nhiều dòng, thêm phần trăm giảm giá vào dòng đầu tiên
+            if (discountFood > 0) {
+                if (itemNameWrapped.length === 1) {
+                    formattedName += ` (${discountFood}%)`;
+                } else {
+                    itemNameWrapped[itemNameWrapped.length - 1] += ` (${discountFood}%)`;
+                }
             }
-
+    
+            // Định dạng số lượng và tổng tiền
+            data += `${stt.toString().padEnd(3)} ${formattedName.padEnd(18)} ${itemQuantity.toString().padEnd(4)} ${itemPrice.toLocaleString('vi-VN').padEnd(9)} ${(itemTotalPrice * (1 - discountFood / 100)).toLocaleString('vi-VN').padStart(9)}\n`;
+    
+            // Đưa các dòng tiếp theo
+            for (let i = 1; i < itemNameWrapped.length; i++) {
+                // Căn chỉnh các dòng tiếp theo với khoảng trắng ở đầu dòng để giữ cho chúng nằm dưới cột tên món
+                data += `    ${itemNameWrapped[i].padEnd(16)}\n`;
+            }
+    
             stt++;
             totalPrice += item.totalPrice;
             totalPriceDiscount += item.totalPrice * (1 - item.discount / 100);
         }
     }
-
+    
     data += '-----------------------------------------------\n';
     if (totalPriceDiscount < totalPrice) {
-        data += `Tong${totalPrice.toLocaleString('vi-VN').toString().padStart(43)}\n`;
+        data += `Tong${totalPrice.toLocaleString('vi-VN').padStart(43)}\n`;
     } else {
-        data += `Tong cong${totalPrice.toLocaleString('vi-VN').toString().padStart(38)}\n`;
+        data += `Tong cong${totalPrice.toLocaleString('vi-VN').padStart(38)}\n`;
     }
     let discountPrint = (totalPriceDiscount - totalPrice).toLocaleString('vi-VN').toString();
     if (totalPriceDiscount < totalPrice) {
         data += `Giam gia${discountPrint.padStart(39)}\n`;
     }
     if (totalPriceDiscount < totalPrice) {
-        data += `Tong cong${totalPriceDiscount.toLocaleString('vi-VN').toString().padStart(38)}\n`;
+        data += `Tong cong${totalPriceDiscount.toLocaleString('vi-VN').padStart(38)}\n`;
     }
-    data += `\n`;
-    data += `         Cam on quy khach, hen gap lai!`;
-    data += `\n`;
-    data += `\n`;
-    data += `\n`;
-    console.log(data)
+    data += `\n         Cam on quy khach, hen gap lai!\n\n`;
 
+    console.log(data);
     // Hàm in hóa đơn
-    const utf8Text = iconv.encode(data, 'utf8').toString();
-    const controller = new AbortController();
-    const signal = controller.signal;
     const ip = dataPrint.Ip;
     const port = dataPrint.Port;
-    // Thiết lập thời gian hủy bỏ sau 5 giây
-    setTimeout(() => controller.abort(), 5000);
-    const printBill = async () => {
-        try {
-            const url = `http://${ip}:${port}`; // Thay đổi địa chỉ URL theo địa chỉ của máy in và cổng
 
-            const data = `${utf8Text}\x1b\x4f \x1B\x69` // Thay đổi dữ liệu in tùy thuộc vào định dạng yêu cầu bởi máy in
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {},
-                signal,
-                redirect: 'manual', // Không tự động chuyển hướng
-                credentials: 'omit',
-                mode: "cors", // Thay đổi sang "cors" nếu có thể
-                body: data, // Dữ liệu cần in
-            });
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-            if (response.ok) {
-                console.log('Dữ liệu đã được gửi thành công đến máy in');
-            } else {
-                console.error('Đã xảy ra lỗi khi gửi dữ liệu đến máy in:', response.statusText);
-            }
-        } catch (error) {
-            console.log(error)
-        }
-    };
-    const handlePrint = () => {
-        if (Object.values(cartItems).length > 0 &&
-            selectedRoom &&
-            customerName.length > 0) {
-            handleSubmit();
-            NetPrinter.init().then(() => {
+    const handlePrint = async () => {
+        if (Object.values(cartItems).length > 0 && selectedRoom && customerName.length > 0) {
+            await handleSubmit();
+    
+            try {
+                await NetPrinter.init();
                 console.log('Net Printer initialized');
     
-                // Kết nối đến máy in mạng
-                NetPrinter.connectPrinter(`${ip}`, port)  // Thay thế bằng IP và port của máy in của bạn
-                    .then((printer) => {
-                        console.log(`Connected to printer: ${printer}`);
+                await NetPrinter.connectPrinter(`${ip}`, port);
+                console.log(`Connected to printer`);
     
-                        // In văn bản
-                        NetPrinter.printText(
-                            `${utf8Text}`
-                        );
-                    })
-                    .catch((error) => {
-                        console.error(error);
-                        Alert.alert("Error", "Failed to connect to printer");
-                    });
-            }).catch((error) => {
+                await NetPrinter.printImage(
+                    `https://firebasestorage.googleapis.com/v0/b/dcat-c09a4.appspot.com/o/logoDCAT_Trang.jpg?alt=media&token=a0caf069-f241-42bb-91e2-849c1817cada`,
+                    {
+                        imageWidth: 300,
+                        imageHeight: 300,
+                    }
+                );
+                await delay(200); // Delay thêm thời gian
+    
+                await NetPrinter.printText(`${CENTER} 102/84 Le Van Tho,P.11,Q.Go Vap,Tp.Ho Chi Minh${CENTER}`, {beep: false, cut: false });
+                await delay(200);
+    
+                await NetPrinter.printText(`\n${CENTER} Lien he de dat ban: 083 805 0503 ${CENTER}`, { beep: false,cut: false });
+                await delay(200);
+    
+                await NetPrinter.printText(`\n${CENTER}${COMMANDS.HORIZONTAL_LINE.HR3_58MM}${CENTER}`, { beep: false,cut: false });
+                await delay(200);
+    
+                await NetPrinter.printText(`\n${CENTER}${BOLD_ON} Hoa don thanh toan ${BOLD_OFF}${CENTER}`, { beep: false,cut: false });
+                await delay(200);
+    
+                await NetPrinter.printText(`\n${LEFT}So hoa don:${OrderID.replace("O", "")}${LEFT}`, {beep: false, cut: false });
+                await delay(200);
+    
+                await NetPrinter.printText(`\n${LEFT}Ngay:${date + ' ' + time}${LEFT}`, { beep: false,cut: false });
+                await delay(200);
+    
+                await NetPrinter.printText(`${CENTER}${COMMANDS.HORIZONTAL_LINE.HR3_80MM}${CENTER}`, { beep: false,cut: false });
+                await delay(200);
+
+                await NetPrinter.printText(`${LEFT}${BOLD_ON}Stt Ten mon            SL   Gia      Thanh tien${BOLD_OFF}${LEFT}`, {beep: false, cut: false });
+                await delay(200);
+
+                await NetPrinter.printBill(`${data}`,{ beep: false, cut: true });
+                
+            } catch (error) {
                 console.error(error);
-                Alert.alert("Error", "Failed to initialize printer");
-            });
+                Alert.alert("Error", "Failed to print");
+            }
         } else {
             checkInput();
         }
     };
+    
+
+
     //-----------------------------------------------------------End Room-------------------------------------------------------------
     const handleSubmit = async () => {
         // Lấy OrderID từ route.params
@@ -545,12 +634,11 @@ export default function OrderDetails({ route }) {
             checkInput();
         }
     }
-    const handlePaidOrder = () => {
+    const handlePaidOrder = async () => {
         if (Object.values(cartItems).length > 0 &&
             selectedRoom &&
             customerName.length > 0) {
             handleSubmitPaid()
-            handlePrint()
             showMessage({
                 message: `Thanh toán đơn hàng ${OrderID} thành công`,
                 type: "success",
@@ -1016,10 +1104,10 @@ export default function OrderDetails({ route }) {
                             </TouchableOpacity>
                         </View>
                     </View>
-                    <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 5 }}>Giảm giá </Text>
+                    {/* <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 5 }}>Giảm giá </Text>
                     <View style={finalStyles.input_cus}>
                         <TextInput style={finalStyles.input} onChangeText={(text) => { setDiscountTotal(text) }} />
-                    </View>
+                    </View> */}
                     <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Chi tiết thanh toán</Text>
                     <View style={finalStyles.orderlist}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'gray', }}>
@@ -1086,7 +1174,8 @@ export default function OrderDetails({ route }) {
                             marginRight: 20,
                             marginTop: 15
                         }} onPress={() => {
-                            handlePaidOrder()
+                            handlePrint()
+                            // handlePaidOrder()
                         }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
                                 <Text style={{ color: '#ffffff' }}>Thanh toán</Text>

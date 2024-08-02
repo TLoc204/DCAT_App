@@ -31,7 +31,7 @@ import {
 } from "firebase/storage";
 import { BottomSheet } from 'react-native-sheet';
 import { SearchBar } from 'react-native-elements';
-
+import { useFocusEffect } from '@react-navigation/native';
 export const ImageAllFolderContext = createContext();
 
 const theme = {
@@ -54,7 +54,7 @@ export const ImageAllFolderProvider = ({ children }) => {
             fetchAllItems();
             setShouldFetch(false); // Đặt lại shouldFetch sau khi fetch dữ liệu
         }
-    }, [shouldFetch]); 
+    }, [shouldFetch]);
 
     const listAllItemsInFolder = async (folderPath) => {
         const folderRef = storageRef(storage, folderPath);
@@ -90,7 +90,7 @@ export const ImageAllFolderProvider = ({ children }) => {
     };
 
     return (
-        <ImageAllFolderContext.Provider value={{ imageAllFolder , setShouldFetch }}>
+        <ImageAllFolderContext.Provider value={{ imageAllFolder, setShouldFetch }}>
             {children}
         </ImageAllFolderContext.Provider>
     );
@@ -103,6 +103,7 @@ export const useImageAllFolder = () => {
     }
     return context;
 };
+
 
 export default function FoodOrder({ route }) {
     const database = getDatabase(FIREBASE_APP);
@@ -123,8 +124,12 @@ export default function FoodOrder({ route }) {
 
     const [selectedCategory, setSelectedCategory] = useState('');
 
-    const { imageAllFolder } = useImageAllFolder();
-
+    const { imageAllFolder, setShouldFetch } = useImageAllFolder();
+    useFocusEffect(
+        React.useCallback(() => {
+            setShouldFetch(true);
+        }, [])
+    );
     const foods = route.params?.Foods || {};
     const Orders = route.params?.Orders || {};
     const OrderID = route.params?.OrderID || {};

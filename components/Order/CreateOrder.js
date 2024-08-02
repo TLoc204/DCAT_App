@@ -204,16 +204,19 @@ export default function CreateOrder({ route }) {
             let lastOrderKey = '';
 
             await get(ordersRef)
-                .then((snapshot) => {
-                    if (snapshot.exists()) {
-                        const data = snapshot.val();
-                        const orderKeys = Object.keys(data);
-                        lastOrderKey = orderKeys.length + 1;
-                    }
-                })
-                .catch((error) => {
-                    console.error(error);
-                });
+            .then((snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    const orderKeys = Object.keys(data);
+                    const numericOrderKeys = orderKeys
+                        .map(key => parseInt(key.replace('O', '')))
+                        .filter(num => !isNaN(num));
+                    lastOrderKey = Math.max(...numericOrderKeys);
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+            });
             
             const newOrderKey = 'O' + (parseInt(lastOrderKey) + 1);
 
@@ -761,11 +764,11 @@ export default function CreateOrder({ route }) {
                             </View>
                         </View>
                     </View>
-
+{/* 
                     <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 5 }}>Giảm giá </Text>
                     <View style={finalStyles.input_cus}>
                         <TextInput style={finalStyles.input} onChangeText={(text) => { setDiscountTotal(text) }} />
-                    </View>
+                    </View> */}
                     <Text style={{ marginLeft: 20, marginBottom: 5, marginTop: 10 }}>Chi tiết thanh toán</Text>
                     <View style={finalStyles.orderlist}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'gray', }}>
