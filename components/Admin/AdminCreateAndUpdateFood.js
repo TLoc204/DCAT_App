@@ -84,19 +84,23 @@ export default function AdminCreateAndUpdateFood({ route }) {
                 quality: 1,
             };
             const result = await ImagePicker.launchImageLibraryAsync(options);
-    
+
             if (!result.canceled) {
                 setPhoto(result);
                 setDisplayPhoto(true);
             } else {
-                setPhoto(null);
-                setDisplayPhoto(false);
+                if (photo) {
+                    setDisplayPhoto(false);
+                } else {
+                    setPhoto(null);
+                    setDisplayPhoto(false);
+                }
             }
         } catch (error) {
             console.error('Error choosing photo:', error);
         }
     };
-    
+
     const getLastKeyFromDatabase = async (ref) => {
         let lastKey = '';
         const snapshot = await get(ref);
@@ -163,42 +167,60 @@ export default function AdminCreateAndUpdateFood({ route }) {
                 switch (selectedCategory.value) {
                     case 'C1':
                         const drinkRef = ref(database, "Drinks");
-                        const lastDrinkKey = await getLastKeyFromDatabase(drinkRef);
+                        let lastDrinkKey = await getLastKeyFromDatabase(drinkRef);
+                        if(isNaN(parseInt(lastDrinkKey))){
+                            lastDrinkKey=0
+                        }
                         keys = 'D' + (parseInt(lastDrinkKey) + 1);
                         folderName = 'Drinks';
                         idCate = 'C1'
                         break;
                     case 'C2':
                         const drink2ndRef = ref(database, "Drink2ND");
-                        const lastDrink2NDKey = await getLastKeyFromDatabase(drink2ndRef);
+                        let lastDrink2NDKey = await getLastKeyFromDatabase(drink2ndRef);
+                        if(isNaN(parseInt(lastDrink2NDKey))){
+                            lastDrink2NDKey=0
+                        }
                         keys = 'DD' + (parseInt(lastDrink2NDKey) + 1);
                         folderName = 'Drink2ND';
                         idCate = 'C2'
                         break;
                     case 'C3':
                         const foodRef = ref(database, "Foods");
-                        const lastFoodKey = await getLastKeyFromDatabase(foodRef);
+                        let lastFoodKey = await getLastKeyFromDatabase(foodRef);
+                        if(isNaN(parseInt(lastFoodKey))){
+                            lastFoodKey=0
+                        }
                         keys = 'F' + (parseInt(lastFoodKey) + 1);
                         folderName = 'Foods';
                         idCate = 'C3'
                         break;
                     case 'C4':
                         const toppingRef = ref(database, "Topping");
-                        const lastToppingKey = await getLastKeyFromDatabase(toppingRef);
+                        let lastToppingKey = await getLastKeyFromDatabase(toppingRef);
+                        if(isNaN(parseInt(lastToppingKey))){
+                            lastToppingKey=0
+                        }
                         keys = 'Tp' + (parseInt(lastToppingKey) + 1);
                         folderName = 'Topping';
                         idCate = 'C4'
                         break;
                     case 'C5':
                         const foodBonusRef = ref(database, "FoodBonus");
-                        const lastFoodBonusKey = await getLastKeyFromDatabase(foodBonusRef);
+                        let lastFoodBonusKey = await getLastKeyFromDatabase(foodBonusRef);
+                        if(isNaN(parseInt(lastFoodBonusKey))){
+                            lastFoodBonusKey=0
+                        }
                         keys = 'Fb' + (parseInt(lastFoodBonusKey) + 1);
                         folderName = 'FoodBonus';
                         idCate = 'C5'
                         break;
                     case 'C6':
                         const gamesRef = ref(database, "Games");
-                        const lastGamesKey = await getLastKeyFromDatabase(gamesRef);
+                        let lastGamesKey = await getLastKeyFromDatabase(gamesRef);
+                        if(isNaN(parseInt(lastGamesKey))){
+                            lastGamesKey=0
+                        }
                         keys = 'G' + (parseInt(lastGamesKey) + 1);
                         folderName = 'Games';
                         idCate = 'C6'
@@ -207,7 +229,7 @@ export default function AdminCreateAndUpdateFood({ route }) {
                     default:
                         return;
                 }
-                
+
                 const storageReference = storageRef(storage, `${folderName}/${nameImage}`);
 
                 if (blob) {
@@ -295,7 +317,7 @@ export default function AdminCreateAndUpdateFood({ route }) {
             }
             else {
                 if (photo) {
-                    deleteItemFromFirebase(key,imageName)
+                    deleteItemFromFirebase(key, imageName)
                     const itemTypePrefix = key.match(/[A-Za-z]+/)[0];
                     let uriParts = photo.assets[0]?.uri.split('/');
                     let nameImage = uriParts[uriParts.length - 1];

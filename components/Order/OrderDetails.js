@@ -13,7 +13,8 @@ import {
     ColumnAlignment,
     COMMANDS
 } from '@nhaanh/react-native-thermal-receipt-printer-image-qr';
-
+import QRCode from 'react-native-qrcode-svg';
+import { captureRef } from 'react-native-view-shot';
 // Lấy kích thước màn hình để hỗ trợ responsive
 export default function OrderDetails({ route }) {
     const database = getDatabase(FIREBASE_APP);
@@ -325,7 +326,7 @@ export default function OrderDetails({ route }) {
     let stt = 1;
     let totalPrice = 0;
     let totalPriceDiscount = 0;
-    
+
     function formatTextWrap(text, width) {
         function removeAccents(word) {
             const accentsMap = {
@@ -356,7 +357,7 @@ export default function OrderDetails({ route }) {
                 'Ư': 'U', 'Ứ': 'U', 'Ừ': 'U', 'Ử': 'U', 'Ữ': 'U', 'Ự': 'U',
                 'Ý': 'Y', 'Ỳ': 'Y', 'Ỷ': 'Y', 'Ỹ': 'Y', 'Ỵ': 'Y'
             };
-    
+
             let newWord = '';
             for (let i = 0; i < word.length; i++) {
                 const char = word[i];
@@ -365,10 +366,10 @@ export default function OrderDetails({ route }) {
             }
             return newWord;
         }
-    
+
         let result = [];
         let line = '';
-    
+
         for (const word of text.split(' ')) {
             const sanitizedWord = removeAccents(word);
             if (line.length + sanitizedWord.length + 1 > width) {
@@ -380,10 +381,10 @@ export default function OrderDetails({ route }) {
         if (line.trim().length > 0) {
             result.push(line.trim());
         }
-    
+
         return result;
     }
-    
+
     for (const key in cartItems) {
         if (cartItems.hasOwnProperty(key)) {
             const item = cartItems[key];
@@ -392,7 +393,7 @@ export default function OrderDetails({ route }) {
             const itemQuantity = item.quantity;
             const itemTotalPrice = item.totalPrice;
             const discountFood = item.discount;
-    
+
             let formattedName = itemNameWrapped[0];
             // Nếu có giảm giá và tên món không bị chia ra nhiều dòng, thêm phần trăm giảm giá vào dòng đầu tiên
             if (discountFood > 0) {
@@ -402,27 +403,29 @@ export default function OrderDetails({ route }) {
                     itemNameWrapped[itemNameWrapped.length - 1] += ` (${discountFood}%)`;
                 }
             }
-    
+
             // Định dạng số lượng và tổng tiền
             data += `${stt.toString().padEnd(3)} ${formattedName.padEnd(18)} ${itemQuantity.toString().padEnd(4)} ${itemPrice.toLocaleString('vi-VN').padEnd(9)} ${(itemTotalPrice * (1 - discountFood / 100)).toLocaleString('vi-VN').padStart(9)}\n`;
-    
+
             // Đưa các dòng tiếp theo
             for (let i = 1; i < itemNameWrapped.length; i++) {
                 // Căn chỉnh các dòng tiếp theo với khoảng trắng ở đầu dòng để giữ cho chúng nằm dưới cột tên món
                 data += `    ${itemNameWrapped[i].padEnd(16)}\n`;
             }
-    
+
             stt++;
             totalPrice += item.totalPrice;
             totalPriceDiscount += item.totalPrice * (1 - item.discount / 100);
         }
     }
-    
+
     data += '-----------------------------------------------\n';
+    let totalBill = 0
     if (totalPriceDiscount < totalPrice) {
         data += `Tong${totalPrice.toLocaleString('vi-VN').padStart(43)}\n`;
     } else {
         data += `Tong cong${totalPrice.toLocaleString('vi-VN').padStart(38)}\n`;
+        totalBill = totalPrice;
     }
     let discountPrint = (totalPriceDiscount - totalPrice).toLocaleString('vi-VN').toString();
     if (totalPriceDiscount < totalPrice) {
@@ -430,27 +433,30 @@ export default function OrderDetails({ route }) {
     }
     if (totalPriceDiscount < totalPrice) {
         data += `Tong cong${totalPriceDiscount.toLocaleString('vi-VN').padStart(38)}\n`;
+        totalBill=totalPriceDiscount;
     }
-    data += `\n         Cam on quy khach, hen gap lai!\n\n`;
 
     console.log(data);
     // Hàm in hóa đơn
     const ip = dataPrint.Ip;
     const port = dataPrint.Port;
 
+
+
+
     const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     const handlePrint = async () => {
         if (Object.values(cartItems).length > 0 && selectedRoom && customerName.length > 0) {
             await handleSubmit();
-    
+
             try {
                 await NetPrinter.init();
                 console.log('Net Printer initialized');
-    
+
                 await NetPrinter.connectPrinter(`${ip}`, port);
                 console.log(`Connected to printer`);
-    
+
                 await NetPrinter.printImage(
                     `https://firebasestorage.googleapis.com/v0/b/dcat-c09a4.appspot.com/o/logoDCAT_Trang.jpg?alt=media&token=a0caf069-f241-42bb-91e2-849c1817cada`,
                     {
@@ -459,33 +465,48 @@ export default function OrderDetails({ route }) {
                     }
                 );
                 await delay(200); // Delay thêm thời gian
-    
-                await NetPrinter.printText(`${CENTER} 102/84 Le Van Tho,P.11,Q.Go Vap,Tp.Ho Chi Minh${CENTER}`, {beep: false, cut: false });
-                await delay(200);
-    
-                await NetPrinter.printText(`\n${CENTER} Lien he de dat ban: 083 805 0503 ${CENTER}`, { beep: false,cut: false });
-                await delay(200);
-    
-                await NetPrinter.printText(`\n${CENTER}${COMMANDS.HORIZONTAL_LINE.HR3_58MM}${CENTER}`, { beep: false,cut: false });
-                await delay(200);
-    
-                await NetPrinter.printText(`\n${CENTER}${BOLD_ON} Hoa don thanh toan ${BOLD_OFF}${CENTER}`, { beep: false,cut: false });
-                await delay(200);
-    
-                await NetPrinter.printText(`\n${LEFT}So hoa don:${OrderID.replace("O", "")}${LEFT}`, {beep: false, cut: false });
-                await delay(200);
-    
-                await NetPrinter.printText(`\n${LEFT}Ngay:${date + ' ' + time}${LEFT}`, { beep: false,cut: false });
-                await delay(200);
-    
-                await NetPrinter.printText(`${CENTER}${COMMANDS.HORIZONTAL_LINE.HR3_80MM}${CENTER}`, { beep: false,cut: false });
+
+                await NetPrinter.printText(`${CENTER} 102/84 Le Van Tho,P.11,Q.Go Vap,Tp.Ho Chi Minh${CENTER}`, { beep: false, cut: false });
                 await delay(200);
 
-                await NetPrinter.printText(`${LEFT}${BOLD_ON}Stt Ten mon            SL   Gia      Thanh tien${BOLD_OFF}${LEFT}`, {beep: false, cut: false });
+                await NetPrinter.printText(`\n${CENTER} Lien he de dat ban: 083 805 0503 ${CENTER}`, { beep: false, cut: false });
                 await delay(200);
 
-                await NetPrinter.printBill(`${data}`,{ beep: false, cut: true });
-                
+                await NetPrinter.printText(`\n${CENTER}${COMMANDS.HORIZONTAL_LINE.HR3_58MM}${CENTER}`, { beep: false, cut: false });
+                await delay(200);
+
+                await NetPrinter.printText(`\n${CENTER}${BOLD_ON} Hoa don thanh toan ${BOLD_OFF}${CENTER}`, { beep: false, cut: false });
+                await delay(200);
+
+                await NetPrinter.printText(`\n${LEFT}So hoa don:${OrderID.replace("O", "")}${LEFT}`, { beep: false, cut: false });
+                await delay(200);
+
+                await NetPrinter.printText(`\n${LEFT}Ngay:${date + ' ' + time}${LEFT}`, { beep: false, cut: false });
+                await delay(200);
+
+                await NetPrinter.printText(`${CENTER}${COMMANDS.HORIZONTAL_LINE.HR3_80MM}${CENTER}`, { beep: false, cut: false });
+                await delay(200);
+
+                await NetPrinter.printText(`${LEFT}${BOLD_ON}Stt Ten mon            SL   Gia      Thanh tien${BOLD_OFF}${LEFT}`, { beep: false, cut: false });
+                await delay(200);
+
+                await NetPrinter.printText(`${data}`, { beep: false, cut: false });
+                await delay(200);
+
+                await NetPrinter.printImage(
+                    `https://img.vietqr.io/image/VCB-DCAT-qr_only.png?amount=${totalBill}&addInfo=Thanh%20toan%20hoa%20don%20${OrderID.replace("O", "")}`,
+                    {
+                        imageWidth: 160,
+                        imageHeight: 160,
+                    }
+                );
+                await delay(200); // Delay thêm thời gian
+
+                await NetPrinter.printText(`${CENTER}Cam on quy khach, hen gap lai${CENTER}`, { beep: false, cut: false });
+                await delay(200);
+
+                await NetPrinter.printBill('', { beep: false, cut: true });
+                await handlePaidOrder();
             } catch (error) {
                 console.error(error);
                 Alert.alert("Error", "Failed to print");
@@ -494,11 +515,11 @@ export default function OrderDetails({ route }) {
             checkInput();
         }
     };
-    
+
 
 
     //-----------------------------------------------------------End Room-------------------------------------------------------------
-    const handleSubmit = async () => {
+    const handleSubmit = async () => {pp
         // Lấy OrderID từ route.params
         const { OrderID } = route.params;
 

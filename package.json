@@ -63,6 +63,7 @@
     "react-native-notifications": "^5.1.0",
     "react-native-paper": "^5.11.4",
     "react-native-platform-stylesheet": "^0.0.6",
+    "react-native-qrcode-svg": "^6.3.1",
     "react-native-raw-bottom-sheet": "^2.2.0",
     "react-native-reanimated": "~3.3.0",
     "react-native-safe-area-context": "4.6.3",
@@ -72,6 +73,7 @@
     "react-native-spinkit": "^1.5.1",
     "react-native-svg": "13.9.0",
     "react-native-vector-icons": "^10.0.2",
+    "react-native-view-shot": "^3.8.0",
     "react-native-web": "~0.19.6",
     "stream-browserify": "^3.0.0",
     "stream-browserify2-react-native": "^2.0.2"

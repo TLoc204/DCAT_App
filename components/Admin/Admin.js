@@ -409,7 +409,7 @@ export default function Admin() {
                         clearIcon={{ color: 'black' }} // Màu icon xóa
                     />
                 </View>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: 20, height: 'auto', width: 'auto' }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: 20, height: 'auto', width: 'auto'}}>
                     <TouchableOpacity onPress={() => handleSelectCategory('')} style={[finalStyles.categoryButton, selectedCategory === '' && finalStyles.categoryButtonSelected]}>
                         <View>
                             <Text style={[finalStyles.categoryButtonText, selectedCategory === '' && finalStyles.categoryButtonTextSelected]}>Tất cả</Text>

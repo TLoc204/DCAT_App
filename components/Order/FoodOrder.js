@@ -282,6 +282,10 @@ export default function FoodOrder({ route }) {
                 ];
         }
     };
+    const roundUpTo = (num, multiple) => {
+        return Math.ceil(num / multiple) * multiple;
+      };
+      
     const addToCart = () => {
         if (bottomSheetData) {
             setCartItems((prevCartItems) => {
@@ -305,7 +309,7 @@ export default function FoodOrder({ route }) {
                         if (existingItem) {
                             // Trùng key và discount, tăng quantity và cộng tổng giá trị
                             newCartItems[existingItem.key].quantity += currentItem.quantity;
-                            newCartItems[existingItem.key].totalPrice += currentItem.price * currentItem.quantity;
+                            newCartItems[existingItem.key].totalPrice += (Math.ceil(currentItem.price * currentItem.quantity / 1000) * 1000);
                         } else {
                             // Trùng key, nhưng khác discount, thêm số index vào key
                             const lastIndex = filteredItems.length + 1;
@@ -313,7 +317,7 @@ export default function FoodOrder({ route }) {
                             newCartItems[newKey] = {
                                 ...currentItem,
                                 key: newKey,
-                                totalPrice: currentItem.price * currentItem.quantity,
+                                totalPrice: (Math.ceil(currentItem.price * currentItem.quantity / 1000) * 1000),
                             };
                         }
                     } else {
@@ -322,7 +326,7 @@ export default function FoodOrder({ route }) {
                         newCartItems[newKey] = {
                             ...currentItem,
                             key: newKey,
-                            totalPrice: currentItem.price * currentItem.quantity,
+                            totalPrice: (Math.ceil(currentItem.price * currentItem.quantity / 1000) * 1000),
                         };
                     }
 
@@ -355,7 +359,7 @@ export default function FoodOrder({ route }) {
                     if (existingCartItem) {
                         // Nếu đã tồn tại mục có cùng key và discount, cộng thêm quantity và tính lại totalPrice
                         newCartItems[existingCartItem.key].quantity += 1;
-                        newCartItems[existingCartItem.key].totalPrice = newCartItems[existingCartItem.key].price * newCartItems[existingCartItem.key].quantity;
+                        newCartItems[existingCartItem.key].totalPrice = roundUpTo(newCartItems[existingCartItem.key].price * newCartItems[existingCartItem.key].quantity,1000);
                         newCartItems[existingCartItem.key].discountPrice = (newCartItems[existingCartItem.key].price * newCartItems[existingCartItem.key].quantity) * (newCartItems[existingCartItem.key].discount / 100);
                     } else {
                         const lastIndex = Object.keys(newCartItems).length + 1;
@@ -363,7 +367,7 @@ export default function FoodOrder({ route }) {
                         newCartItems[newKey] = {
                             ...currentItem,
                             key: newKey,
-                            totalPrice: currentItem.price * currentItem.quantity,
+                            totalPrice: roundUpTo(currentItem.price * currentItem.quantity,1000),
                         };
                     }
 
@@ -382,7 +386,7 @@ export default function FoodOrder({ route }) {
 
 
 
-
+    console.log(cartItems)
     const removeFromCart = (key) => {
         setCartItems((prevCartItems) => {
             const newCartItems = { ...prevCartItems };
@@ -421,7 +425,7 @@ export default function FoodOrder({ route }) {
                 // Increase quantity
                 const updatedQuantity = currentItem.quantity + 1;
                 // Calculate new total price
-                const updatedTotalPrice = updatedQuantity * currentItem.price;
+                const updatedTotalPrice = roundUpTo(updatedQuantity * currentItem.price,1000);
                 const totalPrice = currentItem.price * currentItem.quantity || 0;
                 // Tính giá trị sau giảm giá
                 const discountedPrice = updatedTotalPrice * (currentItem.discount / 100);
@@ -1146,7 +1150,7 @@ export default function FoodOrder({ route }) {
                                 </View>
                             </TouchableOpacity>
                             <View style={{ marginBottom: 10, justifyContent: 'flex-end', flexDirection: 'row', alignItems: 'center' }}>
-                                <Text style={{ marginRight: 10, paddingTop: 10 }}>{totalCartDiscountPrice.toLocaleString('vi-VN')}đ</Text>
+                                <Text style={{ marginRight: 10, paddingTop: 10 }}>{(Math.ceil(totalCartDiscountPrice / 1000) * 1000).toLocaleString('vi-VN')}đ</Text>
                                 <TouchableOpacity
                                     style={{
                                         alignItems: "center",
@@ -1179,7 +1183,7 @@ export default function FoodOrder({ route }) {
 
 
                     <View style={{ marginBottom: 10, justifyContent: 'flex-end', flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={{ marginRight: 10, paddingTop: 10 }}>{totalCartDiscountPrice.toLocaleString('vi-VN')}đ</Text>
+                        <Text style={{ marginRight: 10, paddingTop: 10 }}>{(Math.ceil(totalCartDiscountPrice / 1000) * 1000).toLocaleString('vi-VN')}đ</Text>
                         <TouchableOpacity
                             style={{
                                 alignItems: "center",

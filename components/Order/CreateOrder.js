@@ -217,7 +217,9 @@ export default function CreateOrder({ route }) {
             .catch((error) => {
                 console.error(error);
             });
-            
+            if(isNaN(parseInt(lastOrderKey))){
+                lastOrderKey=0
+            }
             const newOrderKey = 'O' + (parseInt(lastOrderKey) + 1);
 
             let orderDetailsData = {};
