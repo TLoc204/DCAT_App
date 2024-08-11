@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef} from "react";
 import { View, Image, Text, TouchableOpacity, Dimensions, Platform, StyleSheet, SafeAreaView, ScrollView, TextInput, FlatList, Keyboard } from "react-native";
 import { useNavigation } from '@react-navigation/native';
 import { FIREBASE_APP } from '../../FirebaseConfig';
@@ -95,7 +95,6 @@ export default function OrderDetails({ route }) {
             setCartItems(transformedData);
         }
     }, [route.params]);
-
 
 
     useEffect(() => {
@@ -449,7 +448,7 @@ export default function OrderDetails({ route }) {
 
     const handlePrint = async () => {
         if (Object.values(cartItems).length > 0 && selectedRoom && customerName.length > 0) {
-            await handleSubmit();
+            handleSubmit();
 
             try {
                 await NetPrinter.init();
@@ -507,7 +506,7 @@ export default function OrderDetails({ route }) {
                 await delay(200);
 
                 await NetPrinter.printBill('', { beep: false, cut: true });
-                await handlePaidOrder();
+                 await handlePaidOrder();
             } catch (error) {
                 console.error(error);
                 Alert.alert("Error", "Failed to print");
@@ -520,7 +519,7 @@ export default function OrderDetails({ route }) {
 
 
     //-----------------------------------------------------------End Room-------------------------------------------------------------
-    const handleSubmit = async () => {pp
+    const handleSubmit = async () => {
         // Lấy OrderID từ route.params
         const { OrderID } = route.params;
 
@@ -593,11 +592,11 @@ export default function OrderDetails({ route }) {
             // Xử lý khi không có OrderID
         }
     };
-
+    
     const handleSubmitPaid = async () => {
         // Lấy OrderID từ route.params
         const { OrderID } = route.params;
-
+        
         // Kiểm tra xem OrderID có tồn tại không
         if (OrderID) {
             const orderRef = ref(database, `Orders/${OrderID}`);
