@@ -189,7 +189,7 @@ export default function OrderDetails({ route }) {
         0
     );
     const totalCartDiscountPrice = Object.values(cartItems).reduce(
-        (total, item) => total + (item.totalPrice - (item.totalPrice * item.discount / 100 || 0)),
+        (total, item) => total + (item.totalPrice - (Math.ceil((item.totalPrice * item.discount / 100 || 0) / 1000) * 1000)),
         0
     );
     const checkInput = () => {
@@ -403,9 +403,9 @@ export default function OrderDetails({ route }) {
                     itemNameWrapped[itemNameWrapped.length - 1] += ` (${discountFood}%)`;
                 }
             }
-
+            
             // Định dạng số lượng và tổng tiền
-            data += `${stt.toString().padEnd(3)} ${formattedName.padEnd(18)} ${itemQuantity.toString().padEnd(4)} ${itemPrice.toLocaleString('vi-VN').padEnd(9)} ${(itemTotalPrice * (1 - discountFood / 100)).toLocaleString('vi-VN').padStart(9)}\n`;
+            data += `${stt.toString().padEnd(3)} ${formattedName.padEnd(18)} ${itemQuantity.toString().padEnd(4)} ${itemPrice.toLocaleString('vi-VN').padEnd(9)} ${(itemPrice - Math.ceil((itemTotalPrice * ( discountFood / 100)) / 1000) * 1000).toLocaleString('vi-VN').padStart(9)}\n`;
 
             // Đưa các dòng tiếp theo
             for (let i = 1; i < itemNameWrapped.length; i++) {
@@ -415,7 +415,7 @@ export default function OrderDetails({ route }) {
 
             stt++;
             totalPrice += item.totalPrice;
-            totalPriceDiscount += item.totalPrice * (1 - item.discount / 100);
+            totalPriceDiscount += (itemPrice - Math.ceil(item.totalPrice * (item.discount / 100) / 1000) * 1000)
         }
     }
 
@@ -427,6 +427,7 @@ export default function OrderDetails({ route }) {
         data += `Tong cong${totalPrice.toLocaleString('vi-VN').padStart(38)}\n`;
         totalBill = totalPrice;
     }
+    
     let discountPrint = (totalPriceDiscount - totalPrice).toLocaleString('vi-VN').toString();
     if (totalPriceDiscount < totalPrice) {
         data += `Giam gia${discountPrint.padStart(39)}\n`;
@@ -1031,7 +1032,7 @@ export default function OrderDetails({ route }) {
                                 const img = data.image;
                                 const quantity = data.quantity;
                                 const totalPrice = price * quantity || 0;
-                                const discountPrice = totalPrice * (data.discount / 100) || 0;
+                                const discountPrice = (Math.ceil((totalPrice * (data.discount / 100) || 0) / 1000) * 1000)
 
 
                                 const imageArray = imageAllFolder || [];
@@ -1146,7 +1147,7 @@ export default function OrderDetails({ route }) {
                                                 <Text>{`${index + 1}. `}</Text>
                                                 <Text style={{ justifyContent: 'flex-start' }}>{data.name}</Text>
                                             </View>
-                                            <Text style={{ justifyContent: 'flex-end' }}>{`-${((data.price * data.quantity) * (data.discount / 100)).toLocaleString('vi-VN')}đ`}</Text>
+                                            <Text style={{ justifyContent: 'flex-end' }}>{`-${(Math.ceil((data.price * data.quantity) * (data.discount / 100) / 1000) * 1000).toLocaleString('vi-VN')}đ`}</Text>
                                         </View>
 
                                     );
@@ -1156,10 +1157,10 @@ export default function OrderDetails({ route }) {
                             })}
                         </View>
 
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'gray' }}>
+                        {/* <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'gray' }}>
                             <Text style={{ justifyContent: 'flex-start' }}>Giảm giá tổng</Text>
                             <Text style={{ justifyContent: 'flex-end' }}>{`${(totalCartDiscountPrice * discountTotal / 100) > 0 ? '-' : ''}${(totalCartPrice * discountTotal / 100).toLocaleString('vi-VN')}đ`}</Text>
-                        </View>
+                        </View> */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10, paddingTop: 10 }}>
                             <Text style={{ justifyContent: 'flex-start', fontWeight: 'bold' }}>Tổng cộng</Text>
                             <Text style={{ justifyContent: 'flex-end', fontWeight: 'bold' }}>{(discountTotal ? (totalCartDiscountPrice - (totalCartPrice * discountTotal / 100)) : totalCartDiscountPrice).toLocaleString('vi-VN')}đ</Text>

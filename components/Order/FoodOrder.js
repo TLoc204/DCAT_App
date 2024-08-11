@@ -360,7 +360,7 @@ export default function FoodOrder({ route }) {
                         // Nếu đã tồn tại mục có cùng key và discount, cộng thêm quantity và tính lại totalPrice
                         newCartItems[existingCartItem.key].quantity += 1;
                         newCartItems[existingCartItem.key].totalPrice = roundUpTo(newCartItems[existingCartItem.key].price * newCartItems[existingCartItem.key].quantity,1000);
-                        newCartItems[existingCartItem.key].discountPrice = (newCartItems[existingCartItem.key].price * newCartItems[existingCartItem.key].quantity) * (newCartItems[existingCartItem.key].discount / 100);
+                        newCartItems[existingCartItem.key].discountPrice = (Math.ceil((newCartItems[existingCartItem.key].price * newCartItems[existingCartItem.key].quantity) * (newCartItems[existingCartItem.key].discount / 100) / 1000) * 1000);
                     } else {
                         const lastIndex = Object.keys(newCartItems).length + 1;
                         const newKey = `${key}_${lastIndex}`;
@@ -386,7 +386,7 @@ export default function FoodOrder({ route }) {
 
 
 
-    console.log(cartItems)
+    
     const removeFromCart = (key) => {
         setCartItems((prevCartItems) => {
             const newCartItems = { ...prevCartItems };
@@ -406,7 +406,7 @@ export default function FoodOrder({ route }) {
                     // Trùng key và discount, giảm quantity và cập nhật tổng giá trị
                     existingItem.quantity -= 1;
                     existingItem.totalPrice = existingItem.price * existingItem.quantity;
-                    existingItem.discountPrice = (existingItem.price * existingItem.quantity) * (existingItem.discount / 100);
+                    existingItem.discountPrice = (Math.ceil((existingItem.price * existingItem.quantity) * (existingItem.discount / 100) / 1000) * 1000)
                     // Nếu quantity <= 0, xóa mục khỏi giỏ hàng
                     if (existingItem.quantity <= 0) {
                         delete newCartItems[existingItem.key];
@@ -490,7 +490,8 @@ export default function FoodOrder({ route }) {
                 newBottomSheetData[key].discount = discountValue; // Cập nhật giảm giá
 
                 // Tính toán và cập nhật discountPrice dựa trên quantity mới
-                const discountedPrice = (price * quantity) * (newBottomSheetData[key].discount / 100);
+                const discountedPrice = (Math.ceil((price * quantity) * (newBottomSheetData[key].discount / 100) / 1000) * 1000);
+
                 newBottomSheetData[key].discountPrice = discountedPrice;
             }
 
@@ -528,7 +529,7 @@ export default function FoodOrder({ route }) {
     }, [searchQuery, selectedCategory]);
 
     const totalCartDiscountPrice = Object.values(cartItems).reduce(
-        (total, item) => total + (item.price * item.quantity - (item.price * item.quantity * item.discount / 100 || 0)),
+        (total, item) => total + (item.price * item.quantity - (Math.ceil((item.price * item.quantity * item.discount / 100 || 0) / 1000) * 1000)),
         0
     );
     //-------------------------------------------------------------End Add Food-------------------------------------------------------------
@@ -788,7 +789,7 @@ export default function FoodOrder({ route }) {
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
     // ...
     // ...
-
+    console.log(cartItems)
     return (
 
         <View >
@@ -1056,7 +1057,7 @@ export default function FoodOrder({ route }) {
                                     const img = data.image;
                                     const totalPrice = price * quantity;
                                     const discount = data.discount;
-                                    const discountPrice = totalPrice * discount / 100;
+                                    const discountPrice = data.discountPrice;
                                     const imageArray = imageAllFolder || [];
 
                                     // Find the URL for the specific key or provide a default URL if not found
@@ -1183,7 +1184,7 @@ export default function FoodOrder({ route }) {
 
 
                     <View style={{ marginBottom: 10, justifyContent: 'flex-end', flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={{ marginRight: 10, paddingTop: 10 }}>{(Math.ceil(totalCartDiscountPrice / 1000) * 1000).toLocaleString('vi-VN')}đ</Text>
+                        <Text style={{ marginRight: 10, paddingTop: 10 }}>{totalCartDiscountPrice.toLocaleString('vi-VN')}đ</Text>
                         <TouchableOpacity
                             style={{
                                 alignItems: "center",

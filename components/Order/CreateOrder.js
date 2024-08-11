@@ -797,11 +797,11 @@ export default function CreateOrder({ route }) {
                                 }
                             })}
                         </View>
-
+{/* 
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'gray' }}>
                             <Text style={{ justifyContent: 'flex-start' }}>Giảm giá tổng</Text>
                             <Text style={{ justifyContent: 'flex-end' }}>{`${(totalCartDiscountPrice * discountTotal / 100) > 0 ? '-' : ''}${(totalCartPrice * discountTotal / 100).toLocaleString('vi-VN')}đ`}</Text>
-                        </View>
+                        </View> */}
 
 
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10, paddingTop: 10 }}>
