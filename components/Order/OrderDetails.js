@@ -356,7 +356,7 @@ export default function OrderDetails({ route }) {
                 'Ư': 'U', 'Ứ': 'U', 'Ừ': 'U', 'Ử': 'U', 'Ữ': 'U', 'Ự': 'U',
                 'Ý': 'Y', 'Ỳ': 'Y', 'Ỷ': 'Y', 'Ỹ': 'Y', 'Ỵ': 'Y'
             };
-
+    
             let newWord = '';
             for (let i = 0; i < word.length; i++) {
                 const char = word[i];
@@ -365,10 +365,10 @@ export default function OrderDetails({ route }) {
             }
             return newWord;
         }
-
+    
         let result = [];
         let line = '';
-
+    
         for (const word of text.split(' ')) {
             const sanitizedWord = removeAccents(word);
             if (line.length + sanitizedWord.length + 1 > width) {
@@ -380,43 +380,40 @@ export default function OrderDetails({ route }) {
         if (line.trim().length > 0) {
             result.push(line.trim());
         }
-
+    
         return result;
     }
-
+    
     for (const key in cartItems) {
         if (cartItems.hasOwnProperty(key)) {
             const item = cartItems[key];
-            const itemNameWrapped = formatTextWrap(item.name, 15); // Đảm bảo chiều rộng phù hợp
+            const itemNameWrapped = formatTextWrap(item.name, 18); // Đảm bảo chiều rộng phù hợp
             const itemPrice = item.price;
             const itemQuantity = item.quantity;
             const itemTotalPrice = item.totalPrice;
             const discountFood = item.discount;
-
+    
             let formattedName = itemNameWrapped[0];
-            // Nếu có giảm giá và tên món không bị chia ra nhiều dòng, thêm phần trăm giảm giá vào dòng đầu tiên
-            if (discountFood > 0) {
-                if (itemNameWrapped.length === 1) {
-                    formattedName += ` (${discountFood}%)`;
-                } else {
-                    itemNameWrapped[itemNameWrapped.length - 1] += ` (${discountFood}%)`;
-                }
-            }
             
             // Định dạng số lượng và tổng tiền
-            data += `${stt.toString().padEnd(3)} ${formattedName.padEnd(18)} ${itemQuantity.toString().padEnd(4)} ${itemPrice.toLocaleString('vi-VN').padEnd(9)} ${(itemPrice - Math.ceil((itemTotalPrice * ( discountFood / 100)) / 1000) * 1000).toLocaleString('vi-VN').padStart(9)}\n`;
-
-            // Đưa các dòng tiếp theo
+            data += `${stt.toString().padEnd(3)} ${formattedName.padEnd(18)} ${itemQuantity.toString().padEnd(4)} ${itemPrice.toLocaleString('vi-VN').padEnd(9)} ${(itemTotalPrice - Math.ceil((itemTotalPrice * (discountFood / 100)) / 1000) * 1000).toLocaleString('vi-VN').padStart(9)}\n`;
+    
+            // Đưa các dòng tiếp theo và phần giảm giá nếu có
             for (let i = 1; i < itemNameWrapped.length; i++) {
                 // Căn chỉnh các dòng tiếp theo với khoảng trắng ở đầu dòng để giữ cho chúng nằm dưới cột tên món
                 data += `    ${itemNameWrapped[i].padEnd(16)}\n`;
             }
-
+    
+            if (discountFood > 0) {
+                data += `    (${discountFood}%)\n`;
+            }
+    
             stt++;
             totalPrice += item.totalPrice;
-            totalPriceDiscount += (itemPrice - Math.ceil(item.totalPrice * (item.discount / 100) / 1000) * 1000)
+            totalPriceDiscount += (itemTotalPrice - Math.ceil(item.totalPrice * (item.discount / 100) / 1000) * 1000);
         }
     }
+    
 
     data += '-----------------------------------------------\n';
     let totalBill = 0
@@ -492,21 +489,22 @@ export default function OrderDetails({ route }) {
 
                 await NetPrinter.printText(`${data}`, { beep: false, cut: false });
                 await delay(200);
-
-                await NetPrinter.printImage(
-                    `https://img.vietqr.io/image/VCB-DCAT-qr_only.png?amount=${totalBill}&addInfo=Thanh%20toan%20hoa%20don%20${OrderID.replace("O", "")}`,
-                    {
-                        imageWidth: 160,
-                        imageHeight: 160,
-                    }
-                );
+                if(selectedPayment!=='Cash'){
+                    await NetPrinter.printImage(
+                        `https://img.vietqr.io/image/VCB-DCAT-qr_only.png?amount=${totalBill}&addInfo=Thanh%20toan%20hoa%20don%20${OrderID.replace("O", "")}`,
+                        {
+                            imageWidth: 160,
+                            imageHeight: 160,
+                        }
+                    );
+                }
                 await delay(200); // Delay thêm thời gian
 
                 await NetPrinter.printText(`${CENTER}Cam on quy khach, hen gap lai${CENTER}`, { beep: false, cut: false });
                 await delay(200);
 
                 await NetPrinter.printBill('', { beep: false, cut: true });
-                 await handlePaidOrder();
+                
             } catch (error) {
                 console.error(error);
                 Alert.alert("Error", "Failed to print");
@@ -1197,6 +1195,25 @@ export default function OrderDetails({ route }) {
                         }} onPress={() => {
                             handlePrint()
                             // handlePaidOrder()
+                        }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
+                                <Text style={{ color: '#ffffff' }}>In bill</Text>
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+                    <View>
+                        <TouchableOpacity style={{
+                            alignItems: "center",
+                            backgroundColor: "#667080",
+                            borderRadius: 15,
+                            paddingVertical: 15,
+                            marginHorizontal: 5,
+                            marginLeft: 20,
+                            marginRight: 20,
+                            marginTop: 15
+                        }} onPress={() => {
+                            
+                            handlePaidOrder()
                         }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
                                 <Text style={{ color: '#ffffff' }}>Thanh toán</Text>
