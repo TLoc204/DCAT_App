@@ -5,7 +5,12 @@ import { FIREBASE_APP } from '../../FirebaseConfig';
 import { getDatabase, ref, onValue, get, set } from 'firebase/database';
 import { showMessage, hideMessage, } from "react-native-flash-message";
 import IconAnt from 'react-native-vector-icons/AntDesign';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 import { DataTable } from 'react-native-paper';
+import * as XLSX from 'xlsx';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import ExcelJS from 'exceljs';
 // Lấy kích thước màn hình để hỗ trợ responsive
 
 export default function CreateOrder({ route }) {
@@ -75,7 +80,68 @@ export default function CreateOrder({ route }) {
 
     });
     const finalStyles = Platform.OS === 'web' ? { ...commonStyles, ...webStyles } : mobileStyles;
-
+    const createExcel = async (paymentData) => {
+        const paymentArray = Object.values(paymentData);
+      
+        // Kiểm tra xem paymentArray có phải là mảng không
+        if (!Array.isArray(paymentArray)) {
+          console.error("paymentArray is not an array:", paymentArray);
+          return; // Dừng hàm nếu paymentArray không phải là mảng
+        }
+      
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('PaymentData');
+      
+        // Thêm tiêu đề cột
+        worksheet.columns = [
+          { header: 'STT', key: 'stt', width: 10 },
+          { header: 'Name', key: 'name', width: 30 },
+          { header: 'Created Date', key: 'createdDate', width: 20 },
+          { header: 'Update Date', key: 'updateDate', width: 20 },
+          { header: 'Price', key: 'price', width: 15, style: { numFmt: '#,##0' } }, // Định dạng tiền tệ cho cột Price
+          { header: 'Description', key: 'description', width: 30 }
+        ];
+      
+        // Tạo mảng dữ liệu từ paymentArray
+        const rows = paymentArray.map((item, index) => ({
+          stt: item.key ? item.key.substring(1) : index + 1, // STT là phần sau chữ P
+          name: item.Name,
+          createdDate: item.CreatedDate,
+          updateDate: item.UpdateDate,
+          description: item.Description || '',
+          price: parseFloat(item.Price) || 0 // Đảm bảo giá là số
+        }));
+      
+        // Thêm dữ liệu vào worksheet
+        worksheet.addRows(rows);
+      
+        // Thêm dòng tổng cộng
+        const totalRow = worksheet.addRow({});
+        totalRow.getCell('E').value = 'Tổng cộng:';
+        totalRow.getCell('F').value = {
+          formula: `SUM(E2:E${rows.length + 1})`,
+        };
+      
+        // Ghi file ra buffer
+        const buffer = await workbook.xlsx.writeBuffer();
+      
+        // Lưu file vào hệ thống và chia sẻ
+        const fileUri = FileSystem.documentDirectory + 'payment_data.xlsx';
+        
+        // Chuyển đổi buffer thành Base64
+        const base64String = buffer.toString('base64');
+        
+        // Ghi vào file
+        await FileSystem.writeAsStringAsync(fileUri, base64String, { encoding: FileSystem.EncodingType.Base64 });
+      
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(fileUri);
+        }
+      };
+      
+      
+      
+      
 
     const CustomMessageComponent = ({ message, description, icon }) => {
         return (
@@ -130,16 +196,19 @@ export default function CreateOrder({ route }) {
                     if (snapshot.exists()) {
                         const data = snapshot.val();
                         const paymentKeys = Object.keys(data);
-                        lastPaymentKey = paymentKeys[paymentKeys.length - 1];
-                    } else {
-                        console.log("No data available");
+                        const numericOrderKeys = paymentKeys
+                            .map(key => parseInt(key.replace('P', '')))
+                            .filter(num => !isNaN(num));
+                        lastPaymentKey = Math.max(...numericOrderKeys);
                     }
                 })
                 .catch((error) => {
                     console.error(error);
                 });
-
-            const newPaymentKey = 'P' + (parseInt(lastPaymentKey.substring(1)) + 1);
+            if (isNaN(parseInt(lastPaymentKey))) {
+                lastPaymentKey = 0
+            }
+            const newPaymentKey = 'P' + (parseInt(lastPaymentKey) + 1);
             const now = new Date();
             const date = now.toISOString().split('T')[0]; // Ngày
             const time = now.toTimeString().split(' ')[0]; // Thời gian
@@ -210,51 +279,70 @@ export default function CreateOrder({ route }) {
                 <View style={finalStyles.input_cus_payment}>
                     <TextInput style={finalStyles.input} value={paymentDescription} onChangeText={(text) => { setPaymentDescription(text) }} autoFocus={false} />
                 </View>
-                <View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 15 }}>
+
                     <TouchableOpacity style={{
+                        flex: 1,
                         alignItems: "center",
                         backgroundColor: "#667080",
                         borderRadius: 15,
                         paddingVertical: 15,
                         marginHorizontal: 5,
-                        marginLeft: 20,
-                        marginRight: 20,
-                        marginTop: 15
+                        marginLeft: 20
                     }} onPress={handleSubmit}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
                             <Text style={{ color: '#ffffff' }}>Thêm phiếu chi</Text>
                         </View>
                     </TouchableOpacity>
+
+
+                    <TouchableOpacity style={{
+                        flex: 0.2,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: "#667080",
+                        borderRadius: 15,
+                        paddingVertical: 15,
+                        marginHorizontal: 5,
+                        marginRight: 20
+                    }} onPress={()=>createExcel(paymentData)}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
+                            <FontAwesome5 name="file-excel" size={24} color="#ffffff" />
+                        </View>
+                    </TouchableOpacity>
                 </View>
             </View>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
-                <DataTable >
+                <DataTable>
                     <DataTable.Header style={styles.tableHeader}>
-                        <DataTable.Title style={[styles.centerText, { flex: 0.5 }]}>#</DataTable.Title>
                         <DataTable.Title style={[styles.leftText, { flex: 2, maxHeight: 60, overflow: 'hidden' }]}>Tên món hàng</DataTable.Title>
                         <DataTable.Title style={[styles.centerText, { flex: 3 }]}>Ngày</DataTable.Title>
                         <DataTable.Title style={[styles.rightText, { flex: 2 }]}>Giá</DataTable.Title>
                     </DataTable.Header>
-                    {paymentArray.slice().reverse().map((rowData, index) => (
-                        <DataTable.Row key={index} style={styles.tableBody}>
-                            <DataTable.Cell style={[styles.centerText, { flex: 0.5 }]}>{rowData.key.substring(1)}</DataTable.Cell>
-                            <DataTable.Cell style={[styles.leftText, { flex: 2 }]}><MarqueeText text={rowData.Name} /></DataTable.Cell>
-                            <DataTable.Cell style={[styles.centerText, { flex: 3 }]}>{rowData.CreatedDate}</DataTable.Cell>
-                            <DataTable.Cell style={[styles.rightText, { flex: 2 }]}><MarqueeText text={formatCurrency(rowData.Price)} /></DataTable.Cell>
-                        </DataTable.Row>
-                    ))}
-
+                    {paymentArray
+                        .sort((a, b) => new Date(a.CreatedDate) - new Date(b.CreatedDate))
+                        .reverse()
+                        .map((rowData, index) => (
+                            <DataTable.Row key={index} style={styles.tableBody}>
+                                <DataTable.Cell style={[styles.leftText, { flex: 2, flexWrap: 'wrap' }]}>
+                                    <Text numberOfLines={2} style={{ flexWrap: 'wrap' }}>
+                                        {`${rowData.key.substring(1)}.${rowData.Name}`}
+                                    </Text>
+                                </DataTable.Cell>
+                                <DataTable.Cell style={[styles.centerText, { flex: 3 }]}>{rowData.CreatedDate}</DataTable.Cell>
+                                <DataTable.Cell style={[styles.rightText, { flex: 2 }]}><MarqueeText text={formatCurrency(rowData.Price)} /></DataTable.Cell>
+                            </DataTable.Row>
+                        ))}
                 </DataTable>
+
             </ScrollView>
 
         </SafeAreaView>
     );
 }
 const MarqueeText = ({ text }) => {
-
-
     return (
-        <Animated.View style={{ flexDirection: 'row'}}>
+        <Animated.View style={{ flexDirection: 'row' }}>
             <Text>{text}</Text>
         </Animated.View>
     );
@@ -264,7 +352,7 @@ const styles = StyleSheet.create({
     tableHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        backgroundColor:'lightgray',
+        backgroundColor: 'lightgray',
         alignItems: 'center',
     },
     tableBody: {
@@ -292,5 +380,6 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         marginTop: 10,
         marginBottom: 100,
+        paddingBottom: 10
     },
 });

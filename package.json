@@ -32,12 +32,14 @@
     "buffer": "^6.0.3",
     "d3-shape": "^3.2.0",
     "esc-pos-encoder": "^2.0.1",
+    "exceljs": "^4.4.0",
     "expo": "~49.0.15",
     "expo-constants": "~14.4.2",
     "expo-dev-client": "~2.4.13",
     "expo-image-picker": "~14.3.2",
     "expo-notifications": "~0.20.1",
     "expo-print": "~12.4.2",
+    "expo-sharing": "~11.5.0",
     "expo-splash-screen": "~0.20.5",
     "expo-status-bar": "~1.6.0",
     "expo-system-ui": "~2.4.0",
@@ -76,7 +78,8 @@
     "react-native-view-shot": "^3.8.0",
     "react-native-web": "~0.19.6",
     "stream-browserify": "^3.0.0",
-    "stream-browserify2-react-native": "^2.0.2"
+    "stream-browserify2-react-native": "^2.0.2",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

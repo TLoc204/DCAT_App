@@ -401,7 +401,7 @@ export default function OrderDetails({ route }) {
             // Đưa các dòng tiếp theo và phần giảm giá nếu có
             for (let i = 1; i < itemNameWrapped.length; i++) {
                 // Căn chỉnh các dòng tiếp theo với khoảng trắng ở đầu dòng để giữ cho chúng nằm dưới cột tên món
-                data += `    ${itemNameWrapped[i].padEnd(16)}\n`;
+                data += `    ${itemNameWrapped[i].padEnd(18)}\n`;
             }
     
             if (discountFood > 0) {
@@ -443,7 +443,7 @@ export default function OrderDetails({ route }) {
 
     const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-    const handlePrint = async () => {
+    const handlePrint = async (key) => {
         if (Object.values(cartItems).length > 0 && selectedRoom && customerName.length > 0) {
             handleSubmit();
 
@@ -504,7 +504,9 @@ export default function OrderDetails({ route }) {
                 await delay(200);
 
                 await NetPrinter.printBill('', { beep: false, cut: true });
-                
+                if(key =='ThanhToan'){
+                    await handlePaidOrder()
+                }
             } catch (error) {
                 console.error(error);
                 Alert.alert("Error", "Failed to print");
@@ -1193,7 +1195,7 @@ export default function OrderDetails({ route }) {
                             marginRight: 20,
                             marginTop: 15
                         }} onPress={() => {
-                            handlePrint()
+                            handlePrint('InBill')
                             // handlePaidOrder()
                         }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
@@ -1212,8 +1214,7 @@ export default function OrderDetails({ route }) {
                             marginRight: 20,
                             marginTop: 15
                         }} onPress={() => {
-                            
-                            handlePaidOrder()
+                            handlePrint('ThanhToan')
                         }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "center" }}>
                                 <Text style={{ color: '#ffffff' }}>Thanh toán</Text>
